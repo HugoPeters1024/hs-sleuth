@@ -1,9 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 module HsComprehension (plugin) where
+
+import Control.Monad.State
 
 import GHC
 import GHC.Plugins
 import GHC.Core.Ppr
+
+data CorePPState = CorePPState { dynFlags :: DynFlags
+                               , indent :: Int
+                               , output :: String
+                               }
+
+type CorePP = StateT CorePPState CoreM ()
 
 plugin :: Plugin
 plugin = defaultPlugin
@@ -18,15 +28,15 @@ install _ todo = do
 
 pass :: ModGuts -> CoreM ModGuts
 pass guts = do dflags <- getDynFlags
-               putMsg "||||||||||||||||||||||||||||||||||"
                bindsOnlyPass (mapM (printLet dflags)) guts
                pure guts
 
     where printLet :: DynFlags -> CoreBind -> CoreM CoreBind
           printLet dflags bndr@(NonRec b e) = do
+              sbndr <- showBind dflags bndr
               putMsgS $ unlines [ "------------------------------"
-                                , "Found a nonrec function named " ++ showSDoc dflags (ppr b)
-                                , "Pretty: " ++ showBind dflags bndr
+                                , "Found a nonrec function named " ++ showSDocDump dflags (ppr b)
+                                , "Pretty: " ++ sbndr
                                 ]
               pure bndr
 
@@ -37,40 +47,68 @@ pass guts = do dflags <- getDynFlags
 mkSpace :: Int -> String
 mkSpace n = concat $ replicate n " "
 
-showBind :: OutputableBndr a => DynFlags -> Bind a -> String
-showBind dflags b = unlines $ map (\(n, v) -> mkSpace n ++ v) (showBind' dflags 0 b)
+newline :: CorePP
+newline = modify $ \CorePPState {..} -> CorePPState { output = output ++ "\n" ++ mkSpace indent, ..}
+
+indented :: CorePP -> CorePP
+indented pp = do
+    modify $ \CorePPState {..} -> CorePPState { indent = indent + 4, ..}
+    newline
+    pp
+    modify $ \CorePPState {..} -> CorePPState { indent = indent - 4, ..}
+    newline
+
+parensPP :: CorePP -> CorePP
+parensPP pp = printPP "(" >> pp >> printPP ")"
+
+printPP :: String -> CorePP
+printPP s = modify $ \CorePPState {..} -> CorePPState { output = output ++ s, ..}
+
+showPP :: SDoc -> CorePP
+showPP sdoc = do
+    dflags <- gets dynFlags
+    printPP $ showSDoc dflags sdoc
+
+evalPP :: DynFlags -> CorePP -> CoreM String
+evalPP dflags pp = output <$> execStateT pp (CorePPState dflags 0 mempty)
+
+showBind :: OutputableBndr a => DynFlags -> Bind a -> CoreM String
+showBind dflags b = evalPP dflags $ bindPP b
+
+showExpr :: OutputableBndr a => DynFlags -> Expr a -> CoreM String
+showExpr dflags e = evalPP dflags $ exprPP e
 
 
-showBind' :: OutputableBndr a => DynFlags -> Int -> Bind a -> [(Int, String)]
-showBind' dflags n (NonRec b e) = showExpr' dflags n e
-showBind' dflags n (Rec _) = [(n, "recursive functions not supported yet...")]
+bindPP :: OutputableBndr a => Bind a -> CorePP
+bindPP (NonRec b e) = exprPP e
+bindPP (Rec _) = showPP "recursive functions not supported yet..."
 
 
-showExpr :: OutputableBndr a => DynFlags -> Expr a -> String
-showExpr dflags e = unlines $ map (\(n, v) -> mkSpace n ++ v) (showExpr' dflags 0 e)
+exprPP :: OutputableBndr a => Expr a -> CorePP
+exprPP (Var i) = showPP (ppr i)
+exprPP (Lit lit) = showPP (ppr lit)
+exprPP (App e a) = do
+    showPP "App"
+    indented $ do
+        parensPP $ showPP (ppr e)
+        newline
+        parensPP $ showPP (ppr e)
+exprPP (Lam b e) = do
+    printPP "λ"
+    showPP (ppr b)
+    printPP " -> "
+    indented $ showPP (ppr e)
+exprPP (Let b@(NonRec b' e') e) = do
+    printPP "let "
+    showPP (ppr b')
+    printPP " = "
+    showPP (ppr e')
+    printPP " in "
+    showPP (ppr e)
+exprPP (Let b@(Rec _) e) = printPP "RECURSIVE LET NOT IMPLEMENTED"
+exprPP (Case {}) = printPP "Kees"
+exprPP (Tick _ e) = printPP "Tick"
 
-showExpr' :: OutputableBndr a => DynFlags -> Int -> Expr a -> [(Int, String)]
-showExpr' dflags = go
-    where single = (:[])
-          prepend str ((n, line):tl) = (n, str++line):tl
-          append  str ((n, line):tl) = (n, line++str):tl
-          parens = prepend "(" . append ")"
-
-          go :: OutputableBndr a => Int -> Expr a -> [(Int, String)]
-          go n (Var i) = single (n, "Var " ++ showSDocUnsafe (ppr (varName i)))
-          go n (Lit lit) = single (n, "Lit " ++ showSDocUnsafe (pprLiteral id lit))
-          go n (App e a) = single (n, "App") 
-                        ++ parens (go (n+4) e)
-                        ++ parens (go (n+4) a)
-          go n (Lam b e) = prepend ("λ" ++ showSDoc dflags (ppr b) ++ " -> ") (go (n+4) e)
-          go n (Let b@(NonRec b' e') e) = prepend ("let " ++ showSDoc dflags (ppr b') ++ " = ") (showExpr' dflags (n+4) e')
-                                       ++ showBind' dflags (n+4) b
-                        ++ single (n, "in")
-                        ++ go (n+4) e
-          go n (Case {}) = single (n, "Kees")
-          go n (Cast e _) = go n e
-          go n (Tick _ e) = go n e
-          go n _          = single (n, "")
 
 
 parsedPlugin :: [CommandLineOption] -> ModSummary -> HsParsedModule -> Hsc HsParsedModule
