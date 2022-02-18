@@ -7,6 +7,7 @@ import Control.Monad.State
 import GHC
 import GHC.Plugins
 import GHC.Core.Ppr
+import GHC.Core.Type
 
 data CorePPState = CorePPState { dynFlags :: DynFlags
                                , indent :: Int
@@ -33,10 +34,11 @@ pass guts = do dflags <- getDynFlags
 
     where printLet :: DynFlags -> CoreBind -> CoreM CoreBind
           printLet dflags bndr@(NonRec b e) = do
-              sbndr <- showBind dflags bndr
+              sbndr <- showBind bndr
               putMsgS $ unlines [ "------------------------------"
-                                , "Found a nonrec function named " ++ showSDocDump dflags (ppr b)
-                                , "Pretty: " ++ sbndr
+                                , "Found a nonrec function named " ++ showSDoc dflags (ppr b)
+                                , "Pretty: "
+                                , sbndr
                                 ]
               pure bndr
 
@@ -72,8 +74,11 @@ showPP sdoc = do
 evalPP :: DynFlags -> CorePP -> CoreM String
 evalPP dflags pp = output <$> execStateT pp (CorePPState dflags 0 mempty)
 
-showBind :: OutputableBndr a => DynFlags -> Bind a -> CoreM String
-showBind dflags b = evalPP dflags $ bindPP b
+showBind :: OutputableBndr a => Bind a -> CoreM String
+showBind b = getDynFlags >>= \dflags -> showBind' dflags b
+
+showBind' :: OutputableBndr a => DynFlags -> Bind a -> CoreM String
+showBind' dflags b = evalPP dflags $ bindPP b
 
 showExpr :: OutputableBndr a => DynFlags -> Expr a -> CoreM String
 showExpr dflags e = evalPP dflags $ exprPP e
@@ -81,33 +86,31 @@ showExpr dflags e = evalPP dflags $ exprPP e
 
 bindPP :: OutputableBndr a => Bind a -> CorePP
 bindPP (NonRec b e) = exprPP e
-bindPP (Rec _) = showPP "recursive functions not supported yet..."
+bindPP (Rec _) = printPP "recursive functions not supported yet..."
 
 
 exprPP :: OutputableBndr a => Expr a -> CorePP
 exprPP (Var i) = showPP (ppr i)
 exprPP (Lit lit) = showPP (ppr lit)
-exprPP (App e a) = do
-    showPP "App"
-    indented $ do
-        parensPP $ showPP (ppr e)
-        newline
-        parensPP $ showPP (ppr e)
+exprPP (App e a) = exprPP e >> printPP " " >> parensPP (exprPP a)
 exprPP (Lam b e) = do
     printPP "λ"
     showPP (ppr b)
     printPP " -> "
-    indented $ showPP (ppr e)
+    indented $ exprPP e
 exprPP (Let b@(NonRec b' e') e) = do
     printPP "let "
     showPP (ppr b')
     printPP " = "
-    showPP (ppr e')
+    exprPP e'
     printPP " in "
-    showPP (ppr e)
+    exprPP e
 exprPP (Let b@(Rec _) e) = printPP "RECURSIVE LET NOT IMPLEMENTED"
 exprPP (Case {}) = printPP "Kees"
+exprPP (Cast _ _) = printPP "Cast"
 exprPP (Tick _ e) = printPP "Tick"
+exprPP (Type t) = showPP (ppr t)
+exprPP (Coercion _) = printPP "Coercion"
 
 
 
