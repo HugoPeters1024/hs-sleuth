@@ -1,12 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-module HsComprehension (plugin) where
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+module HsComprehension (plugin, CoreTrace(..)) where
 
 import Control.Monad.State
 import Data.Char
 
 import GHC
 import GHC.Plugins
+import Data.Data
+
+data CoreTrace = CoreTrace deriving (Show, Data)
 
 data CorePPState = CorePPState { dynFlags :: DynFlags
                                , indent :: Int
@@ -14,6 +20,11 @@ data CorePPState = CorePPState { dynFlags :: DynFlags
                                }
 
 type CorePP = StateT CorePPState CoreM ()
+
+annotationsOn :: forall a. Data a => ModGuts -> CoreBndr -> CoreM [a]
+annotationsOn guts bndr = do
+  (_, anns) <- getAnnotations (deserializeWithData @a) guts
+  return $ lookupWithDefaultUFM_Directly anns [] (varUnique bndr)
 
 plugin :: Plugin
 plugin = defaultPlugin
@@ -23,27 +34,43 @@ plugin = defaultPlugin
 
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install _ todo = do
-    let myPass = CoreDoPluginPass "Nothing much" pass
-    pure $ myPass:todo
+    let myPasses = repeat $ \prevName -> CoreDoPluginPass "Nothing much" (pass prevName)
+    let passes = concat $ zipWith (\x y -> [x, y (ppr x)]) todo myPasses
+    pure passes
 
-pass :: ModGuts -> CoreM ModGuts
-pass guts = do dflags <- getDynFlags
-               bindsOnlyPass (mapM (printLet dflags)) guts
-               pure guts
+pass :: SDoc -> ModGuts -> CoreM ModGuts
+pass prevName guts = do dflags <- getDynFlags
+                        putMsgS "--------------------------"
+                        putMsg prevName
+                        putMsgS "--------------------------"
+                        bindsOnlyPass (mapM (printLet guts dflags)) guts
+                        pure guts
 
-    where printLet :: DynFlags -> CoreBind -> CoreM CoreBind
-          printLet dflags bndr@(NonRec b e) = do
-              sbndr <- showBind (stripBind bndr)
-              putMsgS $ unlines [ "------------------------------"
-                                , "Found a nonrec function named " ++ showSDoc dflags (ppr b)
-                                , "Pretty: "
-                                , sbndr
-                                ]
+    where printLet :: ModGuts -> DynFlags -> CoreBind -> CoreM CoreBind
+          printLet guts dflags bndr@(NonRec b e) = do
+              anns <- annotationsOn guts b :: CoreM [CoreTrace]
+              unless (null anns) $ do
+                  sbndr <- showBind (stripBind bndr)
+                  putMsgS $ unlines [ "Found annotated nonrec function named " ++ showSDoc dflags (ppr b)
+                                    , "Pretty: "
+                                    , sbndr
+                                    ]
               pure bndr
 
-          printLet dflags bndr@(Rec _) = do
-              putMsg "I can't analyse recursive functions yet..."
+          printLet guts dflags bndr@(Rec [(b,_)]) = do
+              anns <- annotationsOn guts b :: CoreM [CoreTrace]
+              unless (null anns) $ do
+                  sbndr <- showBind (stripBind bndr)
+                  putMsgS $ unlines [ "Found annotated recursive function named " ++ showSDoc dflags (ppr b)
+                                    , "Pretty: "
+                                    , sbndr
+                                    ]
               pure bndr
+          printLet guts dflags bndr@(Rec _) = do
+              putMsg "I can't analyse co-recursive functions yet..."
+              pure bndr
+              
+
 
 intersperse :: a -> [a] -> [a]
 intersperse = intersperse' False
@@ -93,7 +120,8 @@ showExpr dflags e = evalPP dflags $ exprPP e
 
 bindPP :: OutputableBndr a => Bind a -> CorePP
 bindPP (NonRec b e) = exprPP e
-bindPP (Rec _) = printPP "recursive functions not supported yet..."
+bindPP (Rec [(b,e)]) = exprPP e
+bindPP (Rec _) = printPP "co-recursive functions not supported yet..."
 
 exprPP :: OutputableBndr a => Expr a -> CorePP
 exprPP (Var i) = showPP (ppr i)
@@ -101,7 +129,7 @@ exprPP (Lit lit) = showPP (ppr lit)
 exprPP (App e@(Var ev) a) = let opName = showSDocUnsafe (ppr (varName ev))
                              in if any isLetter opName 
                                     then exprPP e >> printPP " " >> parensPP a
-                                    else parensPP a >> printPP " " >> exprPP e >> printPP " "
+                                    else parensPP a >> printPP " " >> exprPP e
 exprPP (App e a) = exprPP e >> printPP " " >> parensPP a
 exprPP (Lam b e) = do
     printPP "λ"
@@ -113,22 +141,27 @@ exprPP (Let b@(NonRec b' e') e) = do
     showPP (ppr b')
     printPP " = "
     exprPP e'
+    printPP " in"
     indented $ do
-        printPP " in "
         exprPP e
 exprPP (Let b@(Rec _) e) = printPP "RECURSIVE LET NOT IMPLEMENTED"
 exprPP (Case e _ _ alts) = do
-    printPP "Case " 
+    printPP "case " 
     exprPP e 
     printPP " of" 
     indented $ mapM_ (\alt -> altPP alt >> newline) alts
 exprPP (Cast e _) = exprPP e
 exprPP (Tick _ e) = printPP "Tick"
-exprPP (Type t) = printPP "Type " >> showPP (ppr t)
+exprPP (Type t) = pure () --printPP "@" >> showPP (ppr t)
 exprPP (Coercion _) = printPP "Coercion"
 
 altPP :: OutputableBndr a => Alt a -> CorePP
-altPP (Alt con _ expr) = showPP (ppr con) >> printPP " -> " >> exprPP expr
+altPP (Alt con bs expr) = do
+    showPP (ppr con) 
+    printPP " " 
+    mapM (\b -> (showPP (ppr b)) >> printPP " ") bs 
+    printPP "-> " 
+    exprPP expr
 
 
 parsedPlugin :: [CommandLineOption] -> ModSummary -> HsParsedModule -> Hsc HsParsedModule
@@ -139,7 +172,7 @@ parsedPlugin _ ms pm = do
 
 stripBind :: Bind a -> Bind a
 stripBind (NonRec b e) = NonRec b (stripExpr e)
-stripBind _ = error "TODO: recursive binds"
+stripBind b = b
 
 stripExpr :: Expr a -> Expr a
 stripExpr (Var i) = Var i
