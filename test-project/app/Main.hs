@@ -5,11 +5,8 @@ import Data.Char
 
 
 {-# ANN joe CoreTrace #-}
-joe :: [Int] -> [Char]
-joe = map $ chr . (+1)
-
-
-
+joe :: Int
+joe = length $ map (+1) [1,2,3,4,5]
 
 main :: IO ()
 main = putStrLn "hi"

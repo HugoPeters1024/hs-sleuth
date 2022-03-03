@@ -136,3 +136,51 @@ joe2 = flipPalin . flipPalin . flipPalin
 flipPalin
 ```
 
+---
+
+Fusion happens :)
+
+```
+joe :: [Int] -> [Int]
+joe = map (+1) . map (+1)
+
+--------------------------
+Desugared
+--------------------------
+Found annotated nonrec function named joe
+Pretty: 
+(map (let v_B1 = + in
+    let v_B3 = I# 1# in
+        λv_B2 -> 
+            v_B1 v_B2 v_B3
+        
+    
+)) . (map (let v_B1 = + in
+    let v_B3 = I# 1# in
+        λv_B2 -> 
+            v_B1 v_B2 v_B3
+        
+    
+))
+
+--------------------------
+Simplifier
+--------------------------
+Found annotated nonrec function named joe
+Pretty: 
+λx -> 
+    build (λb1 -> 
+        λc -> 
+            λn -> 
+                foldr (mapFB c (λx -> 
+                    case x of
+                        I# x -> I# (2# +# x)
+                        
+                    
+                )) n x
+            
+        
+    )
+```
+
+

@@ -3,10 +3,13 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE LambdaCase #-}
 module HsComprehension (plugin, CoreTrace(..)) where
 
 import Control.Monad.State
 import Data.Char
+import Data.List
+import Data.Maybe
 
 import GHC
 import GHC.Plugins
@@ -21,10 +24,12 @@ data CorePPState = CorePPState { dynFlags :: DynFlags
 
 type CorePP = StateT CorePPState CoreM ()
 
-annotationsOn :: forall a. Data a => ModGuts -> CoreBndr -> CoreM [a]
-annotationsOn guts bndr = do
-  (_, anns) <- getAnnotations (deserializeWithData @a) guts
-  return $ lookupWithDefaultUFM_Directly anns [] (varUnique bndr)
+mapMaybeM :: Monad m => (a -> m (Maybe b)) -> [a] -> m [b]
+mapMaybeM f [] =  pure []
+mapMaybeM f (x:xs) = f x >>= \case
+    Just x -> (x:) <$> mapMaybeM f xs
+    Nothing -> mapMaybeM f xs
+
 
 plugin :: Plugin
 plugin = defaultPlugin
@@ -34,49 +39,54 @@ plugin = defaultPlugin
 
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install _ todo = do
-    let myPasses = repeat $ \prevName -> CoreDoPluginPass "Nothing much" (pass prevName)
-    let passes = concat $ zipWith (\x y -> [x, y (ppr x)]) todo myPasses
-    pure passes
+    let myPass = \prevName -> CoreDoPluginPass "Nothing much" (pass prevName)
+    let firstPass = myPass "Desugared" 
+    let passes = concat $ zipWith (\x y -> [x, y (ppr x)]) todo (repeat myPass)
+    pure (firstPass : passes)
+
+annotationsOn :: forall a. Data a => ModGuts -> CoreBndr -> CoreM [a]
+annotationsOn guts bndr = do
+  (_, anns) <- getAnnotations (deserializeWithData @a) guts
+  return $ lookupWithDefaultUFM_Directly anns [] (varUnique bndr)
+
+isCoreTraced :: ModGuts -> CoreBind -> CoreM Bool
+isCoreTraced guts (NonRec b _) = annotationsOn @CoreTrace guts b >>= \anns -> pure $ (length anns) > 0
+isCoreTraced guts (Rec [(b,_)]) = annotationsOn @CoreTrace guts b >>= \anns -> pure $ (length anns) > 0
+
+annotatedFunctions :: ModGuts -> CoreM [String]
+annotatedFunctions guts = mapMaybeM f (mg_binds guts)
+    where f :: CoreBind -> CoreM (Maybe String)
+          f (NonRec b _ ) = do
+              dflags <- getDynFlags
+              anns <- annotationsOn @CoreTrace guts b
+              pure $ if length anns > 0 
+                        then Just (showSDoc dflags (ppr b))
+                        else Nothing
+
+
 
 pass :: SDoc -> ModGuts -> CoreM ModGuts
 pass prevName guts = do dflags <- getDynFlags
+                        annFs <- annotatedFunctions guts
                         putMsgS "--------------------------"
                         putMsg prevName
                         putMsgS "--------------------------"
-                        bindsOnlyPass (mapM (printLet guts dflags)) guts
+                        bindsOnlyPass (mapM (printLet annFs)) guts
                         pure guts
 
-    where printLet :: ModGuts -> DynFlags -> CoreBind -> CoreM CoreBind
-          printLet guts dflags bndr@(NonRec b e) = do
-              anns <- annotationsOn guts b :: CoreM [CoreTrace]
-              unless (null anns) $ do
+    where printLet :: [String] -> CoreBind -> CoreM CoreBind
+          printLet toTrace bndr@(NonRec b e) = do
+              dflags <- getDynFlags
+              let fname = showSDoc dflags (ppr b)
+              when (and (map (\tc -> isPrefixOf tc fname) toTrace)) $ do
                   sbndr <- showBind (stripBind bndr)
                   putMsgS $ unlines [ "Found annotated nonrec function named " ++ showSDoc dflags (ppr b)
                                     , "Pretty: "
                                     , sbndr
                                     ]
               pure bndr
-
-          printLet guts dflags bndr@(Rec [(b,_)]) = do
-              anns <- annotationsOn guts b :: CoreM [CoreTrace]
-              unless (null anns) $ do
-                  sbndr <- showBind (stripBind bndr)
-                  putMsgS $ unlines [ "Found annotated recursive function named " ++ showSDoc dflags (ppr b)
-                                    , "Pretty: "
-                                    , sbndr
-                                    ]
-              pure bndr
-          printLet guts dflags bndr@(Rec _) = do
-              putMsg "I can't analyse co-recursive functions yet..."
-              pure bndr
               
 
-
-intersperse :: a -> [a] -> [a]
-intersperse = intersperse' False
-    where intersperse' False x ys = x:intersperse' True x ys
-          intersperse' True x (y:ys) = y:intersperse' False x ys
-          intersperse' True x [] = []
 
 mkSpace :: Int -> String
 mkSpace n = concat $ replicate n " "
