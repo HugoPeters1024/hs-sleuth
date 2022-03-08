@@ -3,10 +3,10 @@ module Main where
 import HsComprehension
 import Data.Char
 
-
-{-# ANN joe CoreTrace #-}
-joe :: Int
-joe = length $ map (+1) [1,2,3,4,5]
+{-# ANN oneMore CoreTrace #-}
+oneMore :: Int -> Int
+oneMore 0 = 0
+oneMore n = oneMore (n-2)
 
 main :: IO ()
-main = putStrLn "hi"
+main = putStrLn "hello world"

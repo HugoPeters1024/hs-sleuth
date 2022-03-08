@@ -5,6 +5,33 @@ This plugin is ongoing development for my thesis project:
 - Calling GHC from haskell: https://stackoverflow.com/questions/35449353/how-can-i-parse-ghc-core
 - Haskell to core: https://serokell.io/blog/haskell-to-core
 
+- https://arxiv.org/pdf/1803.07130.pdf (Inspection testing)
+- https://www.cs.tufts.edu/~nr/cs257/archive/duncan-coutts/stream-fusion.pdf
+
+- ghc-core exposes a map with CoreExprs as keys: https://ghc.gitlab.haskell.org/ghc/doc/libraries/ghc-9.3/GHC-Core-Map-Expr.html
+
+- high level overview of GHC (with Simon as an author): https://www.aosabook.org/en/ghc.html
+
+### What is the plan?
+
+- An output that describes precisely what optimisation are done.
+- This can currently already be done, but the output is very cluttered and not intuitive.
+- Ideally the transformations applied at each pass can be derived and specified in such a way that
+  they can be reproduced on the original source code.
+- This requires a well defined transformation for each change.
+- To confirm wether this possible a very simple toy language would be in order, allowing for a simple way to expriment
+how to be resilient to different kinds of noise introduced by artifacts
+
+### Useful findings
+
+- The build/foldr artifacts that appear in the core expressions are the result of the deforestation algorithm
+  (i.e. fusion to prevent intermediate datastructures)
+
+- This plugin is related https://github.com/bgamari/ghc-dump but is not up to date and not really easy to use,
+  the pretty printer looks good though
+
+
+
 ### Scratch Board
 
 I don't understand the different outputs from the compiler flag and this plugin. Check out this example:
@@ -182,5 +209,130 @@ Pretty:
         
     )
 ```
+
+
+---
+
+What is this?? why unpack each cons application as a global binding?
+
+```haskell
+{-# RULES
+  "mp/mp"    joe = joe2
+    #-}
+
+
+
+{-# ANN joe CoreTrace #-}
+{-# NOINLINE joe #-}
+joe :: [Int]
+joe =  map (+1) [1,2,3,4,5]
+
+joe2 :: [Int]
+joe2 = error "U got bamboozled"
+```
+
+
+```
+Found annotated nonrec function named joe2
+Pretty: 
+error (lvl_s7Ot) (unpackCString# lvl_s7Ou)
+
+Found annotated nonrec function named joe_s7O7
+Pretty: 
+I# 2#
+
+Found annotated nonrec function named joe_s7O8
+Pretty: 
+I# 3#
+
+Found annotated nonrec function named joe_s7O9
+Pretty: 
+I# 4#
+
+Found annotated nonrec function named joe_s7Oa
+Pretty: 
+I# 5#
+
+Found annotated nonrec function named joe_s7Ob
+Pretty: 
+I# 6#
+
+Found annotated nonrec function named joe_s7Oc
+Pretty: 
+joe_s7Ob : []
+
+Found annotated nonrec function named joe_s7Od
+Pretty: 
+joe_s7Oa : joe_s7Oc
+
+Found annotated nonrec function named joe_s7Oe
+Pretty: 
+joe_s7O9 : joe_s7Od
+
+Found annotated nonrec function named joe_s7Of
+Pretty: 
+joe_s7O8 : joe_s7Oe
+
+Found annotated nonrec function named joe
+Pretty: 
+joe_s7O7 : joe_s7Of
+```
+
+---
+
+This step introduces a variable `ww_s7DD` in the function oneMore which seems to reference
+a variable from the auxilary $woneMore function that is not in scope (see the list of global bindings as well).
+How is this a valid core expression?
+
+```
+--------------------------
+Worker Wrapper binds
+--------------------------
+attempting to locate: ["oneMore"]
+main_s747
+main
+main_s7Df
+:Main.main
+$trModule_s7Dg
+$trModule_s7Dh
+$trModule_s7Di
+$trModule_s7Dj
+Main.$trModule
+lvl_s7Dv
+$woneMore
+oneMore
+Found annotated function named $woneMore
+Pretty: 
+λww -> 
+    let w_s7Dw = I# ww in
+        case let ds_d6W7 = w_s7Dw in
+            case ds_d6W7 of
+                I# ds_d6W8 -> case ds_d6W8 of
+                    0# -> lvl_s7Dv
+                    _ -> oneMore (I# (ds_X1F -# 2#))
+                    
+                
+                
+            
+         of
+            I# ww_s7DD -> ww_s7DD
+            
+        
+    
+
+
+Found annotated function named oneMore
+Pretty: 
+λw_s7Dw -> 
+    case case w_s7Dw of
+        I# ww -> $woneMore ww
+        
+     of
+        _ -> I# ww_s7DD
+        
+```
+
+
+
 
 

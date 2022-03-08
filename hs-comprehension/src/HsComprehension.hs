@@ -6,12 +6,17 @@
 {-# LANGUAGE LambdaCase #-}
 module HsComprehension (plugin, CoreTrace(..)) where
 
+import Prelude hiding ((<>))
 import Control.Monad.State
 import Data.Char
 import Data.List
 import Data.Maybe
+import Data.IORef
 
 import GHC
+import GHC.Core.Map.Expr
+import GHC.Types.Var
+import GHC.Types.Tickish
 import GHC.Plugins
 import Data.Data
 
@@ -23,6 +28,8 @@ data CorePPState = CorePPState { dynFlags :: DynFlags
                                }
 
 type CorePP = StateT CorePPState CoreM ()
+
+type PluginState = CoreMap String
 
 mapMaybeM :: Monad m => (a -> m (Maybe b)) -> [a] -> m [b]
 mapMaybeM f [] =  pure []
@@ -39,24 +46,30 @@ plugin = defaultPlugin
 
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install _ todo = do
-    let myPass = \prevName -> CoreDoPluginPass "Nothing much" (pass prevName)
+    state <- liftIO $ newIORef emptyCoreMap
+    let myPass = \prevName -> CoreDoPluginPass "Nothing much" (pass state prevName)
     let firstPass = myPass "Desugared" 
     let passes = concat $ zipWith (\x y -> [x, y (ppr x)]) todo (repeat myPass)
     pure (firstPass : passes)
+
+getAllTopLevelDefs :: [CoreBind] -> [(CoreBndr, CoreExpr)]
+getAllTopLevelDefs binds = concatMap go binds
+    where go (NonRec b e) = [(b,e)]
+          go (Rec bs) = bs
+
 
 annotationsOn :: forall a. Data a => ModGuts -> CoreBndr -> CoreM [a]
 annotationsOn guts bndr = do
   (_, anns) <- getAnnotations (deserializeWithData @a) guts
   return $ lookupWithDefaultUFM_Directly anns [] (varUnique bndr)
 
-isCoreTraced :: ModGuts -> CoreBind -> CoreM Bool
-isCoreTraced guts (NonRec b _) = annotationsOn @CoreTrace guts b >>= \anns -> pure $ (length anns) > 0
-isCoreTraced guts (Rec [(b,_)]) = annotationsOn @CoreTrace guts b >>= \anns -> pure $ (length anns) > 0
+isCoreTraced :: ModGuts -> CoreBndr -> CoreM Bool
+isCoreTraced guts b = (not . null) <$> annotationsOn @CoreTrace guts b
 
-annotatedFunctions :: ModGuts -> CoreM [String]
-annotatedFunctions guts = mapMaybeM f (mg_binds guts)
-    where f :: CoreBind -> CoreM (Maybe String)
-          f (NonRec b _ ) = do
+annotatedFunctions :: ModGuts -> [(CoreBndr, CoreExpr)] -> CoreM [String]
+annotatedFunctions guts = mapMaybeM f
+    where f :: (CoreBndr, CoreExpr) -> CoreM (Maybe String)
+          f (b, _) = do
               dflags <- getDynFlags
               anns <- annotationsOn @CoreTrace guts b
               pure $ if length anns > 0 
@@ -64,27 +77,31 @@ annotatedFunctions guts = mapMaybeM f (mg_binds guts)
                         else Nothing
 
 
+pass :: IORef PluginState -> SDoc -> ModGuts -> CoreM ModGuts
+pass state prevName guts = do dflags <- getDynFlags
+                              let binders = getAllTopLevelDefs (mg_binds guts)
+                              annFs <- annotatedFunctions guts binders
+                              putMsgS "--------------------------"
+                              putMsg prevName
+                              putMsgS "--------------------------"
+                              putMsgS $ "attempting to locate: " ++ show annFs
+                              putMsg $ cat $ map (ppr . fst) binders
+                              mapM (go annFs) binders
+                              pure guts
 
-pass :: SDoc -> ModGuts -> CoreM ModGuts
-pass prevName guts = do dflags <- getDynFlags
-                        annFs <- annotatedFunctions guts
-                        putMsgS "--------------------------"
-                        putMsg prevName
-                        putMsgS "--------------------------"
-                        bindsOnlyPass (mapM (printLet annFs)) guts
-                        pure guts
-
-    where printLet :: [String] -> CoreBind -> CoreM CoreBind
-          printLet toTrace bndr@(NonRec b e) = do
+    where go :: [String] -> (CoreBndr, CoreExpr) -> CoreM ()
+          go toTrace (b, e) = do
               dflags <- getDynFlags
               let fname = showSDoc dflags (ppr b)
-              when (and (map (\tc -> isPrefixOf tc fname) toTrace)) $ do
-                  sbndr <- showBind (stripBind bndr)
-                  putMsgS $ unlines [ "Found annotated nonrec function named " ++ showSDoc dflags (ppr b)
+              known <- isJust . (flip lookupCoreMap e) <$> liftIO (readIORef state)
+              liftIO $ modifyIORef state (\m -> extendCoreMap m e fname)
+              --when (not known) $ do
+              when (or (map (\tc -> isSubsequenceOf tc fname) toTrace)) $ do
+                  sexpr <- showExpr dflags (stripExpr e)
+                  putMsgS $ unlines [ "Found annotated function named " ++ showSDoc dflags (ppr b)
                                     , "Pretty: "
-                                    , sbndr
+                                    , sexpr
                                     ]
-              pure bndr
               
 
 
@@ -102,7 +119,7 @@ indented pp = do
     modify $ \CorePPState {..} -> CorePPState { indent = indent - 4, ..}
     newline
 
-parensPP :: OutputableBndr a => Expr a -> CorePP
+parensPP :: CoreExpr -> CorePP
 parensPP e@(Var _) = exprPP e
 parensPP e@(Lit _) = exprPP e
 parensPP e = printPP "(" >> exprPP e >> printPP ")"
@@ -118,22 +135,19 @@ showPP sdoc = do
 evalPP :: DynFlags -> CorePP -> CoreM String
 evalPP dflags pp = output <$> execStateT pp (CorePPState dflags 0 mempty)
 
-showBind :: OutputableBndr a => Bind a -> CoreM String
-showBind b = getDynFlags >>= \dflags -> showBind' dflags b
+showBind :: CoreBind -> CoreM String
+showBind b = getDynFlags >>= \dflags -> evalPP dflags (bindPP b)
 
-showBind' :: OutputableBndr a => DynFlags -> Bind a -> CoreM String
-showBind' dflags b = evalPP dflags $ bindPP b
-
-showExpr :: OutputableBndr a => DynFlags -> Expr a -> CoreM String
+showExpr :: DynFlags -> CoreExpr -> CoreM String
 showExpr dflags e = evalPP dflags $ exprPP e
 
 
-bindPP :: OutputableBndr a => Bind a -> CorePP
-bindPP (NonRec b e) = exprPP e
-bindPP (Rec [(b,e)]) = exprPP e
+bindPP :: CoreBind -> CorePP
+bindPP (NonRec b e) = showPP (ppr b) >> printPP " = " >> exprPP e
+bindPP (Rec [(b,e)]) = showPP (ppr b) >> printPP " = " >> exprPP e
 bindPP (Rec _) = printPP "co-recursive functions not supported yet..."
 
-exprPP :: OutputableBndr a => Expr a -> CorePP
+exprPP :: CoreExpr -> CorePP
 exprPP (Var i) = showPP (ppr i)
 exprPP (Lit lit) = showPP (ppr lit)
 exprPP (App e@(Var ev) a) = let opName = showSDocUnsafe (ppr (varName ev))
@@ -146,28 +160,27 @@ exprPP (Lam b e) = do
     showPP (ppr b)
     printPP " -> "
     indented $ exprPP e
-exprPP (Let b@(NonRec b' e') e) = do
+exprPP (Let b e) = do
     printPP "let "
-    showPP (ppr b')
-    printPP " = "
-    exprPP e'
+    bindPP b
     printPP " in"
     indented $ do
         exprPP e
-exprPP (Let b@(Rec _) e) = printPP "RECURSIVE LET NOT IMPLEMENTED"
 exprPP (Case e _ _ alts) = do
     printPP "case " 
     exprPP e 
     printPP " of" 
-    indented $ mapM_ (\alt -> altPP alt >> newline) alts
+    indented $ mapM_ (\alt -> altPP alt >> newline) (reverse alts)
 exprPP (Cast e _) = exprPP e
-exprPP (Tick _ e) = printPP "Tick"
+exprPP (Tick _ e) = exprPP e
 exprPP (Type t) = pure () --printPP "@" >> showPP (ppr t)
 exprPP (Coercion _) = printPP "Coercion"
 
-altPP :: OutputableBndr a => Alt a -> CorePP
+altPP :: CoreAlt -> CorePP
 altPP (Alt con bs expr) = do
-    showPP (ppr con) 
+    if con == DEFAULT
+       then printPP "_"
+       else showPP (ppr con) 
     printPP " " 
     mapM (\b -> (showPP (ppr b)) >> printPP " ") bs 
     printPP "-> " 
