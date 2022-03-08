@@ -20,6 +20,8 @@ import GHC.Types.Tickish
 import GHC.Plugins
 import Data.Data
 
+import Generation
+
 data CoreTrace = CoreTrace deriving (Show, Data)
 
 data CorePPState = CorePPState { dynFlags :: DynFlags
@@ -50,7 +52,7 @@ install _ todo = do
     let myPass = \prevName -> CoreDoPluginPass "Nothing much" (pass state prevName)
     let firstPass = myPass "Desugared" 
     let passes = concat $ zipWith (\x y -> [x, y (ppr x)]) todo (repeat myPass)
-    pure (firstPass : passes)
+    pure (firstPass : passes ++ [printInfoPass])
 
 getAllTopLevelDefs :: [CoreBind] -> [(CoreBndr, CoreExpr)]
 getAllTopLevelDefs binds = concatMap go binds
@@ -75,6 +77,11 @@ annotatedFunctions guts = mapMaybeM f
               pure $ if length anns > 0 
                         then Just (showSDoc dflags (ppr b))
                         else Nothing
+
+printInfoPass :: CoreToDo
+printInfoPass = CoreDoPluginPass "Print Info" $ \guts -> do
+    liftIO $ saveToFile pageTest
+    pure guts
 
 
 pass :: IORef PluginState -> SDoc -> ModGuts -> CoreM ModGuts

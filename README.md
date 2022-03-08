@@ -332,7 +332,83 @@ Pretty:
         
 ```
 
+---
 
+`-ddump-core2core` gives some really extensive inlining information:
+
+```
+Considering inlining: $fNumInt_$c+
+  arg infos [NonTrivArg, NonTrivArg]
+  interesting continuation BoringCtxt
+  some_benefit True
+  is exp: True
+  is work-free: True
+  guidance ALWAYS_IF(arity=2,unsat_ok=True,boring_ok=False)
+  ANSWER = YES
+Inlining done: GHC.Num.$fNumInt_$c+
+    Inlined fn:  \ (ds_a70R [Occ=Once1!] :: GHC.Types.Int)
+                   (ds1_a70S [Occ=Once1!] :: GHC.Types.Int) ->
+                   case ds_a70R of { GHC.Types.I# x_a70U [Occ=Once1] ->
+                   case ds1_a70S of { GHC.Types.I# y_a70X [Occ=Once1] ->
+                   GHC.Types.I# (GHC.Prim.+# x_a70U y_a70X)
+                   }
+                   }
+    Cont:   ApplyToVal nodup hole GHC.Types.Int
+                                  -> GHC.Types.Int -> GHC.Types.Int
+              (Main.oneMore (GHC.Types.I# 5#))
+            ApplyToVal nodup hole GHC.Types.Int -> GHC.Types.Int
+              (Main.oneMore (GHC.Types.I# 6#))
+            Select nodup wild_a78t
+            Stop[BoringCtxt] GHC.Base.String
+Considering inlining: oneMore
+  arg infos [ValueArg]
+  interesting continuation BoringCtxt
+  some_benefit True
+  is exp: True
+  is work-free: True
+  guidance IF_ARGS [20] 51 20
+  case depth = 0
+  depth based penalty = 0
+  discounted size = 11
+  ANSWER = YES
+Inlining done: Main.oneMore
+    Inlined fn:  \ (ds_d70y [Occ=Once1!] :: GHC.Types.Int) ->
+                   case ds_d70y of { GHC.Types.I# ds_d70z [Occ=Once1!] ->
+                   case ds_d70z of ds_X1 [Occ=Once1] {
+                     __DEFAULT -> GHC.Types.I# (GHC.Prim.+# ds_X1 1#);
+                     0# -> GHC.Types.I# 1#
+                   }
+                   }
+    Cont:   ApplyToVal nodup hole GHC.Types.Int -> GHC.Types.Int
+              (GHC.Types.I# 5#)
+            Select nodup wild_a70T
+            Select nodup wild_a78t
+            Stop[BoringCtxt] GHC.Base.String
+Considering inlining: oneMore
+  arg infos [ValueArg]
+  interesting continuation BoringCtxt
+  some_benefit True
+  is exp: True
+  is work-free: True
+  guidance IF_ARGS [20] 51 20
+  case depth = 0
+  depth based penalty = 0
+  discounted size = 11
+  ANSWER = YES
+Inlining done: Main.oneMore
+    Inlined fn:  \ (ds_d70y [Occ=Once1!] :: GHC.Types.Int) ->
+                   case ds_d70y of { GHC.Types.I# ds_d70z [Occ=Once1!] ->
+                   case ds_d70z of ds_X1 [Occ=Once1] {
+                     __DEFAULT -> GHC.Types.I# (GHC.Prim.+# ds_X1 1#);
+                     0# -> GHC.Types.I# 1#
+                   }
+                   }
+    Cont:   ApplyToVal nodup hole GHC.Types.Int -> GHC.Types.Int
+              (GHC.Types.I# 6#)
+            Select nodup wild1_a70W
+            Select nodup wild_a78t
+            Stop[BoringCtxt] GHC.Base.String
+```
 
 
 

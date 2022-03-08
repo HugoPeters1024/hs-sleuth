@@ -5,8 +5,8 @@ import Data.Char
 
 {-# ANN oneMore CoreTrace #-}
 oneMore :: Int -> Int
-oneMore 0 = 0
-oneMore n = oneMore (n-2)
+oneMore 0 = 1
+oneMore n = n+1
 
 main :: IO ()
-main = putStrLn "hello world"
+main = print $ oneMore 5 + oneMore 6
