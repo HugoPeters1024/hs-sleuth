@@ -1,5 +1,9 @@
 This plugin is ongoing development for my thesis project:
 
+### Extra deps
+
+- Syntax highlighting is done with a python script that uses pygments, make sure it is installed globally
+
 ###  Useful links
 
 - Calling GHC from haskell: https://stackoverflow.com/questions/35449353/how-can-i-parse-ghc-core
