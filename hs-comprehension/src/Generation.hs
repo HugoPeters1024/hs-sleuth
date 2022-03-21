@@ -2,23 +2,38 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE PolyKinds #-}
 module Generation where
 
-import Data.String (IsString(..))
 import Control.Monad (forM_)
-import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes as A
-import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import System.IO.Temp
 import System.IO
-import qualified Data.ByteString as BS
 
 import GHC.Plugins
+import GHC.Records
 import System.Process
 
 import qualified Data.String.Interpolate as I (i)
+import Data.Maybe
+
+import IHP.HSX.QQ
+import IHP.HSX.ConvertibleStrings ()
+import IHP.HSX.ToHtml ()
+import Text.Blaze.Html5
+import Text.Blaze.Html.Renderer.Pretty (renderHtml)
+
 import PrettyPrinting
 import qualified CoreCollection as CC
+
+instance HasField (field :: k) r t => HasField field (Maybe r) (Maybe t) where
+    getField = fmap (getField @field)
+    
 
 data PassView  = PassView { info :: CC.PassInfo
                           , prevPass :: Maybe PassView
@@ -28,10 +43,12 @@ data PassView  = PassView { info :: CC.PassInfo
                           }
 
 data GlobalPassInfo = GlobalPassInfo { nrViews :: Int
+                                     , cssPath :: FilePath
                                      }
 
 collectInfo :: [PassView] -> GlobalPassInfo
 collectInfo views = GlobalPassInfo { nrViews = length views
+                                   , cssPath = "/tmp/hs-comprehension-style.css"
                                    }
 
 
@@ -42,7 +59,7 @@ infoToView info = do
     let ast_path = [I.i|/tmp/hs-comprehension-ast-#{idx}.html|]
 
     let code = info.ast
-    withFile ast_path WriteMode $ \h -> BS.hPut h [I.i|#{code}|]
+    withFile ast_path WriteMode $ \h -> hPutStr h [I.i|#{code}|]
 
     pure $ PassView { info = info
                     , prevPass = Nothing
@@ -53,16 +70,22 @@ infoToView info = do
 
 
 codeBlock :: String -> Html
-codeBlock code = H.pre ! A.class_ "code"  $ H.unsafeByteString [I.i| #{code}|]
+codeBlock code = [hsx|<pre class="code">{preEscapedToHtml code}</pre>|]
 
-maybeHtml :: Maybe Html -> Html
-maybeHtml Nothing = pure ()
-maybeHtml (Just html) = html
+buttonToPass :: Maybe PassView -> Html
+buttonToPass view = let
+    filepath = fromMaybe "#" view.filepath
+    title = fromMaybe "#" view.info.title
 
-buttonToPass :: PassView -> Html
-buttonToPass view = H.a ! A.href [I.i|#{filepath view}|] $ do
-                        H.button (toHtml view.info.title)
+    in [hsx|<a class="pass-btn" href={filepath}><button>{title}</button></a>|]
 
+outputCss :: GlobalPassInfo -> IO ()
+outputCss globals = let 
+    css = [I.i|#{myCss}
+               #{pygmentCss}
+               #{ansiCss}]|]
+
+    in withFile globals.cssPath WriteMode $ \h -> hPutStr h css
 
 renderPass :: GlobalPassInfo -> PassView -> IO Html
 renderPass globals view = do
@@ -70,40 +93,39 @@ renderPass globals view = do
     diff_colored <- case view.prevPass of
                         Nothing -> pure ""
                         Just prevPass -> diffFiles prevPass.ast_filepath view.ast_filepath
-    pure $ docTypeHtml $ do
-        H.head $ do
-            H.title $ H.string view.info.title
-            H.style $ do
-                H.unsafeByteString myCss
-                H.unsafeByteString pygmentCss
-                H.unsafeByteString ansiCss
-        H.body $ do
-            let title = view.info.title
-                idx = view.info.idx
-                total = globals.nrViews
-            H.h1 $ [I.i|#{title} #{idx}/#{total}|]
-            H.hr
-            H.div $ do
-                maybeHtml $ buttonToPass <$> view.prevPass
-                maybeHtml $ buttonToPass <$> view.nextPass
-            H.hr
-            codeBlock guts_colored
-            maybeHtml $ view.prevPass >>= \prevPass -> Just $ H.p $ do
-                let hrefv = prevPass.ast_filepath
-                (H.a ! A.href [I.i|#{hrefv}|]) (H.string prevPass.ast_filepath)
-            maybeHtml $ view.nextPass >>= \nextPass -> Just $ H.p $ do
-                let hrefv = nextPass.ast_filepath
-                (H.a ! A.href [I.i|#{hrefv}|]) (H.string nextPass.ast_filepath)
-            codeBlock diff_colored
+    let title = view.info.title
+    let idx = view.info.idx
+    let nrViews = globals.nrViews
+
+    let prevPass = view.prevPass
+    let nextPass = view.nextPass
+    pure $ 
+        [hsx|
+        <html>
+            <head>
+                <title>{title}</title>
+                <link rel="stylesheet" href="file:///tmp/hs-comprehension-style.css">
+            </head>
+            <body>
+                <h1>{title} {idx}/{nrViews}</h1>
+                <div class="button-container">
+                    {buttonToPass prevPass}
+                    {buttonToPass nextPass}
+                </div>
+                {codeBlock guts_colored}
+                {codeBlock diff_colored}
+            </body>
+        </html>
+        |]
         
 saveToFile :: FilePath -> Html -> IO ()
 saveToFile path html = 
     let 
-        bs :: BS.ByteString
-        bs = BS.toStrict $ renderHtml html 
+        bs :: String
+        bs = renderHtml html 
     in 
         withFile path WriteMode $ \handle -> do
-            BS.hPutStr handle bs
+            hPutStr handle bs
             putStrLn $ "file://" ++ path
 
 highlight :: String -> IO String
@@ -114,14 +136,24 @@ diffFiles lhs rhs = do
     ret <- readProcess "/home/hugo/repos/hs-comprehension/hs-comprehension/scripts/diff.sh" [lhs, rhs] mempty
     pure $ if ret == mempty then "The files are the same" else ret
 
-myCss :: BS.ByteString
-myCss = [I.i|
+myCss :: Html
+myCss = preEscapedToHtml @String [I.i|
+    .button-container {
+        display: flex;
+    }
+    .pass-btn button {
+        width: 100%;
+        padding: 2em;
+        font-size: 24px;
+    }
+    .pass-btn {
+        width: 100%;
+    }
 |]
 
-pygmentCss :: BS.ByteString
-pygmentCss = [I.i| 
-    .hll { background-color: #49483e }
-    .c { color: #95917e } /* Comment */
+pygmentCss :: Html
+pygmentCss = preEscapedToHtml @String [I.i| 
+    .hll { backgroun17e } /* Comment */
     .err { color: #960050; background-color: #1e0010 } /* Error */
     .k { color: #66d9ef } /* Keyword */
     .l { color: #ae81ff } /* Literal */
@@ -191,8 +223,8 @@ pygmentCss = [I.i|
     pre.code { color: #FFFFFF; background-color: #173E46; padding: 2em; }
     |]
 
-ansiCss :: BS.ByteString
-ansiCss = [I.i|
+ansiCss :: Html
+ansiCss = preEscapedToHtml @String $ [I.i|
     .ansi2html-content { display: inline; white-space: pre-wrap; word-wrap: break-word; }
     .body_foreground { color: #AAAAAA; }
     .body_background { background-color: #000000; }

@@ -73,6 +73,9 @@ printInfoPass ref = CoreDoPluginPass "Print Info" $ \guts -> do
     -- annotate with previous and next pass if available
     let views' = annPassViews views
     let globalInfo = collectInfo views'
+
+    liftIO $ outputCss globalInfo
+
     forM_ views' $ \view -> do 
         putMsgS $ "dumping output after " ++ view.info.title
         liftIO $ renderPass globalInfo view >>= saveToFile view.filepath
