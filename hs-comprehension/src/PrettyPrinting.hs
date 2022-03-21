@@ -64,6 +64,7 @@ bindPP (Rec _) = printPP "co-recursive functions not supported yet..."
 exprPP :: CoreExpr -> CorePP
 exprPP (Var i) = showPP (ppr i)
 exprPP (Lit lit) = showPP (ppr lit)
+exprPP (App e (Type t)) = exprPP e
 exprPP (App e@(Var ev) a) = let opName = showSDocUnsafe (ppr (varName ev))
                              in if any isLetter opName 
                                     then exprPP e >> printPP " " >> parensPP a
@@ -87,7 +88,7 @@ exprPP (Case e _ _ alts) = do
     indented $ mapM_ (\alt -> altPP alt >> newline) (reverse alts)
 exprPP (Cast e _) = exprPP e
 exprPP (Tick _ e) = exprPP e
-exprPP (Type t) = pure () --printPP "@" >> showPP (ppr t)
+exprPP (Type t) = printPP "@" >> showPP (ppr t)
 exprPP (Coercion _) = printPP "Coercion"
 
 altPP :: CoreAlt -> CorePP

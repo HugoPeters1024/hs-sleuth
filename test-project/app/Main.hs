@@ -9,4 +9,4 @@ oneMore 0 = 1
 oneMore n = n+1
 
 main :: IO ()
-main = print $ oneMore 5 + oneMore 6
+main = pure ()

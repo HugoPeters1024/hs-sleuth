@@ -25,6 +25,7 @@ import CoreCollection
 plugin :: Plugin
 plugin = defaultPlugin
   { installCoreToDos = install
+  , pluginRecompile = purePlugin
   }
 
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
@@ -73,7 +74,7 @@ printInfoPass ref = CoreDoPluginPass "Print Info" $ \guts -> do
     let views' = annPassViews views
     let globalInfo = collectInfo views'
     forM_ views' $ \view -> do 
-        putMsgS $ "dumping output after " ++ view.title
+        putMsgS $ "dumping output after " ++ view.info.title
         liftIO $ renderPass globalInfo view >>= saveToFile view.filepath
 
     pure guts

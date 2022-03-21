@@ -38,6 +38,12 @@ how to be resilient to different kinds of noise introduced by artifacts
 
 ### Scratch Board
 
+diff command:
+
+```<pre>diff --color=always -s src/HsComprehension.hs src/HsComprehension2.hs | ansi2html --partial &gt; output.html
+</pre>```
+
+
 I don't understand the different outputs from the compiler flag and this plugin. Check out this example:
 
 ```
