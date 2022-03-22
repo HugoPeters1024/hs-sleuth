@@ -3,7 +3,7 @@
         <title>
             Simplifier
         </title>
-        <link rel="stylesheet" href="file:///tmp/hs-comprehension-style.css">
+        <link rel="stylesheet" href="hs-comprehension-style.css">
     </head>
     <body>
         <h1>
@@ -14,25 +14,25 @@
             20
         </h1>
         <div class="button-container">
-            <a class="pass-btn" href="/tmp/hs-comprehension-1.html">
+            <a class="pass-btn" href="hs-comprehension-1.html">
                 <button>
                     Desugared
                 </button>
             </a>
              
-            <a class="pass-btn" href="/tmp/hs-comprehension-3.html">
+            <a class="pass-btn" href="hs-comprehension-3.html">
                 <button>
                     Specialise
                 </button>
             </a>
         </div>
         <pre class="code">
-            <div class="highlight"><pre><span></span><span class="o">$</span><span class="n">trModule_s6LB</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
-<span class="o">$</span><span class="n">trModule_s6LC</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s6LB</span>
-<span class="o">$</span><span class="n">trModule_s6LD</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
-<span class="o">$</span><span class="n">trModule_s6LE</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s6LD</span>
-<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_s6LC</span> <span class="o">$</span><span class="n">trModule_s6LE</span>
-<span class="nf">test</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
+            <div class="highlight"><pre><span></span><span class="o">$</span><span class="n">trModule_sUM</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sUN</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sUM</span>
+<span class="o">$</span><span class="n">trModule_sUO</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sUP</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sUO</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_sUN</span> <span class="o">$</span><span class="n">trModule_sUP</span>
+<span class="nf">fusion</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
     <span class="n">build</span> <span class="p">(</span><span class="nf">\</span><span class="n">b1</span> <span class="ow">-&gt;</span> 
         <span class="nf">\</span><span class="n">c</span> <span class="ow">-&gt;</span> 
             <span class="nf">\</span><span class="n">n</span> <span class="ow">-&gt;</span> 
@@ -46,12 +46,12 @@
         
     <span class="p">)</span>
 
-<span class="nf">main_s6Oa</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+<span class="nf">main_sXl</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
     <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
 
-<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s6Oa</span>
-<span class="nf">main_s7sJ</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_s6Oa</span><span class="p">)</span>
-<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s7sJ</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_sXl</span>
+<span class="nf">main_s1CA</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_sXl</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1CA</span>
 </pre></div>
 
 
@@ -59,12 +59,12 @@
         <pre class="diff">
             
 <span class="ansi1">diff --git a/tmp/hs-comprehension-ast-1.html b/tmp/hs-comprehension-ast-2.html</span>
-<span class="ansi1">index 57335f1..78c9056 100644</span>
+<span class="ansi1">index 449d1bc..b83db63 100644</span>
 <span class="ansi1">--- a/tmp/hs-comprehension-ast-1.html</span>
 <span class="ansi1">+++ b/tmp/hs-comprehension-ast-2.html</span>
 <span class="ansi36">@@ -1,12 +1,25 @@</span>
 <span class="ansi31">-$trModule = Module (TrNameS "main"#) (TrNameS "Main"#)</span>
-<span class="ansi31">-test = . (map (let v_B1 = + $fNumInt in</span>
+<span class="ansi31">-fusion = . (map (let v_B1 = + $fNumInt in</span>
 <span class="ansi31">-    let v_B3 = I# 1# in</span>
 <span class="ansi31">-        \v_B2 -&gt; </span>
 <span class="ansi31">-            v_B1 v_B2 v_B3</span>
@@ -75,12 +75,12 @@
 <span class="ansi31">-))</span>
 <span class="ansi31">-main = pure $fApplicativeIO ()</span>
 <span class="ansi31">-main = runMainIO main</span>
-<span class="ansi32">+</span><span class="ansi32">$trModule_s6LB = "main"#</span>
-<span class="ansi32">+</span><span class="ansi32">$trModule_s6LC = TrNameS $trModule_s6LB</span>
-<span class="ansi32">+</span><span class="ansi32">$trModule_s6LD = "Main"#</span>
-<span class="ansi32">+</span><span class="ansi32">$trModule_s6LE = TrNameS $trModule_s6LD</span>
-<span class="ansi32">+</span><span class="ansi32">$trModule = Module $trModule_s6LC $trModule_s6LE</span>
-<span class="ansi32">+</span><span class="ansi32">test = \x -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_sUM = "main"#</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_sUN = TrNameS $trModule_sUM</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_sUO = "Main"#</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_sUP = TrNameS $trModule_sUO</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule = Module $trModule_sUN $trModule_sUP</span>
+<span class="ansi32">+</span><span class="ansi32">fusion = \x -&gt;</span><span class="ansi41"> </span>
 <span class="ansi32">+</span><span class="ansi32">    build (\b1 -&gt;</span><span class="ansi41"> </span>
 <span class="ansi32">+</span><span class="ansi32">        \c -&gt;</span><span class="ansi41"> </span>
 <span class="ansi32">+</span><span class="ansi32">            \n -&gt;</span><span class="ansi41"> </span>
@@ -94,12 +94,12 @@
 <span class="ansi32">+</span><span class="ansi41">        </span>
 <span class="ansi32">+</span><span class="ansi32">    )</span>
 <span class="ansi32">+</span>
-<span class="ansi32">+</span><span class="ansi32">main_s6Oa = \s -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">main_sXl = \s -&gt;</span><span class="ansi41"> </span>
 <span class="ansi32">+</span><span class="ansi32">    (#,#) s ()</span>
 <span class="ansi32">+</span>
-<span class="ansi32">+</span><span class="ansi32">main = main_s6Oa</span>
-<span class="ansi32">+</span><span class="ansi32">main_s7sJ = runMainIO1 (main_s6Oa)</span>
-<span class="ansi32">+</span><span class="ansi32">main = main_s7sJ</span>
+<span class="ansi32">+</span><span class="ansi32">main = main_sXl</span>
+<span class="ansi32">+</span><span class="ansi32">main_s1CA = runMainIO1 (main_sXl)</span>
+<span class="ansi32">+</span><span class="ansi32">main = main_s1CA</span>
 
         </pre>
     </body>

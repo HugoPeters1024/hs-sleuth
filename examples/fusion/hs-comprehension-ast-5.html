@@ -1,26 +1,26 @@
-$trModule_s6LB = "main"#
-$trModule_s6LC = TrNameS $trModule_s6LB
-$trModule_s6LD = "Main"#
-$trModule_s6LE = TrNameS $trModule_s6LD
-$trModule = Module $trModule_s6LC $trModule_s6LE
-lvl_s7sK = \x -> 
+$trModule_sUM = "main"#
+$trModule_sUN = TrNameS $trModule_sUM
+$trModule_sUO = "Main"#
+$trModule_sUP = TrNameS $trModule_sUO
+$trModule = Module $trModule_sUN $trModule_sUP
+lvl_s1CB = \x -> 
     case x of
         I# y -> I# (11# -# y)
         
     
 
-test = \x -> 
+fusion = \x -> 
     build (\b1 -> 
         \c -> 
             \n -> 
-                foldr (mapFB c lvl_s7sK) n x
+                foldr (mapFB c lvl_s1CB) n x
             
         
     )
 
-main_s6Oa = \s -> 
+main_sXl = \s -> 
     (#,#) s ()
 
-main = main_s6Oa
-main_s7sJ = runMainIO1 (main_s6Oa)
-main = main_s7sJ
+main = main_sXl
+main_s1CA = runMainIO1 (main_sXl)
+main = main_s1CA

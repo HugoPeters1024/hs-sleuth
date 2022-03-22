@@ -3,7 +3,7 @@
         <title>
             Common sub-expression
         </title>
-        <link rel="stylesheet" href="file:///tmp/hs-comprehension-style.css">
+        <link rel="stylesheet" href="hs-comprehension-style.css">
     </head>
     <body>
         <h1>
@@ -14,39 +14,39 @@
             20
         </h1>
         <div class="button-container">
-            <a class="pass-btn" href="/tmp/hs-comprehension-16.html">
+            <a class="pass-btn" href="hs-comprehension-16.html">
                 <button>
                     Float out(FOS {Lam = Just 0, Consts = True, OverSatApps = True})
                 </button>
             </a>
              
-            <a class="pass-btn" href="/tmp/hs-comprehension-18.html">
+            <a class="pass-btn" href="hs-comprehension-18.html">
                 <button>
                     Float inwards
                 </button>
             </a>
         </div>
         <pre class="code">
-            <div class="highlight"><pre><span></span><span class="o">$</span><span class="n">trModule_s6LB</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
-<span class="o">$</span><span class="n">trModule_s6LC</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s6LB</span>
-<span class="o">$</span><span class="n">trModule_s6LD</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
-<span class="o">$</span><span class="n">trModule_s6LE</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s6LD</span>
-<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_s6LC</span> <span class="o">$</span><span class="n">trModule_s6LE</span>
-<span class="nf">lvl_s7sK</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
+            <div class="highlight"><pre><span></span><span class="o">$</span><span class="n">trModule_sUM</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sUN</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sUM</span>
+<span class="o">$</span><span class="n">trModule_sUO</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sUP</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sUO</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_sUN</span> <span class="o">$</span><span class="n">trModule_sUP</span>
+<span class="nf">lvl_s1CB</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
     <span class="kr">case</span> <span class="n">x</span> <span class="kr">of</span>
         <span class="kt">I</span><span class="o">#</span> <span class="n">y</span> <span class="ow">-&gt;</span> <span class="kt">I</span><span class="o">#</span> <span class="p">(</span><span class="mi">11</span><span class="o">#</span> <span class="o">-#</span> <span class="n">y</span><span class="p">)</span>
         
     
 
-<span class="nf">test</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
-    <span class="n">map</span> <span class="n">lvl_s7sK</span> <span class="n">x</span>
+<span class="nf">fusion</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
+    <span class="n">map</span> <span class="n">lvl_s1CB</span> <span class="n">x</span>
 
-<span class="nf">main_s6Oa</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+<span class="nf">main_sXl</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
     <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
 
-<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s6Oa</span>
-<span class="nf">main_s7sJ</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="n">main</span>
-<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s7sJ</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_sXl</span>
+<span class="nf">main_s1CA</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="n">main</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1CA</span>
 </pre></div>
 
 
@@ -54,16 +54,16 @@
         <pre class="diff">
             
 <span class="ansi1">diff --git a/tmp/hs-comprehension-ast-16.html b/tmp/hs-comprehension-ast-17.html</span>
-<span class="ansi1">index 4d55af9..6728cf8 100644</span>
+<span class="ansi1">index 12f0476..23aac68 100644</span>
 <span class="ansi1">--- a/tmp/hs-comprehension-ast-16.html</span>
 <span class="ansi1">+++ b/tmp/hs-comprehension-ast-17.html</span>
-<span class="ansi36">@@ -16,5 +16,5 @@</span> main_s6Oa = \s -&gt;
+<span class="ansi36">@@ -16,5 +16,5 @@</span> main_sXl = \s -&gt;
      (#,#) s ()
  
- main = main_s6Oa
-<span class="ansi31">-main_s7sJ = runMainIO1 (main_s6Oa)</span>
-<span class="ansi32">+</span><span class="ansi32">main_s7sJ = runMainIO1 main</span>
- main = main_s7sJ
+ main = main_sXl
+<span class="ansi31">-main_s1CA = runMainIO1 (main_sXl)</span>
+<span class="ansi32">+</span><span class="ansi32">main_s1CA = runMainIO1 main</span>
+ main = main_s1CA
 
         </pre>
     </body>

@@ -1,0 +1,139 @@
+<html>
+    <head>
+        <title>
+            Simplifier
+        </title>
+        <link rel="stylesheet" href="file:///tmp/hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Simplifier
+             
+            7
+            /
+            20
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="hs-comprehension-6.html">
+                <button>
+                    Simplifier
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="hs-comprehension-8.html">
+                <button>
+                    Float inwards
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="nf">uppercaseLength</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">xs</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">xs</span> <span class="kr">of</span>
+        <span class="kt">Text</span> <span class="n">dt</span> <span class="n">dt1</span> <span class="n">dt2</span> <span class="ow">-&gt;</span> <span class="kr">let</span> <span class="n">end</span> <span class="ow">=</span> <span class="n">dt1</span> <span class="o">+#</span> <span class="n">dt2</span> <span class="kr">in</span>
+            <span class="kr">let</span> <span class="n">loop_length</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">z</span> <span class="ow">-&gt;</span> 
+                <span class="nf">\</span><span class="n">s1</span> <span class="ow">-&gt;</span> 
+                    <span class="kr">case</span> <span class="n">z</span> <span class="kr">of</span>
+                        <span class="kt">I</span><span class="o">#</span> <span class="n">ipv</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">s1</span> <span class="kr">of</span>
+                            <span class="kt">I</span><span class="o">#</span> <span class="n">ipv</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">ipv</span> <span class="o">&gt;=#</span> <span class="n">end</span> <span class="kr">of</span>
+                                <span class="mi">1</span><span class="o">#</span> <span class="ow">-&gt;</span> <span class="n">z1</span>
+                                <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">indexWord16Array</span><span class="o">#</span> <span class="n">dt</span> <span class="n">ipv</span> <span class="kr">of</span>
+                                    <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="kr">let</span> <span class="o">$</span><span class="n">j</span> <span class="ow">=</span> <span class="n">loop_length</span> <span class="p">(</span><span class="kt">I</span><span class="o">#</span> <span class="p">(</span><span class="n">ipv</span> <span class="o">+#</span> <span class="mi">1</span><span class="o">#</span><span class="p">))</span> <span class="p">(</span><span class="kt">I</span><span class="o">#</span> <span class="p">(</span><span class="n">ipv</span> <span class="o">+#</span> <span class="mi">1</span><span class="o">#</span><span class="p">))</span> <span class="kr">in</span>
+                                        <span class="kr">case</span> <span class="n">geWord16</span><span class="o">#</span> <span class="n">r</span><span class="o">#</span> <span class="mi">55296</span><span class="o">##</span><span class="mi">16</span> <span class="kr">of</span>
+                                            <span class="mi">1</span><span class="o">#</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">leWord16</span><span class="o">#</span> <span class="n">r</span><span class="o">#</span> <span class="mi">56319</span><span class="o">##</span><span class="mi">16</span> <span class="kr">of</span>
+                                                <span class="mi">1</span><span class="o">#</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">indexWord16Array</span><span class="o">#</span> <span class="n">dt</span> <span class="p">(</span><span class="n">ipv</span> <span class="o">+#</span> <span class="mi">1</span><span class="o">#</span><span class="p">)</span> <span class="kr">of</span>
+                                                    <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="n">loop_length</span> <span class="p">(</span><span class="kt">I</span><span class="o">#</span> <span class="p">(</span><span class="n">ipv</span> <span class="o">+#</span> <span class="mi">1</span><span class="o">#</span><span class="p">))</span> <span class="p">(</span><span class="kt">I</span><span class="o">#</span> <span class="p">(</span><span class="n">ipv</span> <span class="o">+#</span> <span class="mi">2</span><span class="o">#</span><span class="p">))</span>
+                                                    
+                                                
+                                                <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="o">$</span><span class="n">j</span>
+                                                
+                                            
+                                            <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="o">$</span><span class="n">j</span>
+                                            
+                                        
+                                    
+                                    
+                                
+                                
+                            
+                            
+                        
+                        
+                    
+                
+             <span class="kr">in</span>
+                <span class="n">loop_length</span> <span class="p">(</span><span class="kt">I</span><span class="o">#</span> <span class="mi">0</span><span class="o">#</span><span class="p">)</span> <span class="p">(</span><span class="kt">I</span><span class="o">#</span> <span class="n">dt1</span><span class="p">)</span>
+            
+        
+        
+    
+
+<span class="o">$</span><span class="n">trModule_sXj</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sXk</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sXj</span>
+<span class="o">$</span><span class="n">trModule_sXl</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sXm</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sXl</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_sXk</span> <span class="o">$</span><span class="n">trModule_sXm</span>
+<span class="nf">main_sXY</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+    <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_sXY</span>
+<span class="nf">main_s1D8</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_sXY</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1D8</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+<span class="ansi1">diff --git a/hs-comprehension-ast-6.html b/hs-comprehension-ast-7.html</span>
+<span class="ansi1">index 5d04d2f..9d28239 100644</span>
+<span class="ansi1">--- a/hs-comprehension-ast-6.html</span>
+<span class="ansi1">+++ b/hs-comprehension-ast-7.html</span>
+<span class="ansi36">@@ -1,5 +1,42 @@</span>
+ uppercaseLength = \xs -&gt; 
+<span class="ansi31">-    length (map safe (stream xs))</span>
+<span class="ansi32">+</span><span class="ansi32">    case xs of</span>
+<span class="ansi32">+</span><span class="ansi32">        Text dt dt1 dt2 -&gt; let end = dt1 +# dt2 in</span>
+<span class="ansi32">+</span><span class="ansi32">            let loop_length = \z -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">                \s1 -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">                    case z of</span>
+<span class="ansi32">+</span><span class="ansi32">                        I# ipv -&gt; case s1 of</span>
+<span class="ansi32">+</span><span class="ansi32">                            I# ipv -&gt; case ipv &gt;=# end of</span>
+<span class="ansi32">+</span><span class="ansi32">                                1# -&gt; z1</span>
+<span class="ansi32">+</span><span class="ansi32">                                _ -&gt; case indexWord16Array# dt ipv of</span>
+<span class="ansi32">+</span><span class="ansi32">                                    _ -&gt; let $j = loop_length (I# (ipv +# 1#)) (I# (ipv +# 1#)) in</span>
+<span class="ansi32">+</span><span class="ansi32">                                        case geWord16# r# 55296##16 of</span>
+<span class="ansi32">+</span><span class="ansi32">                                            1# -&gt; case leWord16# r# 56319##16 of</span>
+<span class="ansi32">+</span><span class="ansi32">                                                1# -&gt; case indexWord16Array# dt (ipv +# 1#) of</span>
+<span class="ansi32">+</span><span class="ansi32">                                                    _ -&gt; loop_length (I# (ipv +# 1#)) (I# (ipv +# 2#))</span>
+<span class="ansi32">+</span><span class="ansi41">                                                    </span>
+<span class="ansi32">+</span><span class="ansi41">                                                </span>
+<span class="ansi32">+</span><span class="ansi32">                                                _ -&gt; $j</span>
+<span class="ansi32">+</span><span class="ansi41">                                                </span>
+<span class="ansi32">+</span><span class="ansi41">                                            </span>
+<span class="ansi32">+</span><span class="ansi32">                                            _ -&gt; $j</span>
+<span class="ansi32">+</span><span class="ansi41">                                            </span>
+<span class="ansi32">+</span><span class="ansi41">                                        </span>
+<span class="ansi32">+</span><span class="ansi41">                                    </span>
+<span class="ansi32">+</span><span class="ansi41">                                    </span>
+<span class="ansi32">+</span><span class="ansi41">                                </span>
+<span class="ansi32">+</span><span class="ansi41">                                </span>
+<span class="ansi32">+</span><span class="ansi41">                            </span>
+<span class="ansi32">+</span><span class="ansi41">                            </span>
+<span class="ansi32">+</span><span class="ansi41">                        </span>
+<span class="ansi32">+</span><span class="ansi41">                        </span>
+<span class="ansi32">+</span><span class="ansi41">                    </span>
+<span class="ansi32">+</span><span class="ansi41">                </span>
+<span class="ansi32">+</span><span class="ansi32">             in</span>
+<span class="ansi32">+</span><span class="ansi32">                loop_length (I# 0#) (I# dt1)</span>
+<span class="ansi32">+</span><span class="ansi41">            </span>
+<span class="ansi32">+</span><span class="ansi41">        </span>
+<span class="ansi32">+</span><span class="ansi41">        </span>
+<span class="ansi32">+</span><span class="ansi41">    </span>
+ 
+ $trModule_sXj = "main"#
+ $trModule_sXk = TrNameS $trModule_sXj
+
+        </pre>
+    </body>
+</html>
+

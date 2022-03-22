@@ -1,11 +1,7 @@
 module Main where
 
-import Data.Char (toUpper)
-import Data.Text (Text)
-import qualified Data.Text as T
-
-uppercaseLength :: Text -> Int
-uppercaseLength xs = T.length (T.map id xs)
+test :: [Int]
+test = map (+1) (map (+1) [1000])
 
 main :: IO ()
 main = pure ()

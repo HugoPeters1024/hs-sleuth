@@ -1,0 +1,21 @@
+$trModule_sJl = "main"#
+$trModule_sJm = TrNameS $trModule_sJl
+$trModule_sJn = "Main"#
+$trModule_sJo = TrNameS $trModule_sJn
+$trModule = Module $trModule_sJm $trModule_sJo
+test = mapFB (\ds -> 
+    \ds1 -> 
+        : ds ds1
+    
+) (\x -> 
+    case x of
+        I# x -> I# (2# +# x)
+        
+    
+) (I# 1000#) ([])
+main_sLM = \s -> 
+    (#,#) s ()
+
+main = main_sLM
+main_s1rH = runMainIO1 (main_sLM)
+main = main_s1rH

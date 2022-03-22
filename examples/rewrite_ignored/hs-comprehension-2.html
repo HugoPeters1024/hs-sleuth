@@ -1,0 +1,108 @@
+<html>
+    <head>
+        <title>
+            Simplifier
+        </title>
+        <link rel="stylesheet" href="hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Simplifier
+             
+            2
+            /
+            20
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="hs-comprehension-1.html">
+                <button>
+                    Desugared
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="hs-comprehension-3.html">
+                <button>
+                    Specialise
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="o">$</span><span class="n">trModule_sJl</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sJm</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sJl</span>
+<span class="o">$</span><span class="n">trModule_sJn</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sJo</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sJn</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_sJm</span> <span class="o">$</span><span class="n">trModule_sJo</span>
+<span class="nf">test</span> <span class="ow">=</span> <span class="n">build</span> <span class="p">(</span><span class="nf">\</span><span class="n">b1</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">c</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">n</span> <span class="ow">-&gt;</span> 
+            <span class="n">mapFB</span> <span class="n">c</span> <span class="p">(</span><span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
+                <span class="kr">case</span> <span class="n">x</span> <span class="kr">of</span>
+                    <span class="kt">I</span><span class="o">#</span> <span class="n">x</span> <span class="ow">-&gt;</span> <span class="kt">I</span><span class="o">#</span> <span class="p">(</span><span class="mi">2</span><span class="o">#</span> <span class="o">+#</span> <span class="n">x</span><span class="p">)</span>
+                    
+                
+            <span class="p">)</span> <span class="p">(</span><span class="kt">I</span><span class="o">#</span> <span class="mi">1000</span><span class="o">#</span><span class="p">)</span> <span class="n">n</span>
+        
+    
+<span class="p">)</span>
+<span class="nf">main_sLM</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+    <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_sLM</span>
+<span class="nf">main_s1rH</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_sLM</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1rH</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+<span class="ansi1">diff --git a/tmp/hs-comprehension-ast-1.html b/tmp/hs-comprehension-ast-2.html</span>
+<span class="ansi1">index 62ce23c..acb4b0c 100644</span>
+<span class="ansi1">--- a/tmp/hs-comprehension-ast-1.html</span>
+<span class="ansi1">+++ b/tmp/hs-comprehension-ast-2.html</span>
+<span class="ansi36">@@ -1,22 +1,23 @@</span>
+<span class="ansi31">-$trModule = Module (TrNameS "main"#) (TrNameS "Main"#)</span>
+<span class="ansi31">-test = map (let v_B1 = + $fNumInt in</span>
+<span class="ansi31">-    let v_B3 = I# 1# in</span>
+<span class="ansi31">-        \v_B2 -&gt; </span>
+<span class="ansi31">-            v_B1 v_B2 v_B3</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_sJl = "main"#</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_sJm = TrNameS $trModule_sJl</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_sJn = "Main"#</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_sJo = TrNameS $trModule_sJn</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule = Module $trModule_sJm $trModule_sJo</span>
+<span class="ansi32">+</span><span class="ansi32">test = build (\b1 -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">    \c -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">        \n -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">            mapFB c (\x -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">                case x of</span>
+<span class="ansi32">+</span><span class="ansi32">                    I# x -&gt; I# (2# +# x)</span>
+                     
+                 
+<span class="ansi31">-) (map (let v_B1 = + $fNumInt in</span>
+<span class="ansi31">-    let v_B3 = I# 1# in</span>
+<span class="ansi31">-        \v_B2 -&gt; </span>
+<span class="ansi31">-            v_B1 v_B2 v_B3</span>
+<span class="ansi32">+</span><span class="ansi32">            ) (I# 1000#) n</span>
+         
+     
+<span class="ansi31">-) (build (\a -&gt; </span>
+<span class="ansi31">-    \c_dJa -&gt; </span>
+<span class="ansi31">-        \n_dJb -&gt; </span>
+<span class="ansi31">-            c_dJa (I# 1000#) n_dJb</span>
+<span class="ansi32">+</span><span class="ansi32">)</span>
+<span class="ansi32">+</span><span class="ansi32">main_sLM = \s -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">    (#,#) s ()</span>
+ 
+<span class="ansi31">-    </span>
+<span class="ansi31">-)))</span>
+<span class="ansi31">-main = pure $fApplicativeIO ()</span>
+<span class="ansi31">-main = runMainIO main</span>
+<span class="ansi32">+</span><span class="ansi32">main = main_sLM</span>
+<span class="ansi32">+</span><span class="ansi32">main_s1rH = runMainIO1 (main_sLM)</span>
+<span class="ansi32">+</span><span class="ansi32">main = main_s1rH</span>
+
+        </pre>
+    </body>
+</html>
+

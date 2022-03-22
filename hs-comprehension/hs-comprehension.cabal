@@ -40,5 +40,6 @@ library
                     , ihp-hsx
                     , blaze-html
                     , text
+                    , filepath
     hs-source-dirs:   src
     default-language: Haskell2010

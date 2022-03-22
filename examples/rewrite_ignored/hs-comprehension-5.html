@@ -1,0 +1,95 @@
+<html>
+    <head>
+        <title>
+            Simplifier
+        </title>
+        <link rel="stylesheet" href="hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Simplifier
+             
+            5
+            /
+            20
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="hs-comprehension-4.html">
+                <button>
+                    Float out(FOS {Lam = Just 0, Consts = True, OverSatApps = False})
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="hs-comprehension-6.html">
+                <button>
+                    Simplifier
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="o">$</span><span class="n">trModule_sJl</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sJm</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sJl</span>
+<span class="o">$</span><span class="n">trModule_sJn</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sJo</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sJn</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_sJm</span> <span class="o">$</span><span class="n">trModule_sJo</span>
+<span class="nf">test</span> <span class="ow">=</span> <span class="n">build</span> <span class="p">(</span><span class="nf">\</span><span class="n">b1</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">c</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">n</span> <span class="ow">-&gt;</span> 
+            <span class="n">mapFB</span> <span class="n">c</span> <span class="p">(</span><span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
+                <span class="kr">case</span> <span class="n">x</span> <span class="kr">of</span>
+                    <span class="kt">I</span><span class="o">#</span> <span class="n">x</span> <span class="ow">-&gt;</span> <span class="kt">I</span><span class="o">#</span> <span class="p">(</span><span class="mi">2</span><span class="o">#</span> <span class="o">+#</span> <span class="n">x</span><span class="p">)</span>
+                    
+                
+            <span class="p">)</span> <span class="p">(</span><span class="kt">I</span><span class="o">#</span> <span class="mi">1000</span><span class="o">#</span><span class="p">)</span> <span class="n">n</span>
+        
+    
+<span class="p">)</span>
+<span class="nf">main_sLM</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+    <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_sLM</span>
+<span class="nf">main_s1rH</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_sLM</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1rH</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+<span class="ansi1">diff --git a/tmp/hs-comprehension-ast-4.html b/tmp/hs-comprehension-ast-5.html</span>
+<span class="ansi1">index a0059e2..acb4b0c 100644</span>
+<span class="ansi1">--- a/tmp/hs-comprehension-ast-4.html</span>
+<span class="ansi1">+++ b/tmp/hs-comprehension-ast-5.html</span>
+<span class="ansi36">@@ -3,21 +3,18 @@</span> $trModule_sJm = TrNameS $trModule_sJl
+ $trModule_sJn = "Main"#
+ $trModule_sJo = TrNameS $trModule_sJn
+ $trModule = Module $trModule_sJm $trModule_sJo
+<span class="ansi31">-lvl_s1rI = \x -&gt; </span>
+<span class="ansi32">+</span><span class="ansi32">test = build (\b1 -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">    \c -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">        \n -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">            mapFB c (\x -&gt;</span><span class="ansi41"> </span>
+                 case x of
+                     I# x -&gt; I# (2# +# x)
+                     
+                 
+<span class="ansi31">-</span>
+<span class="ansi31">-lvl_s1rJ = I# 1000#</span>
+<span class="ansi31">-lvl_s1rK = \b1 -&gt; </span>
+<span class="ansi31">-    \c -&gt; </span>
+<span class="ansi31">-        \n -&gt; </span>
+<span class="ansi31">-            mapFB c lvl_s1rI lvl_s1rJ n</span>
+<span class="ansi31">-        </span>
+<span class="ansi32">+</span><span class="ansi32">            ) (I# 1000#) n</span>
+         
+     
+<span class="ansi31">-test = build lvl_s1rK</span>
+<span class="ansi32">+</span><span class="ansi32">)</span>
+ main_sLM = \s -&gt; 
+     (#,#) s ()
+ 
+
+        </pre>
+    </body>
+</html>
+

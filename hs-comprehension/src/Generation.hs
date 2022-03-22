@@ -18,6 +18,7 @@ import System.IO
 import GHC.Plugins
 import GHC.Records
 import System.Process
+import System.FilePath
 
 import qualified Data.String.Interpolate as I (i)
 import Data.Maybe
@@ -74,7 +75,7 @@ buttonToPass view = let
     filepath = fromMaybe "#" view.filepath
     title = fromMaybe "#" view.info.title
 
-    in [hsx|<a class="pass-btn" href={filepath}><button>{title}</button></a>|]
+    in [hsx|<a class="pass-btn" href={takeFileName filepath}><button>{title}</button></a>|]
 
 outputCss :: GlobalPassInfo -> IO ()
 outputCss globals = let 
@@ -101,7 +102,7 @@ renderPass globals view = do
         <html>
             <head>
                 <title>{title}</title>
-                <link rel="stylesheet" href="file:///tmp/hs-comprehension-style.css">
+                <link rel="stylesheet" href="hs-comprehension-style.css">
             </head>
             <body>
                 <h1>{title} {idx}/{nrViews}</h1>

@@ -1,27 +1,24 @@
-$trModule_s6WW = "main"#
-$trModule_s6WX = TrNameS $trModule_s6WW
-$trModule_s6WY = "Main"#
-$trModule_s6WZ = TrNameS $trModule_s6WY
-$trModule = Module $trModule_s6WX $trModule_s6WZ
-lvl_s7Cb = I# 0#
-lvl_s7Cc = I# 1#
-fac = \ds_d6WO -> 
-    case ds_d6WO of
-        I# ds_d6WP -> case ds_d6WP of
-            1# -> lvl_s7Cc
-            0# -> lvl_s7Cb
-            _ -> case fac (I# (ds_d6WP -# 1#)) of
-                I# y -> I# (ds_d6WP *# y)
-                
-            
+$trModule_s166 = "main"#
+$trModule_s167 = TrNameS $trModule_s166
+$trModule_s168 = "Main"#
+$trModule_s169 = TrNameS $trModule_s168
+$trModule = Module $trModule_s167 $trModule_s169
+lvl_s1LT = I# 0#
+lvl_s1LU = I# 1#
+fac = \ds_d15Y -> 
+    case ds_d15Y of
+        I# ds_d15Z -> case ds_d15Z of
+            1# -> lvl_s1LU
+            0# -> lvl_s1LT
+            _ -> fac (I# (ds_d15Z -# 1#))
             
         
         
     
 
-main_s6XR = \s -> 
+main_s16T = \s -> 
     (#,#) s ()
 
-main = main_s6XR
-main_s7Ca = runMainIO1 (main_s6XR)
-main = main_s7Ca
+main = main_s16T
+main_s1LS = runMainIO1 (main_s16T)
+main = main_s1LS

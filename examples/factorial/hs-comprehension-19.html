@@ -3,7 +3,7 @@
         <title>
             Simplifier
         </title>
-        <link rel="stylesheet" href="file:///tmp/hs-comprehension-style.css">
+        <link rel="stylesheet" href="hs-comprehension-style.css">
     </head>
     <body>
         <h1>
@@ -14,50 +14,47 @@
             20
         </h1>
         <div class="button-container">
-            <a class="pass-btn" href="/tmp/hs-comprehension-18.html">
+            <a class="pass-btn" href="hs-comprehension-18.html">
                 <button>
                     Float inwards
                 </button>
             </a>
              
-            <a class="pass-btn" href="/tmp/hs-comprehension-20.html">
+            <a class="pass-btn" href="hs-comprehension-20.html">
                 <button>
                     Demand analysis
                 </button>
             </a>
         </div>
         <pre class="code">
-            <div class="highlight"><pre><span></span><span class="o">$</span><span class="n">trModule_s6WW</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
-<span class="o">$</span><span class="n">trModule_s6WX</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s6WW</span>
-<span class="o">$</span><span class="n">trModule_s6WY</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
-<span class="o">$</span><span class="n">trModule_s6WZ</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s6WY</span>
-<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_s6WX</span> <span class="o">$</span><span class="n">trModule_s6WZ</span>
+            <div class="highlight"><pre><span></span><span class="o">$</span><span class="n">trModule_s166</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s167</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s166</span>
+<span class="o">$</span><span class="n">trModule_s168</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s169</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s168</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_s167</span> <span class="o">$</span><span class="n">trModule_s169</span>
 <span class="o">$</span><span class="n">wfac</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">ww</span> <span class="ow">-&gt;</span> 
     <span class="kr">case</span> <span class="n">ww</span> <span class="kr">of</span>
         <span class="mi">1</span><span class="o">#</span> <span class="ow">-&gt;</span> <span class="mi">1</span><span class="o">#</span>
         <span class="mi">0</span><span class="o">#</span> <span class="ow">-&gt;</span> <span class="mi">0</span><span class="o">#</span>
-        <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="p">(</span><span class="n">ds_X1</span> <span class="o">-#</span> <span class="mi">1</span><span class="o">#</span><span class="p">)</span> <span class="o">$</span><span class="n">wfac</span> <span class="kr">of</span>
-            <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="n">ds_X1</span> <span class="o">*#</span> <span class="n">ww_s7Ck</span>
-            
-        
+        <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">ds_X1</span> <span class="o">-#</span> <span class="mi">1</span><span class="o">#</span><span class="p">)</span> <span class="o">$</span><span class="n">wfac</span>
         
     
 
-<span class="nf">fac</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">w_s7Cd</span> <span class="ow">-&gt;</span> 
-    <span class="kr">case</span> <span class="n">w_s7Cd</span> <span class="kr">of</span>
+<span class="nf">fac</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">w_s1LV</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">w_s1LV</span> <span class="kr">of</span>
         <span class="kt">I</span><span class="o">#</span> <span class="n">ww</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">ww</span> <span class="o">$</span><span class="n">wfac</span> <span class="kr">of</span>
-            <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="kt">I</span><span class="o">#</span> <span class="n">ww_s7Ck</span>
+            <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="kt">I</span><span class="o">#</span> <span class="n">ww_s1M2</span>
             
         
         
     
 
-<span class="nf">main_s6XR</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+<span class="nf">main_s16T</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
     <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
 
-<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s6XR</span>
-<span class="nf">main_s7Ca</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_s6XR</span><span class="p">)</span>
-<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s7Ca</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s16T</span>
+<span class="nf">main_s1LS</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_s16T</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1LS</span>
 </pre></div>
 
 
@@ -65,27 +62,25 @@
         <pre class="diff">
             
 <span class="ansi1">diff --git a/tmp/hs-comprehension-ast-18.html b/tmp/hs-comprehension-ast-19.html</span>
-<span class="ansi1">index f532a6f..a967556 100644</span>
+<span class="ansi1">index b07b59d..7e808b7 100644</span>
 <span class="ansi1">--- a/tmp/hs-comprehension-ast-18.html</span>
 <span class="ansi1">+++ b/tmp/hs-comprehension-ast-19.html</span>
-<span class="ansi36">@@ -7,8 +7,8 @@</span> $wfac = \ww -&gt;
+<span class="ansi36">@@ -7,7 +7,7 @@</span> $wfac = \ww -&gt;
      case ww of
          1# -&gt; 1#
          0# -&gt; 0#
-<span class="ansi31">-        _ -&gt; case (ww -# 1#) $wfac of</span>
-<span class="ansi31">-            _ -&gt; ww *# ww_s7Ck</span>
-<span class="ansi32">+</span><span class="ansi32">        _ -&gt; case (ds_X1 -# 1#) $wfac of</span>
-<span class="ansi32">+</span><span class="ansi32">            _ -&gt; ds_X1 *# ww_s7Ck</span>
-             
+<span class="ansi31">-        _ -&gt; (ww -# 1#) $wfac</span>
+<span class="ansi32">+</span><span class="ansi32">        _ -&gt; (ds_X1 -# 1#) $wfac</span>
          
-         
-<span class="ansi36">@@ -27,5 +27,5 @@</span> main_s6XR = \s -&gt;
+     
+ 
+<span class="ansi36">@@ -24,5 +24,5 @@</span> main_s16T = \s -&gt;
      (#,#) s ()
  
- main = main_s6XR
-<span class="ansi31">-main_s7Ca = runMainIO1 main</span>
-<span class="ansi32">+</span><span class="ansi32">main_s7Ca = runMainIO1 (main_s6XR)</span>
- main = main_s7Ca
+ main = main_s16T
+<span class="ansi31">-main_s1LS = runMainIO1 main</span>
+<span class="ansi32">+</span><span class="ansi32">main_s1LS = runMainIO1 (main_s16T)</span>
+ main = main_s1LS
 
         </pre>
     </body>

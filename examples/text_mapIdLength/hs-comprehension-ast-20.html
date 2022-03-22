@@ -1,5 +1,5 @@
-uppercaseLength = \w_s1PX -> 
-    case w_s1PX of
+uppercaseLength = \w_s1PV -> 
+    case w_s1PV of
         Text ww ww ww -> let end = ww +# ww in
             let $wloop_length = \ww -> 
                 \ww -> 
@@ -27,14 +27,14 @@ uppercaseLength = \w_s1PX ->
         
     
 
-$trModule_sXl = "main"#
+$trModule_sXj = "main"#
+$trModule_sXk = TrNameS $trModule_sXj
+$trModule_sXl = "Main"#
 $trModule_sXm = TrNameS $trModule_sXl
-$trModule_sXn = "Main"#
-$trModule_sXo = TrNameS $trModule_sXn
-$trModule = Module $trModule_sXm $trModule_sXo
-main_sY0 = \s -> 
+$trModule = Module $trModule_sXk $trModule_sXm
+main_sXY = \s -> 
     (#,#) s ()
 
-main = main_sY0
-main_s1Da = runMainIO1 (main_sY0)
-main = main_s1Da
+main = main_sXY
+main_s1D8 = runMainIO1 (main_sXY)
+main = main_s1D8
