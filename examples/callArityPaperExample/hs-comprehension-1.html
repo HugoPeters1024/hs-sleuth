@@ -1,0 +1,43 @@
+<html>
+    <head>
+        <title>
+            Desugared
+        </title>
+        <link rel="stylesheet" href="hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Desugared
+             
+            1
+            /
+            20
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="#">
+                <button>
+                    #
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="hs-comprehension-2.html">
+                <button>
+                    Simplifier
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="nf">arity</span> <span class="ow">=</span> <span class="n">sum</span> <span class="o">$</span><span class="n">fFoldable</span><span class="kt">[]</span> <span class="o">$</span><span class="n">fNumInteger</span> <span class="p">(</span><span class="n">filter</span> <span class="p">(</span><span class="n">even</span> <span class="o">$</span><span class="n">fIntegralInteger</span><span class="p">)</span> <span class="p">(</span><span class="n">enumFromTo</span> <span class="o">$</span><span class="n">fEnumInteger</span> <span class="mi">42</span> <span class="mi">2014</span><span class="p">))</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="p">(</span><span class="kt">TrNameS</span> <span class="s">&quot;main&quot;</span><span class="o">#</span><span class="p">)</span> <span class="p">(</span><span class="kt">TrNameS</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">pure</span> <span class="o">$</span><span class="n">fApplicativeIO</span> <span class="nb">()</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">runMainIO</span> <span class="n">main</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+        </pre>
+    </body>
+</html>
+

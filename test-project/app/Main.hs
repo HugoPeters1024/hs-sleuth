@@ -1,7 +1,10 @@
 module Main where
 
-test :: [Int]
-test = map (+1) (map (+1) [1000])
+double :: Num a => a -> a
+double x = x * 2
+
+doubleInt :: Int -> Int
+doubleInt = double
 
 main :: IO ()
 main = pure ()

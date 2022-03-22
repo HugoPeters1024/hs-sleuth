@@ -1,0 +1,119 @@
+<html>
+    <head>
+        <title>
+            Simplifier
+        </title>
+        <link rel="stylesheet" href="hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Simplifier
+             
+            5
+            /
+            20
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="hs-comprehension-4.html">
+                <button>
+                    Float out(FOS {Lam = Just 0, Consts = True, OverSatApps = False})
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="hs-comprehension-6.html">
+                <button>
+                    Simplifier
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="nf">lvl_s2dL</span> <span class="ow">=</span> <span class="mi">2</span>
+<span class="nf">lvl_s2dN</span> <span class="ow">=</span> <span class="mi">0</span>
+<span class="o">$</span><span class="n">seven</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">n</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">integerRem</span> <span class="n">n</span> <span class="n">lvl_s2dL</span> <span class="kr">of</span>
+        <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">integerEq</span><span class="o">#</span> <span class="n">x1</span> <span class="n">lvl_s2dN</span> <span class="kr">of</span>
+            <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="n">tagToEnum</span><span class="o">#</span> <span class="n">wild</span>
+            
+        
+        
+    
+
+<span class="nf">arity</span> <span class="ow">=</span> <span class="n">enumDeltaToInteger1FB</span> <span class="p">(</span><span class="n">filterFB</span> <span class="p">(</span><span class="nf">\</span><span class="n">ds</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">ds1</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">v</span> <span class="ow">-&gt;</span> 
+            <span class="kr">case</span> <span class="n">v</span> <span class="kr">of</span>
+                <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="n">ds1</span> <span class="p">(</span><span class="n">integerAdd</span> <span class="n">z</span> <span class="n">ds</span><span class="p">)</span>
+                
+            
+        
+    
+<span class="p">)</span> <span class="o">$</span><span class="n">seven</span><span class="p">)</span> <span class="p">(</span><span class="n">id</span><span class="p">)</span> <span class="mi">42</span> <span class="mi">2014</span> <span class="mi">0</span>
+<span class="o">$</span><span class="n">trModule_s1xs</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s1xt</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s1xs</span>
+<span class="o">$</span><span class="n">trModule_s1xu</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s1xv</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s1xu</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_s1xt</span> <span class="o">$</span><span class="n">trModule_s1xv</span>
+<span class="nf">main_s1y7</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+    <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1y7</span>
+<span class="nf">main_s2dz</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_s1y7</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s2dz</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+<span class="ansi1">diff --git a/tmp/hs-comprehension-ast-4.html b/tmp/hs-comprehension-ast-5.html</span>
+<span class="ansi1">index ba4d51a..9c6396d 100644</span>
+<span class="ansi1">--- a/tmp/hs-comprehension-ast-4.html</span>
+<span class="ansi1">+++ b/tmp/hs-comprehension-ast-5.html</span>
+<span class="ansi36">@@ -1,30 +1,24 @@</span>
+<span class="ansi31">-$dReal = $p1Integral $fIntegralInteger</span>
+<span class="ansi31">-$dEq = $p2Real $dReal</span>
+<span class="ansi31">-$dEq1 = $p1Ord $dEq</span>
+<span class="ansi31">-$dNum = $p1Real $dReal</span>
+<span class="ansi31">-lvl_s2dK = 2</span>
+<span class="ansi31">-lvl_s2dL = fromInteger $dNum lvl_s2dK</span>
+<span class="ansi31">-lvl_s2dM = 0</span>
+<span class="ansi31">-lvl_s2dN = fromInteger $dNum lvl_s2dM</span>
+<span class="ansi32">+</span><span class="ansi32">lvl_s2dL = 2</span>
+<span class="ansi32">+</span><span class="ansi32">lvl_s2dN = 0</span>
+ $seven = \n -&gt; 
+<span class="ansi31">-    == $dEq1 (rem $fIntegralInteger n lvl_s2dL) lvl_s2dN</span>
+<span class="ansi32">+</span><span class="ansi32">    case integerRem n lvl_s2dL of</span>
+<span class="ansi32">+</span><span class="ansi32">        _ -&gt; case integerEq# x1 lvl_s2dN of</span>
+<span class="ansi32">+</span><span class="ansi32">            _ -&gt; tagToEnum# wild</span>
+             
+<span class="ansi31">-lvl_s2dO = \ds -&gt; </span>
+<span class="ansi32">+</span><span class="ansi41">        </span>
+<span class="ansi32">+</span><span class="ansi41">        </span>
+<span class="ansi32">+</span><span class="ansi41">    </span>
+<span class="ansi32">+</span>
+<span class="ansi32">+</span><span class="ansi32">arity = enumDeltaToInteger1FB (filterFB (\ds -&gt;</span><span class="ansi41"> </span>
+     \ds1 -&gt; 
+         \v -&gt; 
+             case v of
+<span class="ansi31">-                _ -&gt; ds1 (integerAdd v ds)</span>
+<span class="ansi31">-                </span>
+<span class="ansi32">+</span><span class="ansi32">                _ -&gt; ds1 (integerAdd z ds)</span>
+                 
+             
+         
+     
+<span class="ansi31">-lvl_s2dP = even $fIntegralInteger</span>
+<span class="ansi31">-lvl_s2dQ = filterFB lvl_s2dO lvl_s2dP</span>
+<span class="ansi31">-lvl_s2dR = 42</span>
+<span class="ansi31">-lvl_s2dS = 2014</span>
+<span class="ansi31">-lvl_s2dT = 0</span>
+<span class="ansi31">-arity = enumDeltaToInteger1FB lvl_s2dQ (id) lvl_s2dR lvl_s2dS lvl_s2dT</span>
+<span class="ansi32">+</span><span class="ansi32">) $seven) (id) 42 2014 0</span>
+ $trModule_s1xs = "main"#
+ $trModule_s1xt = TrNameS $trModule_s1xs
+ $trModule_s1xu = "Main"#
+
+        </pre>
+    </body>
+</html>
+

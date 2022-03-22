@@ -1,0 +1,4 @@
+arity = sum $fFoldable[] $fNumInteger (filter (even $fIntegralInteger) (enumFromTo $fEnumInteger 42 2014))
+$trModule = Module (TrNameS "main"#) (TrNameS "Main"#)
+main = pure $fApplicativeIO ()
+main = runMainIO main

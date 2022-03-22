@@ -1,0 +1,83 @@
+<html>
+    <head>
+        <title>
+            Specialise
+        </title>
+        <link rel="stylesheet" href="hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Specialise
+             
+            3
+            /
+            20
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="hs-comprehension-2.html">
+                <button>
+                    Simplifier
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="hs-comprehension-4.html">
+                <button>
+                    Float out(FOS {Lam = Just 0, Consts = True, OverSatApps = False})
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="o">$</span><span class="n">dReal</span> <span class="ow">=</span> <span class="o">$</span><span class="n">p1Integral</span> <span class="o">$</span><span class="n">fIntegralInteger</span>
+<span class="o">$</span><span class="n">dEq</span> <span class="ow">=</span> <span class="o">$</span><span class="n">p2Real</span> <span class="o">$</span><span class="n">dReal</span>
+<span class="o">$</span><span class="n">dEq1</span> <span class="ow">=</span> <span class="o">$</span><span class="n">p1Ord</span> <span class="o">$</span><span class="n">dEq</span>
+<span class="o">$</span><span class="n">dNum</span> <span class="ow">=</span> <span class="o">$</span><span class="n">p1Real</span> <span class="o">$</span><span class="n">dReal</span>
+<span class="o">$</span><span class="n">seven</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">n</span> <span class="ow">-&gt;</span> 
+    <span class="o">==</span> <span class="o">$</span><span class="n">dEq1</span> <span class="p">(</span><span class="n">rem</span> <span class="o">$</span><span class="n">fIntegralInteger</span> <span class="n">n</span> <span class="p">(</span><span class="n">fromInteger</span> <span class="o">$</span><span class="n">dNum</span> <span class="mi">2</span><span class="p">))</span> <span class="p">(</span><span class="n">fromInteger</span> <span class="o">$</span><span class="n">dNum</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="nf">arity</span> <span class="ow">=</span> <span class="n">enumDeltaToInteger1FB</span> <span class="p">(</span><span class="n">filterFB</span> <span class="p">(</span><span class="nf">\</span><span class="n">ds</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">ds1</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">v</span> <span class="ow">-&gt;</span> 
+            <span class="kr">case</span> <span class="n">v</span> <span class="kr">of</span>
+                <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="n">ds1</span> <span class="p">(</span><span class="n">integerAdd</span> <span class="n">z</span> <span class="n">ds</span><span class="p">)</span>
+                
+            
+        
+    
+<span class="p">)</span> <span class="p">(</span><span class="n">even</span> <span class="o">$</span><span class="n">fIntegralInteger</span><span class="p">))</span> <span class="p">(</span><span class="n">id</span><span class="p">)</span> <span class="mi">42</span> <span class="mi">2014</span> <span class="mi">0</span>
+<span class="o">$</span><span class="n">trModule_s1xs</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s1xt</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s1xs</span>
+<span class="o">$</span><span class="n">trModule_s1xu</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s1xv</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s1xu</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_s1xt</span> <span class="o">$</span><span class="n">trModule_s1xv</span>
+<span class="nf">main_s1y7</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+    <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1y7</span>
+<span class="nf">main_s2dz</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_s1y7</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s2dz</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+<span class="ansi1">diff --git a/tmp/hs-comprehension-ast-2.html b/tmp/hs-comprehension-ast-3.html</span>
+<span class="ansi1">index a2a0484..9f83e07 100644</span>
+<span class="ansi1">--- a/tmp/hs-comprehension-ast-2.html</span>
+<span class="ansi1">+++ b/tmp/hs-comprehension-ast-3.html</span>
+<span class="ansi36">@@ -1,3 +1,10 @@</span>
+<span class="ansi32">+</span><span class="ansi32">$dReal = $p1Integral $fIntegralInteger</span>
+<span class="ansi32">+</span><span class="ansi32">$dEq = $p2Real $dReal</span>
+<span class="ansi32">+</span><span class="ansi32">$dEq1 = $p1Ord $dEq</span>
+<span class="ansi32">+</span><span class="ansi32">$dNum = $p1Real $dReal</span>
+<span class="ansi32">+</span><span class="ansi32">$seven = \n -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">    == $dEq1 (rem $fIntegralInteger n (fromInteger $dNum 2)) (fromInteger $dNum 0)</span>
+<span class="ansi32">+</span>
+ arity = enumDeltaToInteger1FB (filterFB (\ds -&gt; 
+     \ds1 -&gt; 
+         \v -&gt; 
+
+        </pre>
+    </body>
+</html>
+

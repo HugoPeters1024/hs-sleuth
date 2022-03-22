@@ -16,6 +16,8 @@ This plugin is ongoing development for my thesis project:
 
 - high level overview of GHC (with Simon as an author): https://www.aosabook.org/en/ghc.html
 
+- Call Arity paper: https://www.joachim-breitner.de/publications/CallArity-TFP.pdf
+
 ### What is the plan?
 
 - An output that describes precisely what optimisation are done.

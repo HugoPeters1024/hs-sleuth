@@ -1,0 +1,91 @@
+<html>
+    <head>
+        <title>
+            Simplifier
+        </title>
+        <link rel="stylesheet" href="hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Simplifier
+             
+            2
+            /
+            20
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="hs-comprehension-1.html">
+                <button>
+                    Desugared
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="hs-comprehension-3.html">
+                <button>
+                    Specialise
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="nf">arity</span> <span class="ow">=</span> <span class="n">enumDeltaToInteger1FB</span> <span class="p">(</span><span class="n">filterFB</span> <span class="p">(</span><span class="nf">\</span><span class="n">ds</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">ds1</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">v</span> <span class="ow">-&gt;</span> 
+            <span class="kr">case</span> <span class="n">v</span> <span class="kr">of</span>
+                <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="n">ds1</span> <span class="p">(</span><span class="n">integerAdd</span> <span class="n">z</span> <span class="n">ds</span><span class="p">)</span>
+                
+            
+        
+    
+<span class="p">)</span> <span class="p">(</span><span class="n">even</span> <span class="o">$</span><span class="n">fIntegralInteger</span><span class="p">))</span> <span class="p">(</span><span class="n">id</span><span class="p">)</span> <span class="mi">42</span> <span class="mi">2014</span> <span class="mi">0</span>
+<span class="o">$</span><span class="n">trModule_s1xs</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s1xt</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s1xs</span>
+<span class="o">$</span><span class="n">trModule_s1xu</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s1xv</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s1xu</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_s1xt</span> <span class="o">$</span><span class="n">trModule_s1xv</span>
+<span class="nf">main_s1y7</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+    <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1y7</span>
+<span class="nf">main_s2dz</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_s1y7</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s2dz</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+<span class="ansi1">diff --git a/tmp/hs-comprehension-ast-1.html b/tmp/hs-comprehension-ast-2.html</span>
+<span class="ansi1">index 81552d4..a2a0484 100644</span>
+<span class="ansi1">--- a/tmp/hs-comprehension-ast-1.html</span>
+<span class="ansi1">+++ b/tmp/hs-comprehension-ast-2.html</span>
+<span class="ansi36">@@ -1,4 +1,21 @@</span>
+<span class="ansi31">-arity = sum $fFoldable[] $fNumInteger (filter (even $fIntegralInteger) (enumFromTo $fEnumInteger 42 2014))</span>
+<span class="ansi31">-$trModule = Module (TrNameS "main"#) (TrNameS "Main"#)</span>
+<span class="ansi31">-main = pure $fApplicativeIO ()</span>
+<span class="ansi31">-main = runMainIO main</span>
+<span class="ansi32">+</span><span class="ansi32">arity = enumDeltaToInteger1FB (filterFB (\ds -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">    \ds1 -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">        \v -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">            case v of</span>
+<span class="ansi32">+</span><span class="ansi32">                _ -&gt; ds1 (integerAdd z ds)</span>
+<span class="ansi32">+</span><span class="ansi41">                </span>
+<span class="ansi32">+</span><span class="ansi41">            </span>
+<span class="ansi32">+</span><span class="ansi41">        </span>
+<span class="ansi32">+</span><span class="ansi41">    </span>
+<span class="ansi32">+</span><span class="ansi32">) (even $fIntegralInteger)) (id) 42 2014 0</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s1xs = "main"#</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s1xt = TrNameS $trModule_s1xs</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s1xu = "Main"#</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s1xv = TrNameS $trModule_s1xu</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule = Module $trModule_s1xt $trModule_s1xv</span>
+<span class="ansi32">+</span><span class="ansi32">main_s1y7 = \s -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">    (#,#) s ()</span>
+<span class="ansi32">+</span>
+<span class="ansi32">+</span><span class="ansi32">main = main_s1y7</span>
+<span class="ansi32">+</span><span class="ansi32">main_s2dz = runMainIO1 (main_s1y7)</span>
+<span class="ansi32">+</span><span class="ansi32">main = main_s2dz</span>
+
+        </pre>
+    </body>
+</html>
+

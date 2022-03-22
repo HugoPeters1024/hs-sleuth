@@ -1,0 +1,65 @@
+<html>
+    <head>
+        <title>
+            Simplifier
+        </title>
+        <link rel="stylesheet" href="hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Simplifier
+             
+            10
+            /
+            20
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="hs-comprehension-9.html">
+                <button>
+                    Called arity analysis
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="hs-comprehension-11.html">
+                <button>
+                    Demand analysis
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="nf">lvl_s1pW</span> <span class="ow">=</span> <span class="mi">2</span>
+<span class="nf">double</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">a</span> <span class="ow">-&gt;</span> 
+    <span class="o">\$</span><span class="n">dNum_aHT</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
+            <span class="o">*</span> <span class="o">$</span><span class="n">dNum_aHT</span> <span class="n">x</span> <span class="p">(</span><span class="n">fromInteger</span> <span class="o">$</span><span class="n">dNum_aHT</span> <span class="n">lvl_s1pW</span><span class="p">)</span>
+        
+    
+
+<span class="o">$</span><span class="n">trModule_sJd</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sJe</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sJd</span>
+<span class="o">$</span><span class="n">trModule_sJf</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sJg</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sJf</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_sJe</span> <span class="o">$</span><span class="n">trModule_sJg</span>
+<span class="nf">doubleInt</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">x</span> <span class="kr">of</span>
+        <span class="kt">I</span><span class="o">#</span> <span class="n">x</span> <span class="ow">-&gt;</span> <span class="kt">I</span><span class="o">#</span> <span class="p">(</span><span class="n">x</span> <span class="o">*#</span> <span class="mi">2</span><span class="o">#</span><span class="p">)</span>
+        
+    
+
+<span class="nf">main_sK2</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+    <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_sK2</span>
+<span class="nf">main_s1pV</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_sK2</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1pV</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+The files are the same
+        </pre>
+    </body>
+</html>
+

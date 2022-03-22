@@ -1,0 +1,11 @@
+double = \a -> 
+    \$dNum_aHT -> 
+        \x -> 
+            * $dNum_aHT x (fromInteger $dNum_aHT 2)
+        
+    
+
+$trModule = Module (TrNameS "main"#) (TrNameS "Main"#)
+doubleInt = double $fNumInt
+main = pure $fApplicativeIO ()
+main = runMainIO main

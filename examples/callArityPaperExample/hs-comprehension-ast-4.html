@@ -1,0 +1,38 @@
+$dReal = $p1Integral $fIntegralInteger
+$dEq = $p2Real $dReal
+$dEq1 = $p1Ord $dEq
+$dNum = $p1Real $dReal
+lvl_s2dK = 2
+lvl_s2dL = fromInteger $dNum lvl_s2dK
+lvl_s2dM = 0
+lvl_s2dN = fromInteger $dNum lvl_s2dM
+$seven = \n -> 
+    == $dEq1 (rem $fIntegralInteger n lvl_s2dL) lvl_s2dN
+
+lvl_s2dO = \ds -> 
+    \ds1 -> 
+        \v -> 
+            case v of
+                _ -> ds1 (integerAdd v ds)
+                
+            
+        
+    
+
+lvl_s2dP = even $fIntegralInteger
+lvl_s2dQ = filterFB lvl_s2dO lvl_s2dP
+lvl_s2dR = 42
+lvl_s2dS = 2014
+lvl_s2dT = 0
+arity = enumDeltaToInteger1FB lvl_s2dQ (id) lvl_s2dR lvl_s2dS lvl_s2dT
+$trModule_s1xs = "main"#
+$trModule_s1xt = TrNameS $trModule_s1xs
+$trModule_s1xu = "Main"#
+$trModule_s1xv = TrNameS $trModule_s1xu
+$trModule = Module $trModule_s1xt $trModule_s1xv
+main_s1y7 = \s -> 
+    (#,#) s ()
+
+main = main_s1y7
+main_s2dz = runMainIO1 (main_s1y7)
+main = main_s2dz
