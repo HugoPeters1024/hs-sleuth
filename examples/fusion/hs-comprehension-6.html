@@ -1,0 +1,79 @@
+<html>
+    <head>
+        <title>
+            Simplifier
+        </title>
+        <link rel="stylesheet" href="file:///tmp/hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Simplifier
+             
+            6
+            /
+            20
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="/tmp/hs-comprehension-5.html">
+                <button>
+                    Simplifier
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="/tmp/hs-comprehension-7.html">
+                <button>
+                    Simplifier
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="o">$</span><span class="n">trModule_s6LB</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s6LC</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s6LB</span>
+<span class="o">$</span><span class="n">trModule_s6LD</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s6LE</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s6LD</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_s6LC</span> <span class="o">$</span><span class="n">trModule_s6LE</span>
+<span class="nf">lvl_s7sK</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">x</span> <span class="kr">of</span>
+        <span class="kt">I</span><span class="o">#</span> <span class="n">y</span> <span class="ow">-&gt;</span> <span class="kt">I</span><span class="o">#</span> <span class="p">(</span><span class="mi">11</span><span class="o">#</span> <span class="o">-#</span> <span class="n">y</span><span class="p">)</span>
+        
+    
+
+<span class="nf">test</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">-&gt;</span> 
+    <span class="n">map</span> <span class="n">lvl_s7sK</span> <span class="n">x</span>
+
+<span class="nf">main_s6Oa</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+    <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s6Oa</span>
+<span class="nf">main_s7sJ</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_s6Oa</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s7sJ</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+<span class="ansi1">diff --git a/tmp/hs-comprehension-ast-5.html b/tmp/hs-comprehension-ast-6.html</span>
+<span class="ansi1">index 5c33a1b..4d55af9 100644</span>
+<span class="ansi1">--- a/tmp/hs-comprehension-ast-5.html</span>
+<span class="ansi1">+++ b/tmp/hs-comprehension-ast-6.html</span>
+<span class="ansi36">@@ -10,13 +10,7 @@</span> lvl_s7sK = \x -&gt;
+     
+ 
+ test = \x -&gt; 
+<span class="ansi31">-    build (\b1 -&gt; </span>
+<span class="ansi31">-        \c -&gt; </span>
+<span class="ansi31">-            \n -&gt; </span>
+<span class="ansi31">-                foldr (mapFB c lvl_s7sK) n x</span>
+<span class="ansi31">-            </span>
+<span class="ansi31">-        </span>
+<span class="ansi31">-    )</span>
+<span class="ansi32">+</span><span class="ansi32">    map lvl_s7sK x</span>
+ 
+ main_s6Oa = \s -&gt; 
+     (#,#) s ()
+
+        </pre>
+    </body>
+</html>
+

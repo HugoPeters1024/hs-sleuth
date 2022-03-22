@@ -1,0 +1,31 @@
+$trModule_s6WW = "main"#
+$trModule_s6WX = TrNameS $trModule_s6WW
+$trModule_s6WY = "Main"#
+$trModule_s6WZ = TrNameS $trModule_s6WY
+$trModule = Module $trModule_s6WX $trModule_s6WZ
+$wfac = \ww -> 
+    case ww of
+        1# -> 1#
+        0# -> 0#
+        _ -> case (ww -# 1#) $wfac of
+            _ -> ww *# ww_s7Ck
+            
+        
+        
+    
+
+fac = \w_s7Cd -> 
+    case w_s7Cd of
+        I# ww -> case ww $wfac of
+            _ -> I# ww_s7Ck
+            
+        
+        
+    
+
+main_s6XR = \s -> 
+    (#,#) s ()
+
+main = main_s6XR
+main_s7Ca = runMainIO1 main
+main = main_s7Ca

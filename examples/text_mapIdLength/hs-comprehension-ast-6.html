@@ -1,0 +1,14 @@
+uppercaseLength = \xs -> 
+    length (map safe (stream xs))
+
+$trModule_sXl = "main"#
+$trModule_sXm = TrNameS $trModule_sXl
+$trModule_sXn = "Main"#
+$trModule_sXo = TrNameS $trModule_sXn
+$trModule = Module $trModule_sXm $trModule_sXo
+main_sY0 = \s -> 
+    (#,#) s ()
+
+main = main_sY0
+main_s1Da = runMainIO1 (main_sY0)
+main = main_s1Da

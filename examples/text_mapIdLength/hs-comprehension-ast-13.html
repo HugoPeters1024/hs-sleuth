@@ -1,0 +1,84 @@
+$wuppercaseLength = \ww -> 
+    \ww -> 
+        \ww -> 
+            let w_s1PX = Text ww ww ww in
+                case let xs = w_s1PX in
+                    case xs of
+                        Text dt dt1 dt2 -> let end = dt1 +# dt2 in
+                            let $wloop_length = \ww -> 
+                                \ww -> 
+                                    let w_s1PM = I# ww in
+                                        let w_s1PN = I# ww in
+                                            let z = w_s1PM in
+                                                let s1 = w_s1PN in
+                                                    case z of
+                                                        I# ipv -> case s1 of
+                                                            I# ipv -> case ipv >=# end of
+                                                                1# -> z1
+                                                                _ -> case indexWord16Array# dt ipv of
+                                                                    _ -> case geWord16# r# 55296##16 of
+                                                                        1# -> case leWord16# r# 56319##16 of
+                                                                            1# -> loop_length (I# (ipv +# 1#)) (I# (ipv +# 2#))
+                                                                            _ -> loop_length (I# (ipv +# 1#)) (I# (ipv +# 1#))
+                                                                            
+                                                                        
+                                                                        _ -> loop_length (I# (ipv +# 1#)) (I# (ipv +# 1#))
+                                                                        
+                                                                    
+                                                                    
+                                                                
+                                                                
+                                                            
+                                                            
+                                                        
+                                                        
+                                                    
+                                                
+                                            
+                                        
+                                    
+                                
+                            loop_length = \w_s1PM -> 
+                                \w_s1PN -> 
+                                    case w_s1PM of
+                                        I# ww -> case w_s1PN of
+                                            I# ww -> ww $wloop_length ww
+                                            
+                                        
+                                        
+                                    
+                                
+                             in
+                                loop_length (I# 0#) (I# dt1)
+                            
+                        
+                        
+                    
+                 of
+                    I# ww_s1Q6 -> ww_s1Q6
+                    
+                
+            
+        
+    
+
+uppercaseLength = \w_s1PX -> 
+    case case w_s1PX of
+        Text ww ww ww -> ww $wuppercaseLength ww ww
+        
+     of
+        _ -> I# ww_s1Q6
+        
+    
+
+$trModule_sXl = "main"#
+$trModule_sXm = TrNameS $trModule_sXl
+$trModule_sXn = "Main"#
+$trModule_sXo = TrNameS $trModule_sXn
+$trModule = Module $trModule_sXm $trModule_sXo
+main_sY0 = \s -> 
+    (#,#) s ()
+
+main = main_sY0
+main_s1Da = runMainIO1 (main_sY0)
+main = main_s1Da

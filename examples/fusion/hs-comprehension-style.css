@@ -1,140 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE OverloadedRecordDot #-}
-{-# LANGUAGE DisambiguateRecordFields #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE PolyKinds #-}
-module Generation where
 
-import Control.Monad (forM_)
-import System.IO.Temp
-import System.IO
-
-import GHC.Plugins
-import GHC.Records
-import System.Process
-
-import qualified Data.String.Interpolate as I (i)
-import Data.Maybe
-
-import IHP.HSX.QQ
-import IHP.HSX.ConvertibleStrings ()
-import IHP.HSX.ToHtml ()
-import Text.Blaze.Html5
-import Text.Blaze.Html.Renderer.Pretty (renderHtml)
-
-import PrettyPrinting
-import qualified CoreCollection as CC
-
-instance HasField (field :: k) r t => HasField field (Maybe r) (Maybe t) where
-    getField = fmap (getField @field)
-    
-
-data PassView  = PassView { info :: CC.PassInfo
-                          , prevPass :: Maybe PassView
-                          , nextPass :: Maybe PassView
-                          , filepath :: FilePath
-                          , ast_filepath :: FilePath
-                          }
-
-data GlobalPassInfo = GlobalPassInfo { nrViews :: Int
-                                     , cssPath :: FilePath
-                                     }
-
-collectInfo :: [PassView] -> GlobalPassInfo
-collectInfo views = GlobalPassInfo { nrViews = length views
-                                   , cssPath = "/tmp/hs-comprehension-style.css"
-                                   }
-
-
-infoToView :: CC.PassInfo -> IO PassView
-infoToView info = do
-    let idx = info.idx
-    let path = [I.i|/tmp/hs-comprehension-#{idx}.html|]
-    let ast_path = [I.i|/tmp/hs-comprehension-ast-#{idx}.html|]
-
-    let code = info.ast
-    withFile ast_path WriteMode $ \h -> hPutStr h [I.i|#{code}|]
-
-    pure $ PassView { info = info
-                    , prevPass = Nothing
-                    , nextPass = Nothing
-                    , filepath = path
-                    , ast_filepath = ast_path
-                    }
-
-
-buttonToPass :: Maybe PassView -> Html
-buttonToPass view = let
-    filepath = fromMaybe "#" view.filepath
-    title = fromMaybe "#" view.info.title
-
-    in [hsx|<a class="pass-btn" href={filepath}><button>{title}</button></a>|]
-
-outputCss :: GlobalPassInfo -> IO ()
-outputCss globals = let 
-    css = [I.i|#{myCss}
-               #{pygmentCss}
-               #{ansiCss}]|]
-
-    in withFile globals.cssPath WriteMode $ \h -> hPutStr h css
-
-renderPass :: GlobalPassInfo -> PassView -> IO Html
-renderPass globals view = do
-    guts_colored <- highlight view.info.ast
-    diff_colored <- case view.prevPass of
-                        Nothing -> pure ""
-                        Just prevPass -> diffFiles prevPass.ast_filepath view.ast_filepath
-    let title = view.info.title
-    let idx = view.info.idx
-    let nrViews = globals.nrViews
-
-    let prevPass = view.prevPass
-    let nextPass = view.nextPass
-    pure $ 
-        [hsx|
-        <html>
-            <head>
-                <title>{title}</title>
-                <link rel="stylesheet" href="file:///tmp/hs-comprehension-style.css">
-            </head>
-            <body>
-                <h1>{title} {idx}/{nrViews}</h1>
-                <div class="button-container">
-                    {buttonToPass prevPass}
-                    {buttonToPass nextPass}
-                </div>
-                <pre class="code">{preEscapedToHtml guts_colored}</pre>
-                <pre class="diff">{preEscapedToHtml diff_colored}</pre>
-            </body>
-        </html>
-        |]
-        
-saveToFile :: FilePath -> Html -> IO ()
-saveToFile path html = 
-    let 
-        bs :: String
-        bs = renderHtml html 
-    in 
-        withFile path WriteMode $ \handle -> do
-            hPutStr handle bs
-            putStrLn $ "file://" ++ path
-
-highlight :: String -> IO String
-highlight = readProcess "/home/hugo/repos/hs-comprehension/hs-comprehension/scripts/hightlight.py" []
-
-diffFiles :: FilePath -> FilePath -> IO String
-diffFiles lhs rhs = do
-    ret <- readProcess "/home/hugo/repos/hs-comprehension/hs-comprehension/scripts/diff.sh" [lhs, rhs] mempty
-    pure $ if ret == mempty then "\nThe files are the same" else "\n" ++ ret
-
-myCss :: Html
-myCss = preEscapedToHtml @String [I.i|
     .body {
         font-family: monospace, monospace;
     }
@@ -163,10 +27,8 @@ myCss = preEscapedToHtml @String [I.i|
         padding: 2em; 
         font-size: 13pt;
     }
-|]
 
-pygmentCss :: Html
-pygmentCss = preEscapedToHtml @String [I.i| 
+                
     .hll { backgroun17e } /* Comment */
     .err { color: #960050; background-color: #1e0010 } /* Error */
     .k { color: #66d9ef } /* Keyword */
@@ -234,10 +96,8 @@ pygmentCss = preEscapedToHtml @String [I.i|
     .vi { color: #f8f8f2 } /* Name.Variable.Instance */
     .vm { color: #f8f8f2 } /* Name.Variable.Magic */
     .il { color: #ae81ff } /* Literal.Number.Integer.Long */
-    |]
-
-ansiCss :: Html
-ansiCss = preEscapedToHtml @String $ [I.i|
+    
+               
     .ansi2html-content { display: inline; white-space: pre-wrap; word-wrap: break-word; }
     .body_foreground { color: #AAAAAA; }
     .body_background { background-color: #000000; }
@@ -1340,4 +1200,4 @@ ansiCss = preEscapedToHtml @String $ [I.i|
     .inv38-255 { background: #eeeeee; }
     .ansi48-255 { background: #eeeeee; }
     .inv48-255 { color: #eeeeee; }
-    |]
+    ]

@@ -1,13 +1,11 @@
 module Main where
 
-import HsComprehension
-import Data.Char
+import Data.Char (toUpper)
+import Data.Text (Text)
+import qualified Data.Text as T
 
-{-# ANN fac CoreTrace #-}
-fac :: Int -> Int
-fac 0 = 0
-fac 1 = 1
-fac n = n * fac (n-1)
+uppercaseLength :: Text -> Int
+uppercaseLength xs = T.length (T.map id xs)
 
 main :: IO ()
 main = pure ()

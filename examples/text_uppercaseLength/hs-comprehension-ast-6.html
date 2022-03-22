@@ -1,0 +1,27 @@
+uppercaseLength = \xs -> 
+    length (map (\x -> 
+        case x of
+            C# c# -> case (ord# c#) {__ffi_static_ccall_unsafe base:u_towupper :: Int#
+                                              -> State# RealWorld -> (# State# RealWorld, Int# #)} realWorld# of
+                (#,#) ds ds1 -> case leWord# (int2Word# ds1) 1114111## of
+                    1# -> safe (C# (chr# ds1))
+                    _ -> ds1 $wlvl
+                    
+                
+                
+            
+            
+        
+    ) (stream xs))
+
+$trModule_s10v = "main"#
+$trModule_s10w = TrNameS $trModule_s10v
+$trModule_s10x = "Main"#
+$trModule_s10y = TrNameS $trModule_s10x
+$trModule = Module $trModule_s10w $trModule_s10y
+main_s11a = \s -> 
+    (#,#) s ()
+
+main = main_s11a
+main_s1Gf = runMainIO1 (main_s11a)
+main = main_s1Gf

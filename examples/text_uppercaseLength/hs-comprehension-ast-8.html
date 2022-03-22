@@ -1,0 +1,71 @@
+uppercaseLength = \xs -> 
+    case xs of
+        Text dt dt1 dt2 -> let end = dt1 +# dt2 in
+            let loop_length = \z -> 
+                \s1 -> 
+                    case z of
+                        I# ipv -> case s1 of
+                            I# ipv -> case ipv >=# end of
+                                1# -> z1
+                                _ -> case indexWord16Array# dt ipv of
+                                    _ -> let $j = case (word2Int# (word16ToWord# r#)) {__ffi_static_ccall_unsafe base:u_towupper :: Int#
+                                              -> State# RealWorld -> (# State# RealWorld, Int# #)} realWorld# of
+                                        (#,#) ds ds1 -> case leWord# (int2Word# ds1) 1114111## of
+                                            1# -> loop_length (I# (ipv +# 1#)) (I# (ipv +# 1#))
+                                            _ -> case ds1 $wlvl of
+                                                
+                                            
+                                            
+                                        
+                                        
+                                     in
+                                        case geWord16# r# 55296##16 of
+                                            1# -> case leWord16# r# 56319##16 of
+                                                1# -> case indexWord16Array# dt (ipv +# 1#) of
+                                                    _ -> case (9216# +# ((uncheckedIShiftL# ((word2Int# (word16ToWord# r#)) -# 55296#) 10#) +# (word2Int# (word16ToWord# r#1)))) {__ffi_static_ccall_unsafe base:u_towupper :: Int#
+                                              -> State# RealWorld -> (# State# RealWorld, Int# #)} realWorld# of
+                                                        (#,#) ds ds1 -> case leWord# (int2Word# ds1) 1114111## of
+                                                            1# -> loop_length (I# (ipv +# 1#)) (I# (ipv +# 2#))
+                                                            _ -> case ds1 $wlvl of
+                                                                
+                                                            
+                                                            
+                                                        
+                                                        
+                                                    
+                                                    
+                                                
+                                                _ -> $j
+                                                
+                                            
+                                            _ -> $j
+                                            
+                                        
+                                    
+                                    
+                                
+                                
+                            
+                            
+                        
+                        
+                    
+                
+             in
+                loop_length (I# 0#) (I# dt1)
+            
+        
+        
+    
+
+$trModule_s10v = "main"#
+$trModule_s10w = TrNameS $trModule_s10v
+$trModule_s10x = "Main"#
+$trModule_s10y = TrNameS $trModule_s10x
+$trModule = Module $trModule_s10w $trModule_s10y
+main_s11a = \s -> 
+    (#,#) s ()
+
+main = main_s11a
+main_s1Gf = runMainIO1 (main_s11a)
+main = main_s1Gf

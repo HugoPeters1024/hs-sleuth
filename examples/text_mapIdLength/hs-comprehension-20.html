@@ -1,0 +1,80 @@
+<html>
+    <head>
+        <title>
+            Demand analysis
+        </title>
+        <link rel="stylesheet" href="file:///tmp/hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Demand analysis
+             
+            20
+            /
+            20
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="/tmp/hs-comprehension-19.html">
+                <button>
+                    Simplifier
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="#">
+                <button>
+                    #
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="nf">uppercaseLength</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">w_s1PX</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">w_s1PX</span> <span class="kr">of</span>
+        <span class="kt">Text</span> <span class="n">ww</span> <span class="n">ww</span> <span class="n">ww</span> <span class="ow">-&gt;</span> <span class="kr">let</span> <span class="n">end</span> <span class="ow">=</span> <span class="n">ww</span> <span class="o">+#</span> <span class="n">ww</span> <span class="kr">in</span>
+            <span class="kr">let</span> <span class="o">$</span><span class="n">wloop_length</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">ww</span> <span class="ow">-&gt;</span> 
+                <span class="nf">\</span><span class="n">ww</span> <span class="ow">-&gt;</span> 
+                    <span class="kr">case</span> <span class="n">ww</span> <span class="o">&gt;=#</span> <span class="n">end</span> <span class="kr">of</span>
+                        <span class="mi">1</span><span class="o">#</span> <span class="ow">-&gt;</span> <span class="kt">I</span><span class="o">#</span> <span class="n">ww</span>
+                        <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">indexWord16Array</span><span class="o">#</span> <span class="n">ww</span> <span class="n">ww</span> <span class="kr">of</span>
+                            <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">geWord16</span><span class="o">#</span> <span class="n">r</span><span class="o">#</span> <span class="mi">55296</span><span class="o">##</span><span class="mi">16</span> <span class="kr">of</span>
+                                <span class="mi">1</span><span class="o">#</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">leWord16</span><span class="o">#</span> <span class="n">r</span><span class="o">#</span> <span class="mi">56319</span><span class="o">##</span><span class="mi">16</span> <span class="kr">of</span>
+                                    <span class="mi">1</span><span class="o">#</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">ww</span> <span class="o">+#</span> <span class="mi">1</span><span class="o">#</span><span class="p">)</span> <span class="o">$</span><span class="n">wloop_length</span> <span class="p">(</span><span class="n">ww</span> <span class="o">+#</span> <span class="mi">2</span><span class="o">#</span><span class="p">)</span>
+                                    <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">ww</span> <span class="o">+#</span> <span class="mi">1</span><span class="o">#</span><span class="p">)</span> <span class="o">$</span><span class="n">wloop_length</span> <span class="p">(</span><span class="n">ww</span> <span class="o">+#</span> <span class="mi">1</span><span class="o">#</span><span class="p">)</span>
+                                    
+                                
+                                <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">ww</span> <span class="o">+#</span> <span class="mi">1</span><span class="o">#</span><span class="p">)</span> <span class="o">$</span><span class="n">wloop_length</span> <span class="p">(</span><span class="n">ww</span> <span class="o">+#</span> <span class="mi">1</span><span class="o">#</span><span class="p">)</span>
+                                
+                            
+                            
+                        
+                        
+                    
+                
+             <span class="kr">in</span>
+                <span class="mi">0</span><span class="o">#</span> <span class="o">$</span><span class="n">wloop_length</span> <span class="n">ww</span>
+            
+        
+        
+    
+
+<span class="o">$</span><span class="n">trModule_sXl</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sXm</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sXl</span>
+<span class="o">$</span><span class="n">trModule_sXn</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_sXo</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_sXn</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_sXm</span> <span class="o">$</span><span class="n">trModule_sXo</span>
+<span class="nf">main_sY0</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+    <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_sY0</span>
+<span class="nf">main_s1Da</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_sY0</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1Da</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+The files are the same
+        </pre>
+    </body>
+</html>
+

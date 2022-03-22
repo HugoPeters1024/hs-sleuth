@@ -1,0 +1,25 @@
+$trModule_s6LB = "main"#
+$trModule_s6LC = TrNameS $trModule_s6LB
+$trModule_s6LD = "Main"#
+$trModule_s6LE = TrNameS $trModule_s6LD
+$trModule = Module $trModule_s6LC $trModule_s6LE
+test = \x -> 
+    build (\b1 -> 
+        \c -> 
+            \n -> 
+                foldr (mapFB c (\x -> 
+                    case x of
+                        I# y -> I# (11# -# y)
+                        
+                    
+                )) n x
+            
+        
+    )
+
+main_s6Oa = \s -> 
+    (#,#) s ()
+
+main = main_s6Oa
+main_s7sJ = runMainIO1 (main_s6Oa)
+main = main_s7sJ

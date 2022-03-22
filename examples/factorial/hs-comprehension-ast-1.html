@@ -1,0 +1,14 @@
+$trModule = Module (TrNameS "main"#) (TrNameS "Main"#)
+fac = \ds_d6WO -> 
+    case ds_d6WO of
+        I# ds_d6WP -> case ds_d6WP of
+            1# -> I# 1#
+            0# -> I# 0#
+            _ -> * $fNumInt ds_d6WO (fac (- $fNumInt ds_d6WO (I# 1#)))
+            
+        
+        
+    
+
+main = pure $fApplicativeIO ()
+main = runMainIO main

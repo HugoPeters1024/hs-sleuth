@@ -58,20 +58,30 @@ showExpr dflags e = evalPP dflags (exprPP e)
 
 bindPP :: CoreBind -> CorePP
 bindPP (NonRec b e) = showPP (ppr b) >> printPP " = " >> exprPP e
-bindPP (Rec [(b,e)]) = showPP (ppr b) >> printPP " = " >> exprPP e
-bindPP (Rec _) = printPP "co-recursive functions not supported yet..."
+bindPP (Rec []) = pure ()
+bindPP (Rec ((b,e):tl)) = showPP (ppr b) >> printPP " = " >> exprPP e >> bindPP (Rec tl)
 
 exprPP :: CoreExpr -> CorePP
 exprPP (Var i) = showPP (ppr i)
 exprPP (Lit lit) = showPP (ppr lit)
-exprPP (App e (Type t)) = exprPP e
-exprPP (App e@(Var ev) a) = let opName = showSDocUnsafe (ppr (varName ev))
-                             in if any isLetter opName 
-                                    then exprPP e >> printPP " " >> parensPP a
-                                    else parensPP a >> printPP " " >> exprPP e
-exprPP (App e a) = exprPP e >> printPP " " >> parensPP a
+exprPP (App e a) = let
+    infixSymbols = "!$%&*+./<=>?@\\^-~"
+    isInfixOperator = case e of
+                        Var i -> any (\x -> elem x infixSymbols) $ showSDocUnsafe $ ppr $ varName i
+                        _ -> False
+
+
+    isTypeApplication = case a of
+                          Type _ -> True
+                          _ -> False
+
+    in if isTypeApplication
+          then exprPP e
+          else if isInfixOperator 
+                  then parensPP a >> printPP " " >> exprPP e
+                  else exprPP e >> printPP " " >> parensPP a
 exprPP (Lam b e) = do
-    printPP "λ"
+    printPP "\\"
     showPP (ppr b)
     printPP " -> "
     indented $ exprPP e

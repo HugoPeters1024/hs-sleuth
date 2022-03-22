@@ -1,0 +1,14 @@
+uppercaseLength = \xs -> 
+    length (map toUpper xs)
+
+$trModule_s10v = "main"#
+$trModule_s10w = TrNameS $trModule_s10v
+$trModule_s10x = "Main"#
+$trModule_s10y = TrNameS $trModule_s10x
+$trModule = Module $trModule_s10w $trModule_s10y
+main_s11a = \s -> 
+    (#,#) s ()
+
+main = main_s11a
+main_s1Gf = runMainIO1 (main_s11a)
+main = main_s1Gf

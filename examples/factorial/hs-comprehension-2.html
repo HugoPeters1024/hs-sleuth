@@ -1,0 +1,99 @@
+<html>
+    <head>
+        <title>
+            Simplifier
+        </title>
+        <link rel="stylesheet" href="file:///tmp/hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Simplifier
+             
+            2
+            /
+            20
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="/tmp/hs-comprehension-1.html">
+                <button>
+                    Desugared
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="/tmp/hs-comprehension-3.html">
+                <button>
+                    Specialise
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="o">$</span><span class="n">trModule_s6WW</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s6WX</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s6WW</span>
+<span class="o">$</span><span class="n">trModule_s6WY</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s6WZ</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s6WY</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_s6WX</span> <span class="o">$</span><span class="n">trModule_s6WZ</span>
+<span class="nf">fac</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">ds_d6WO</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">ds_d6WO</span> <span class="kr">of</span>
+        <span class="kt">I</span><span class="o">#</span> <span class="n">ds_d6WP</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">ds_d6WP</span> <span class="kr">of</span>
+            <span class="mi">1</span><span class="o">#</span> <span class="ow">-&gt;</span> <span class="kt">I</span><span class="o">#</span> <span class="mi">1</span><span class="o">#</span>
+            <span class="mi">0</span><span class="o">#</span> <span class="ow">-&gt;</span> <span class="kt">I</span><span class="o">#</span> <span class="mi">0</span><span class="o">#</span>
+            <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="n">fac</span> <span class="p">(</span><span class="kt">I</span><span class="o">#</span> <span class="p">(</span><span class="n">ds_X1</span> <span class="o">-#</span> <span class="mi">1</span><span class="o">#</span><span class="p">))</span> <span class="kr">of</span>
+                <span class="kt">I</span><span class="o">#</span> <span class="n">y</span> <span class="ow">-&gt;</span> <span class="kt">I</span><span class="o">#</span> <span class="p">(</span><span class="n">ds_X1</span> <span class="o">*#</span> <span class="n">y</span><span class="p">)</span>
+                
+            
+            
+        
+        
+    
+
+<span class="nf">main_s6XR</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">-&gt;</span> 
+    <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">s</span> <span class="nb">()</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s6XR</span>
+<span class="nf">main_s7Ca</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_s6XR</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s7Ca</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+<span class="ansi1">diff --git a/tmp/hs-comprehension-ast-1.html b/tmp/hs-comprehension-ast-2.html</span>
+<span class="ansi1">index 8e84f1e..27fa514 100644</span>
+<span class="ansi1">--- a/tmp/hs-comprehension-ast-1.html</span>
+<span class="ansi1">+++ b/tmp/hs-comprehension-ast-2.html</span>
+<span class="ansi36">@@ -1,14 +1,25 @@</span>
+<span class="ansi31">-$trModule = Module (TrNameS "main"#) (TrNameS "Main"#)</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s6WW = "main"#</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s6WX = TrNameS $trModule_s6WW</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s6WY = "Main"#</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s6WZ = TrNameS $trModule_s6WY</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule = Module $trModule_s6WX $trModule_s6WZ</span>
+ fac = \ds_d6WO -&gt; 
+     case ds_d6WO of
+         I# ds_d6WP -&gt; case ds_d6WP of
+             1# -&gt; I# 1#
+             0# -&gt; I# 0#
+<span class="ansi31">-            _ -&gt; * $fNumInt ds_d6WO (fac (- $fNumInt ds_d6WO (I# 1#)))</span>
+<span class="ansi32">+</span><span class="ansi32">            _ -&gt; case fac (I# (ds_X1 -# 1#)) of</span>
+<span class="ansi32">+</span><span class="ansi32">                I# y -&gt; I# (ds_X1 *# y)</span>
+                 
+             
+             
+         
+         
+<span class="ansi31">-main = pure $fApplicativeIO ()</span>
+<span class="ansi31">-main = runMainIO main</span>
+<span class="ansi32">+</span><span class="ansi41">    </span>
+<span class="ansi32">+</span>
+<span class="ansi32">+</span><span class="ansi32">main_s6XR = \s -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">    (#,#) s ()</span>
+<span class="ansi32">+</span>
+<span class="ansi32">+</span><span class="ansi32">main = main_s6XR</span>
+<span class="ansi32">+</span><span class="ansi32">main_s7Ca = runMainIO1 (main_s6XR)</span>
+<span class="ansi32">+</span><span class="ansi32">main = main_s7Ca</span>
+
+        </pre>
+    </body>
+</html>
+
