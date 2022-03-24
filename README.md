@@ -18,6 +18,12 @@ This plugin is ongoing development for my thesis project:
 
 - Call Arity paper: https://www.joachim-breitner.de/publications/CallArity-TFP.pdf
 
+- A very interesting discussion about failed fusion in GHC leading to opt problems: https://gitlab.haskell.org/ghc/ghc/-/issues/17075. This discussion also mentions this paper: https://yanniss.github.io/streams-popl17.pdf
+
+- Fusion and performance with some real examples: https://archive.alvb.in/msc/03_infoafp/papers/2013-01-08_HoorCollege_HaskellByteStrings_dk.pdf
+
+- More fusion, but by Gabriele Keller!: https://www.deepdyve.com/lp/association-for-computing-machinery/functional-array-fusion-7rgCUpOaY1
+
 ### What is the plan?
 
 - An output that describes precisely what optimisation are done.
@@ -422,6 +428,49 @@ Inlining done: Main.oneMore
             Select nodup wild_a78t
             Stop[BoringCtxt] GHC.Base.String
 ```
+
+---
+
+### Findings from the output of the html dumps
+
+Using the type palindrome example
+
+```haskell
+data Palin xs where
+    Nil :: Palin '[]
+    Single :: a -> Palin '[a]
+    Cons :: a -> Palin xs -> a -> Palin (a ': xs)
+
+reversePalin :: Palin xs -> Palin xs
+reversePalin Nil = Nil
+reversePalin (Single x) = Single x
+reversePalin (Cons lhs tl rhs) = Cons rhs (reversePalin tl) lhs
+
+doubleRev = reversePalin . reversePalin
+```
+
+Ghc cannot derive doubleRev to be equivalent to id. We can add a rule for that:
+
+```haskell
+{-# Rules
+   "Reverse Palin" reversePalin . reversePalin = id
+#-}
+
+{-# NOINLINE reversePalin #-}
+```
+
+However, this rule never fires becuase the `.` is inlined first... But if we write the rule as:
+
+```haskell
+{-# Rules
+   "Reverse Palin2"      forall xs. reversePalin (reversePalin xs) = xs
+#-}
+```
+
+Then the rule is fired (in round 1 of the simplifier), suggestion that rewrite rules should always be eta expanded??
+
+
+
 
 
 

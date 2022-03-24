@@ -1,0 +1,265 @@
+<html>
+    <head>
+        <title>
+            Simplifier
+        </title>
+        <link rel="stylesheet" href="hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Simplifier
+             
+            2
+            /
+            26
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="hs-comprehension-1.html">
+                <button>
+                    Desugared
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="hs-comprehension-3.html">
+                <button>
+                    Specialise
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="nf">readUp</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">::</span> <span class="kt">String</span> <span class="ow">-&gt;</span> 
+    <span class="kt">Stream</span> <span class="p">(</span><span class="nf">\</span><span class="n">ds_d151</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+        <span class="kr">case</span> <span class="n">ds_d151</span> <span class="kr">of</span>
+            <span class="kt">:</span> <span class="n">c</span> <span class="n">tl</span> <span class="ow">-&gt;</span> <span class="kt">Yield</span> <span class="n">c</span> <span class="n">tl</span>
+            <span class="kt">[]</span> <span class="ow">-&gt;</span> <span class="kt">Done</span>
+            
+        
+    <span class="p">)</span> <span class="n">s</span> <span class="kt">[]</span>
+
+<span class="nf">writeUp</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">ds_d14Q</span> <span class="ow">::</span> <span class="kt">Stream</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">ds_d14Q</span> <span class="kr">of</span>
+        <span class="kt">Stream</span> <span class="n">s</span> <span class="n">next</span> <span class="n">s</span> <span class="n">n</span> <span class="ow">-&gt;</span> <span class="kr">let</span> <span class="n">go</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> 
+            <span class="kr">case</span> <span class="n">next</span> <span class="n">s</span> <span class="kr">of</span>
+                <span class="kt">Skip</span> <span class="n">s</span> <span class="ow">-&gt;</span> <span class="n">go</span> <span class="n">s</span>
+                <span class="kt">Yield</span> <span class="n">c</span> <span class="n">s</span> <span class="ow">-&gt;</span> <span class="kt">:</span> <span class="n">c</span> <span class="p">(</span><span class="n">go</span> <span class="n">s</span><span class="p">)</span>
+                <span class="kt">Done</span> <span class="ow">-&gt;</span> <span class="kt">[]</span>
+                
+            
+         <span class="kr">in</span>
+            <span class="n">go</span> <span class="n">s</span>
+        
+        
+    
+
+<span class="nf">mapS</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">f</span> <span class="ow">::</span> <span class="kt">Char</span> <span class="ow">-&gt;</span> <span class="kt">Char</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">ds_d14E</span> <span class="ow">::</span> <span class="kt">Stream</span> <span class="ow">-&gt;</span> 
+        <span class="kr">case</span> <span class="n">ds_d14E</span> <span class="kr">of</span>
+            <span class="kt">Stream</span> <span class="n">s</span> <span class="n">next</span> <span class="n">s</span> <span class="n">n</span> <span class="ow">-&gt;</span> <span class="kt">Stream</span> <span class="p">(</span><span class="nf">\</span><span class="n">s</span> <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> 
+                <span class="kr">case</span> <span class="n">next</span> <span class="n">s</span> <span class="kr">of</span>
+                    <span class="kt">Skip</span> <span class="n">s&#39;</span> <span class="ow">-&gt;</span> <span class="kt">Skip</span> <span class="n">s&#39;</span>
+                    <span class="kt">Yield</span> <span class="n">x</span> <span class="n">s&#39;</span> <span class="ow">-&gt;</span> <span class="kt">Yield</span> <span class="p">(</span><span class="n">f</span> <span class="n">x</span><span class="p">)</span> <span class="n">s&#39;</span>
+                    <span class="kt">Done</span> <span class="ow">-&gt;</span> <span class="kt">Done</span>
+                    
+                
+            <span class="p">)</span> <span class="n">s</span> <span class="n">n</span>
+            
+        
+    
+
+<span class="nf">myMap</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">t</span> <span class="ow">::</span> <span class="o">*</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">a</span> <span class="ow">::</span> <span class="o">*</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">ds_d154</span> <span class="ow">::</span> <span class="n">t</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> 
+            <span class="nf">\</span><span class="n">ds_d155</span> <span class="ow">::</span> <span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+                <span class="kr">case</span> <span class="n">ds_d155</span> <span class="kr">of</span>
+                    <span class="kt">:</span> <span class="n">x</span> <span class="n">xs</span> <span class="ow">-&gt;</span> <span class="kt">:</span> <span class="p">(</span><span class="n">ds_d154</span> <span class="n">x</span><span class="p">)</span> <span class="p">(</span><span class="n">myMap</span> <span class="n">ds_d154</span> <span class="n">xs</span><span class="p">)</span>
+                    <span class="kt">[]</span> <span class="ow">-&gt;</span> <span class="kt">[]</span>
+                    
+                
+            
+        
+    
+
+<span class="nf">myMap</span> <span class="ow">=</span> <span class="n">myMap</span>
+<span class="nf">n</span> <span class="ow">=</span> <span class="kt">I</span><span class="o">#</span> <span class="mi">10000</span><span class="o">#</span>
+<span class="nf">msg</span> <span class="ow">=</span> <span class="kr">case</span> <span class="n">build</span> <span class="p">(</span><span class="nf">\</span><span class="n">b</span> <span class="ow">::</span> <span class="o">*</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">c</span> <span class="ow">::</span> <span class="p">([</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Char</span><span class="p">])</span> <span class="ow">-&gt;</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">b</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">nil</span> <span class="ow">::</span> <span class="n">b</span> <span class="ow">-&gt;</span> 
+            <span class="kr">case</span> <span class="n">ltInt</span> <span class="p">(</span><span class="kt">I</span><span class="o">#</span> <span class="mi">0</span><span class="o">#</span><span class="p">)</span> <span class="n">n</span> <span class="kr">of</span>
+                <span class="kt">True</span> <span class="ow">-&gt;</span> <span class="n">repeatFB</span> <span class="p">(</span><span class="n">takeFB</span> <span class="n">c</span> <span class="n">nil</span><span class="p">)</span> <span class="p">(</span><span class="nf">\</span><span class="n">x</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+                    <span class="n">writeUp</span> <span class="p">(</span><span class="n">mapS</span> <span class="n">toUpper</span> <span class="p">(</span><span class="n">readUp</span> <span class="p">(</span><span class="n">writeUp</span> <span class="p">(</span><span class="n">mapS</span> <span class="n">toLower</span> <span class="p">(</span><span class="n">readUp</span> <span class="n">x</span><span class="p">)))))</span>
+                <span class="p">)</span> <span class="n">n</span>
+                <span class="kt">False</span> <span class="ow">-&gt;</span> <span class="n">nil</span>
+                
+            
+        
+    
+<span class="p">)</span> <span class="kr">of</span>
+    <span class="kt">:</span> <span class="n">x</span> <span class="n">xs</span> <span class="ow">-&gt;</span> <span class="n">foldr</span> <span class="p">(</span><span class="nf">\</span><span class="n">ds</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">ds1</span> <span class="ow">::</span> <span class="p">([</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Char</span><span class="p">])</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+            <span class="nf">\</span><span class="n">v</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+                <span class="n">ds1</span> <span class="p">(</span><span class="n">v</span> <span class="o">.</span> <span class="n">ds</span><span class="p">)</span>
+            
+        
+    <span class="p">)</span> <span class="n">id</span> <span class="n">xs</span> <span class="n">x</span>
+    <span class="kt">[]</span> <span class="ow">-&gt;</span> <span class="n">foldl2</span>
+    
+ <span class="p">(</span><span class="n">build</span> <span class="p">(</span><span class="nf">\</span><span class="n">b</span> <span class="ow">::</span> <span class="o">*</span> <span class="ow">-&gt;</span> 
+    <span class="n">unpackFoldrCString</span><span class="o">#</span> <span class="s">&quot;Hello Wjfkdsafjaldskfjdskjfklsdjflsajflask;jfklads;jfkladsjflkdsajfklsdjfkdsfklsjfsdklfjakl;fjldsk;ajflskadjfkladsfodsklafjlkads;fjlk;adsfj;sadklfrdsfjdskla;fjdghjfdjghudskjgohgiojis ugisrofhjiesfhjisfghifldldldkfjgndlfitkriodlnlgogkrtidjwjajxjcjerjfjfkfkfkfjitorbjdskjfdskjfskljfaskljfklasjfklsdafddsjflkadsjfklsjfsadkdlffkldshfdsdfhjisldgjiifndslisdhbigirgjijfkldsfjssofhjdsihjioshuisgfhdsifhjsidhfdsifjsjdikfjdsikfld&quot;</span><span class="o">#</span>
+<span class="p">))</span>
+<span class="nf">main_s1vZ</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">eta</span> <span class="ow">::</span> <span class="kt">State</span><span class="o">#</span> <span class="kt">RealWorld</span> <span class="ow">-&gt;</span> 
+    <span class="n">hPutStr2</span> <span class="n">stdout</span> <span class="n">msg</span> <span class="kt">True</span> <span class="n">eta</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1vZ</span>
+<span class="nf">main_s2b5</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_s1vZ</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s2b5</span>
+<span class="o">$</span><span class="n">trModule_s2b6</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s2b7</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s2b6</span>
+<span class="o">$</span><span class="n">trModule_s2b8</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s2b9</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s2b8</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_s2b7</span> <span class="o">$</span><span class="n">trModule_s2b9</span>
+<span class="o">$</span><span class="n">krep_a13S</span> <span class="ow">=</span> <span class="kt">KindRepTyConApp</span> <span class="o">$</span><span class="n">tcChar</span> <span class="kt">[]</span>
+<span class="o">$</span><span class="n">krep_s2ba</span> <span class="ow">=</span> <span class="kt">:</span> <span class="o">$</span><span class="n">krep_a13S</span> <span class="kt">[]</span>
+<span class="o">$</span><span class="n">krep_a13R</span> <span class="ow">=</span> <span class="kt">KindRepTyConApp</span> <span class="o">$</span><span class="n">tc</span><span class="kt">[]</span> <span class="o">$</span><span class="n">krep_s2ba</span>
+<span class="o">$</span><span class="n">krep_s2bb</span> <span class="ow">=</span> <span class="kt">I</span><span class="o">#</span> <span class="mi">0</span><span class="o">#</span>
+<span class="o">$</span><span class="n">krep_a13N</span> <span class="ow">=</span> <span class="o">$</span><span class="kt">WKindRepVar</span> <span class="o">$</span><span class="n">krep_s2bb</span>
+<span class="o">$</span><span class="n">tcStep_s2bc</span> <span class="ow">=</span> <span class="s">&quot;Step&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tcStep_s2bd</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tcStep_s2bc</span>
+<span class="o">$</span><span class="n">tcStep</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">12766381590924836876</span><span class="o">##</span> <span class="mi">17532131051778711994</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tcStep_s2bd</span> <span class="mi">0</span><span class="o">#</span> <span class="n">krep</span><span class="o">$*</span><span class="kt">Arr</span><span class="o">*</span>
+<span class="o">$</span><span class="n">krep_s2be</span> <span class="ow">=</span> <span class="kt">:</span> <span class="o">$</span><span class="n">krep_a13N</span> <span class="kt">[]</span>
+<span class="o">$</span><span class="n">krep_a13O</span> <span class="ow">=</span> <span class="kt">KindRepTyConApp</span> <span class="o">$</span><span class="n">tcStep</span> <span class="o">$</span><span class="n">krep_s2be</span>
+<span class="o">$</span><span class="n">tc&#39;Done_s2bf</span> <span class="ow">=</span> <span class="s">&quot;&#39;Done&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tc&#39;Done_s2bg</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tc&#39;Done_s2bf</span>
+<span class="o">$</span><span class="n">tc&#39;Done</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">12461457374452162227</span><span class="o">##</span> <span class="mi">16535247372730198091</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tc&#39;Done_s2bg</span> <span class="mi">1</span><span class="o">#</span> <span class="o">$</span><span class="n">krep_a13O</span>
+<span class="o">$</span><span class="n">krep_a13M</span> <span class="ow">=</span> <span class="kt">KindRepFun</span> <span class="o">$</span><span class="n">krep_a13N</span> <span class="o">$</span><span class="n">krep_a13O</span>
+<span class="o">$</span><span class="n">tc&#39;Skip_s2bh</span> <span class="ow">=</span> <span class="s">&quot;&#39;Skip&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tc&#39;Skip_s2bi</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tc&#39;Skip_s2bh</span>
+<span class="o">$</span><span class="n">tc&#39;Skip</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">3094536593620165717</span><span class="o">##</span> <span class="mi">4027393797195985287</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tc&#39;Skip_s2bi</span> <span class="mi">1</span><span class="o">#</span> <span class="o">$</span><span class="n">krep_a13M</span>
+<span class="o">$</span><span class="n">krep_a13U</span> <span class="ow">=</span> <span class="kt">KindRepFun</span> <span class="o">$</span><span class="n">krep_a13S</span> <span class="o">$</span><span class="n">krep_a13M</span>
+<span class="o">$</span><span class="n">tc&#39;Yield_s2bj</span> <span class="ow">=</span> <span class="s">&quot;&#39;Yield&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tc&#39;Yield_s2bk</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tc&#39;Yield_s2bj</span>
+<span class="o">$</span><span class="n">tc&#39;Yield</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">11605012626859213932</span><span class="o">##</span> <span class="mi">10048296928662928533</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tc&#39;Yield_s2bk</span> <span class="mi">1</span><span class="o">#</span> <span class="o">$</span><span class="n">krep_a13U</span>
+<span class="o">$</span><span class="n">tcStream_s2bl</span> <span class="ow">=</span> <span class="s">&quot;Stream&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tcStream_s2bm</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tcStream_s2bl</span>
+<span class="o">$</span><span class="n">tcStream</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">4684828220733693542</span><span class="o">##</span> <span class="mi">9271748289049993304</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tcStream_s2bm</span> <span class="mi">0</span><span class="o">#</span> <span class="n">krep</span><span class="o">$*</span>
+<span class="o">$</span><span class="n">krep_a13T</span> <span class="ow">=</span> <span class="kt">KindRepTyConApp</span> <span class="o">$</span><span class="n">tcStream</span> <span class="kt">[]</span>
+<span class="o">$</span><span class="n">krep_a13Q</span> <span class="ow">=</span> <span class="kt">KindRepFun</span> <span class="o">$</span><span class="n">krep_a13R</span> <span class="o">$</span><span class="n">krep_a13T</span>
+<span class="o">$</span><span class="n">krep_a13P</span> <span class="ow">=</span> <span class="kt">KindRepFun</span> <span class="o">$</span><span class="n">krep_a13N</span> <span class="o">$</span><span class="n">krep_a13Q</span>
+<span class="o">$</span><span class="n">krep_a13L</span> <span class="ow">=</span> <span class="kt">KindRepFun</span> <span class="o">$</span><span class="n">krep_a13M</span> <span class="o">$</span><span class="n">krep_a13P</span>
+<span class="o">$</span><span class="n">tc&#39;Stream_s2bn</span> <span class="ow">=</span> <span class="s">&quot;&#39;Stream&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tc&#39;Stream_s2bo</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tc&#39;Stream_s2bn</span>
+<span class="o">$</span><span class="n">tc&#39;Stream</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">3913242768984846722</span><span class="o">##</span> <span class="mi">15904583103253483572</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tc&#39;Stream_s2bo</span> <span class="mi">1</span><span class="o">#</span> <span class="o">$</span><span class="n">krep_a13L</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+<span class="ansi1">diff --git a/tmp/hs-comprehension-ast-1.html b/tmp/hs-comprehension-ast-2.html</span>
+<span class="ansi1">index 236c719..a2e513b 100644</span>
+<span class="ansi1">--- a/tmp/hs-comprehension-ast-1.html</span>
+<span class="ansi1">+++ b/tmp/hs-comprehension-ast-2.html</span>
+<span class="ansi36">@@ -39,7 +39,7 @@</span> mapS = \f :: Char -&gt; Char -&gt;
+ 
+ myMap = \t :: * -&gt; 
+     \a :: * -&gt; 
+<span class="ansi31">-        let myMap = \ds_d154 :: t -&gt; a -&gt; </span>
+<span class="ansi32">+</span><span class="ansi32">        \ds_d154 :: t -&gt; a -&gt;</span><span class="ansi41"> </span>
+             \ds_d155 :: [t] -&gt; 
+                 case ds_d155 of
+                     : x xs -&gt; : (ds_d154 x) (myMap ds_d154 xs)
+<span class="ansi36">@@ -47,28 +47,75 @@</span> myMap = \t :: * -&gt;
+                     
+                 
+             
+<span class="ansi31">-         in</span>
+<span class="ansi31">-            myMap</span>
+         
+     
+ 
+<span class="ansi31">-msg = foldl1 $fFoldable[] . (replicate (I# 10000#) ((myMap toUpper) . (myMap toLower))) (unpackCString# "Hello Wjfkdsafjaldskfjdskjfklsdjflsajflask;jfklads;jfkladsjflkdsajfklsdjfkdsfklsjfsdklfjakl;fjldsk;ajflskadjfkladsfodsklafjlkads;fjlk;adsfj;sadklfrdsfjdskla;fjdghjfdjghudskjgohgiojis ugisrofhjiesfhjisfghifldldldkfjgndlfitkriodlnlgogkrtidjwjajxjcjerjfjfkfkfkfjitorbjdskjfdskjfskljfaskljfklasjfklsdafddsjflkadsjfklsjfsadkdlffkldshfdsdfhjisldgjiifndslisdhbigirgjijfkldsfjssofhjdsihjioshuisgfhdsifhjsidhfdsifjsjdikfjdsikfld"#)</span>
+<span class="ansi31">-main = putStrLn msg</span>
+<span class="ansi31">-main = runMainIO main</span>
+<span class="ansi31">-$trModule = Module (TrNameS "main"#) (TrNameS "Main"#)</span>
+<span class="ansi32">+</span><span class="ansi32">myMap = myMap</span>
+<span class="ansi32">+</span><span class="ansi32">n = I# 10000#</span>
+<span class="ansi32">+</span><span class="ansi32">msg = case build (\b :: * -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">    \c :: ([Char] -&gt; [Char]) -&gt; b -&gt; b -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">        \nil :: b -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">            case ltInt (I# 0#) n of</span>
+<span class="ansi32">+</span><span class="ansi32">                True -&gt; repeatFB (takeFB c nil) (\x :: [Char] -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">                    writeUp (mapS toUpper (readUp (writeUp (mapS toLower (readUp x)))))</span>
+<span class="ansi32">+</span><span class="ansi32">                ) n</span>
+<span class="ansi32">+</span><span class="ansi32">                False -&gt; nil</span>
+<span class="ansi32">+</span><span class="ansi41">                </span>
+<span class="ansi32">+</span><span class="ansi41">            </span>
+<span class="ansi32">+</span><span class="ansi41">        </span>
+<span class="ansi32">+</span><span class="ansi41">    </span>
+<span class="ansi32">+</span><span class="ansi32">) of</span>
+<span class="ansi32">+</span><span class="ansi32">    : x xs -&gt; foldr (\ds :: [Char] -&gt; [Char] -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">        \ds1 :: ([Char] -&gt; [Char]) -&gt; [Char] -&gt; [Char] -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">            \v :: [Char] -&gt; [Char] -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">                ds1 (v . ds)</span>
+<span class="ansi32">+</span><span class="ansi41">            </span>
+<span class="ansi32">+</span><span class="ansi41">        </span>
+<span class="ansi32">+</span><span class="ansi32">    ) id xs x</span>
+<span class="ansi32">+</span><span class="ansi32">    [] -&gt; foldl2</span>
+<span class="ansi32">+</span><span class="ansi41">    </span>
+<span class="ansi32">+</span><span class="ansi32"> (build (\b :: * -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">    unpackFoldrCString# "Hello Wjfkdsafjaldskfjdskjfklsdjflsajflask;jfklads;jfkladsjflkdsajfklsdjfkdsfklsjfsdklfjakl;fjldsk;ajflskadjfkladsfodsklafjlkads;fjlk;adsfj;sadklfrdsfjdskla;fjdghjfdjghudskjgohgiojis ugisrofhjiesfhjisfghifldldldkfjgndlfitkriodlnlgogkrtidjwjajxjcjerjfjfkfkfkfjitorbjdskjfdskjfskljfaskljfklasjfklsdafddsjflkadsjfklsjfsadkdlffkldshfdsdfhjisldgjiifndslisdhbigirgjijfkldsfjssofhjdsihjioshuisgfhdsifhjsidhfdsifjsjdikfjdsikfld"#</span>
+<span class="ansi32">+</span><span class="ansi32">))</span>
+<span class="ansi32">+</span><span class="ansi32">main_s1vZ = \eta :: State# RealWorld -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">    hPutStr2 stdout msg True eta</span>
+<span class="ansi32">+</span>
+<span class="ansi32">+</span><span class="ansi32">main = main_s1vZ</span>
+<span class="ansi32">+</span><span class="ansi32">main_s2b5 = runMainIO1 (main_s1vZ)</span>
+<span class="ansi32">+</span><span class="ansi32">main = main_s2b5</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s2b6 = "main"#</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s2b7 = TrNameS $trModule_s2b6</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s2b8 = "Main"#</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule_s2b9 = TrNameS $trModule_s2b8</span>
+<span class="ansi32">+</span><span class="ansi32">$trModule = Module $trModule_s2b7 $trModule_s2b9</span>
+ $krep_a13S = KindRepTyConApp $tcChar []
+<span class="ansi31">-$krep_a13R = KindRepTyConApp $tc[] (: $krep_a13S [])</span>
+<span class="ansi31">-$krep_a13N = $WKindRepVar (I# 0#)</span>
+<span class="ansi31">-$tcStep = TyCon 12766381590924836876## 17532131051778711994## $trModule (TrNameS "Step"#) 0# krep$*Arr*</span>
+<span class="ansi31">-$krep_a13O = KindRepTyConApp $tcStep (: $krep_a13N [])</span>
+<span class="ansi31">-$tc'Done = TyCon 12461457374452162227## 16535247372730198091## $trModule (TrNameS "'Done"#) 1# $krep_a13O</span>
+<span class="ansi32">+</span><span class="ansi32">$krep_s2ba = : $krep_a13S []</span>
+<span class="ansi32">+</span><span class="ansi32">$krep_a13R = KindRepTyConApp $tc[] $krep_s2ba</span>
+<span class="ansi32">+</span><span class="ansi32">$krep_s2bb = I# 0#</span>
+<span class="ansi32">+</span><span class="ansi32">$krep_a13N = $WKindRepVar $krep_s2bb</span>
+<span class="ansi32">+</span><span class="ansi32">$tcStep_s2bc = "Step"#</span>
+<span class="ansi32">+</span><span class="ansi32">$tcStep_s2bd = TrNameS $tcStep_s2bc</span>
+<span class="ansi32">+</span><span class="ansi32">$tcStep = TyCon 12766381590924836876## 17532131051778711994## $trModule $tcStep_s2bd 0# krep$*Arr*</span>
+<span class="ansi32">+</span><span class="ansi32">$krep_s2be = : $krep_a13N []</span>
+<span class="ansi32">+</span><span class="ansi32">$krep_a13O = KindRepTyConApp $tcStep $krep_s2be</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Done_s2bf = "'Done"#</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Done_s2bg = TrNameS $tc'Done_s2bf</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Done = TyCon 12461457374452162227## 16535247372730198091## $trModule $tc'Done_s2bg 1# $krep_a13O</span>
+ $krep_a13M = KindRepFun $krep_a13N $krep_a13O
+<span class="ansi31">-$tc'Skip = TyCon 3094536593620165717## 4027393797195985287## $trModule (TrNameS "'Skip"#) 1# $krep_a13M</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Skip_s2bh = "'Skip"#</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Skip_s2bi = TrNameS $tc'Skip_s2bh</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Skip = TyCon 3094536593620165717## 4027393797195985287## $trModule $tc'Skip_s2bi 1# $krep_a13M</span>
+ $krep_a13U = KindRepFun $krep_a13S $krep_a13M
+<span class="ansi31">-$tc'Yield = TyCon 11605012626859213932## 10048296928662928533## $trModule (TrNameS "'Yield"#) 1# $krep_a13U</span>
+<span class="ansi31">-$tcStream = TyCon 4684828220733693542## 9271748289049993304## $trModule (TrNameS "Stream"#) 0# krep$*</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Yield_s2bj = "'Yield"#</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Yield_s2bk = TrNameS $tc'Yield_s2bj</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Yield = TyCon 11605012626859213932## 10048296928662928533## $trModule $tc'Yield_s2bk 1# $krep_a13U</span>
+<span class="ansi32">+</span><span class="ansi32">$tcStream_s2bl = "Stream"#</span>
+<span class="ansi32">+</span><span class="ansi32">$tcStream_s2bm = TrNameS $tcStream_s2bl</span>
+<span class="ansi32">+</span><span class="ansi32">$tcStream = TyCon 4684828220733693542## 9271748289049993304## $trModule $tcStream_s2bm 0# krep$*</span>
+ $krep_a13T = KindRepTyConApp $tcStream []
+ $krep_a13Q = KindRepFun $krep_a13R $krep_a13T
+ $krep_a13P = KindRepFun $krep_a13N $krep_a13Q
+ $krep_a13L = KindRepFun $krep_a13M $krep_a13P
+<span class="ansi31">-$tc'Stream = TyCon 3913242768984846722## 15904583103253483572## $trModule (TrNameS "'Stream"#) 1# $krep_a13L</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Stream_s2bn = "'Stream"#</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Stream_s2bo = TrNameS $tc'Stream_s2bn</span>
+<span class="ansi32">+</span><span class="ansi32">$tc'Stream = TyCon 3913242768984846722## 15904583103253483572## $trModule $tc'Stream_s2bo 1# $krep_a13L</span>
+
+        </pre>
+    </body>
+</html>
+

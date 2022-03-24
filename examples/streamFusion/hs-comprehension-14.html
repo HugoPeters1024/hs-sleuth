@@ -1,0 +1,326 @@
+<html>
+    <head>
+        <title>
+            Simplifier
+        </title>
+        <link rel="stylesheet" href="hs-comprehension-style.css">
+    </head>
+    <body>
+        <h1>
+            Simplifier
+             
+            14
+            /
+            26
+        </h1>
+        <div class="button-container">
+            <a class="pass-btn" href="hs-comprehension-13.html">
+                <button>
+                    Worker Wrapper binds
+                </button>
+            </a>
+             
+            <a class="pass-btn" href="hs-comprehension-15.html">
+                <button>
+                    Exitification transformation
+                </button>
+            </a>
+        </div>
+        <pre class="code">
+            <div class="highlight"><pre><span></span><span class="nf">lvl_s2br</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">ds_d151</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">ds_d151</span> <span class="kr">of</span>
+        <span class="kt">:</span> <span class="n">c</span> <span class="n">tl</span> <span class="ow">-&gt;</span> <span class="kt">Yield</span> <span class="n">c</span> <span class="n">tl</span>
+        <span class="kt">[]</span> <span class="ow">-&gt;</span> <span class="kt">Done</span>
+        
+    
+
+<span class="nf">readUp</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">::</span> <span class="kt">String</span> <span class="ow">-&gt;</span> 
+    <span class="kt">Stream</span> <span class="n">lvl_s2br</span> <span class="n">s</span> <span class="kt">[]</span>
+
+<span class="o">$</span><span class="n">wwriteUp</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s_s2bE</span> <span class="ow">::</span> <span class="o">*</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">ww</span> <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> <span class="kt">Step</span> <span class="n">s</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">ww</span> <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> 
+            <span class="kr">let</span> <span class="n">go</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">s</span> <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> 
+                <span class="kr">case</span> <span class="n">ww</span> <span class="n">s</span> <span class="kr">of</span>
+                    <span class="kt">Skip</span> <span class="n">s</span> <span class="ow">-&gt;</span> <span class="n">go</span> <span class="n">s</span>
+                    <span class="kt">Yield</span> <span class="n">c</span> <span class="n">s</span> <span class="ow">-&gt;</span> <span class="kt">:</span> <span class="n">c</span> <span class="p">(</span><span class="n">go</span> <span class="n">s</span><span class="p">)</span>
+                    <span class="kt">Done</span> <span class="ow">-&gt;</span> <span class="kt">[]</span>
+                    
+                
+             <span class="kr">in</span>
+                <span class="n">go</span> <span class="n">ww</span>
+            
+        
+    
+
+<span class="nf">writeUp</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">w_s2bB</span> <span class="ow">::</span> <span class="kt">Stream</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">w_s2bB</span> <span class="kr">of</span>
+        <span class="kt">Stream</span> <span class="n">s_s2bE</span> <span class="n">ww</span> <span class="n">ww</span> <span class="n">ww</span> <span class="ow">-&gt;</span> <span class="o">$</span><span class="n">wwriteUp</span> <span class="n">ww</span> <span class="n">ww</span>
+        
+    
+
+<span class="o">$</span><span class="n">wmapS</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">w_s2bK</span> <span class="ow">::</span> <span class="kt">Char</span> <span class="ow">-&gt;</span> <span class="kt">Char</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">s_s2bO</span> <span class="ow">::</span> <span class="o">*</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">ww</span> <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> <span class="kt">Step</span> <span class="n">s</span> <span class="ow">-&gt;</span> 
+            <span class="nf">\</span><span class="n">ww</span> <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> 
+                <span class="nf">\</span><span class="n">ww</span> <span class="ow">::</span> <span class="kt">String</span> <span class="ow">-&gt;</span> 
+                    <span class="kt">Stream</span> <span class="p">(</span><span class="nf">\</span><span class="n">s</span> <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> 
+                        <span class="kr">case</span> <span class="n">ww</span> <span class="n">s</span> <span class="kr">of</span>
+                            <span class="kt">Skip</span> <span class="n">s&#39;</span> <span class="ow">-&gt;</span> <span class="kt">Skip</span> <span class="n">s&#39;</span>
+                            <span class="kt">Yield</span> <span class="n">x</span> <span class="n">s&#39;</span> <span class="ow">-&gt;</span> <span class="kt">Yield</span> <span class="p">(</span><span class="n">w_s2bK</span> <span class="n">x</span><span class="p">)</span> <span class="n">s&#39;</span>
+                            <span class="kt">Done</span> <span class="ow">-&gt;</span> <span class="kt">Done</span>
+                            
+                        
+                    <span class="p">)</span> <span class="n">ww</span> <span class="n">ww</span>
+                
+            
+        
+    
+
+<span class="nf">mapS</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">w_s2bK</span> <span class="ow">::</span> <span class="kt">Char</span> <span class="ow">-&gt;</span> <span class="kt">Char</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">w_s2bL</span> <span class="ow">::</span> <span class="kt">Stream</span> <span class="ow">-&gt;</span> 
+        <span class="kr">case</span> <span class="n">w_s2bL</span> <span class="kr">of</span>
+            <span class="kt">Stream</span> <span class="n">s_s2bO</span> <span class="n">ww</span> <span class="n">ww</span> <span class="n">ww</span> <span class="ow">-&gt;</span> <span class="o">$</span><span class="n">wmapS</span> <span class="n">w_s2bK</span> <span class="n">ww</span> <span class="n">ww</span> <span class="n">ww</span>
+            
+        
+    
+
+<span class="nf">myMap</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">t</span> <span class="ow">::</span> <span class="o">*</span> <span class="ow">-&gt;</span> 
+    <span class="nf">\</span><span class="n">a</span> <span class="ow">::</span> <span class="o">*</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">ds_d154</span> <span class="ow">::</span> <span class="n">t</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> 
+            <span class="nf">\</span><span class="n">ds_d155</span> <span class="ow">::</span> <span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+                <span class="kr">case</span> <span class="n">ds_d155</span> <span class="kr">of</span>
+                    <span class="kt">:</span> <span class="n">x</span> <span class="n">xs</span> <span class="ow">-&gt;</span> <span class="kt">:</span> <span class="p">(</span><span class="n">ds_d154</span> <span class="n">x</span><span class="p">)</span> <span class="p">(</span><span class="n">myMap</span> <span class="n">ds_d154</span> <span class="n">xs</span><span class="p">)</span>
+                    <span class="kt">[]</span> <span class="ow">-&gt;</span> <span class="kt">[]</span>
+                    
+                
+            
+        
+    
+
+<span class="nf">myMap</span> <span class="ow">=</span> <span class="n">myMap</span>
+<span class="nf">x</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">x</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">readUp</span> <span class="p">(</span><span class="kr">case</span> <span class="n">readUp</span> <span class="n">x</span> <span class="kr">of</span>
+        <span class="kt">Stream</span> <span class="n">s_s2bO</span> <span class="n">ww</span> <span class="n">ww</span> <span class="n">ww</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="o">$</span><span class="n">wmapS</span> <span class="n">toLower</span> <span class="n">ww</span> <span class="n">ww</span> <span class="n">ww</span> <span class="kr">of</span>
+            <span class="kt">Stream</span> <span class="n">s_s2bE</span> <span class="n">ww</span> <span class="n">ww</span> <span class="n">ww</span> <span class="ow">-&gt;</span> <span class="o">$</span><span class="n">wwriteUp</span> <span class="n">ww</span> <span class="n">ww</span>
+            
+        
+        
+    <span class="p">)</span> <span class="kr">of</span>
+        <span class="kt">Stream</span> <span class="n">s_s2bO</span> <span class="n">ww</span> <span class="n">ww</span> <span class="n">ww</span> <span class="ow">-&gt;</span> <span class="kr">case</span> <span class="o">$</span><span class="n">wmapS</span> <span class="n">toUpper</span> <span class="n">ww</span> <span class="n">ww</span> <span class="n">ww</span> <span class="kr">of</span>
+            <span class="kt">Stream</span> <span class="n">s_s2bE</span> <span class="n">ww</span> <span class="n">ww</span> <span class="n">ww</span> <span class="ow">-&gt;</span> <span class="o">$</span><span class="n">wwriteUp</span> <span class="n">ww</span> <span class="n">ww</span>
+            
+        
+        
+    
+
+<span class="o">$</span><span class="n">wxs</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">ww</span> <span class="ow">::</span> <span class="kt">Int</span><span class="o">#</span> <span class="ow">-&gt;</span> 
+    <span class="kr">case</span> <span class="n">ww</span> <span class="kr">of</span>
+        <span class="mi">1</span><span class="o">#</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">x</span> <span class="kt">[]</span>
+        <span class="kr">_</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">x</span> <span class="p">(</span><span class="kr">case</span> <span class="o">$</span><span class="n">wxs</span> <span class="p">(</span><span class="o">-#</span> <span class="n">ds1</span> <span class="mi">1</span><span class="o">#</span><span class="p">)</span> <span class="kr">of</span>
+            <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">ww</span> <span class="n">ww</span> <span class="ow">-&gt;</span> <span class="kt">:</span> <span class="n">ww</span> <span class="n">ww</span>
+            
+        <span class="p">)</span>
+        
+    
+
+<span class="nf">msg</span> <span class="ow">=</span> <span class="kr">case</span> <span class="o">$</span><span class="n">wxs</span> <span class="mi">10000</span><span class="o">#</span> <span class="kr">of</span>
+    <span class="p">(</span><span class="o">#</span><span class="p">,</span><span class="o">#</span><span class="p">)</span> <span class="n">ww</span> <span class="n">ww</span> <span class="ow">-&gt;</span> <span class="kr">let</span> <span class="n">go1</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">ds</span> <span class="ow">::</span> <span class="p">[[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]]</span> <span class="ow">-&gt;</span> 
+        <span class="nf">\</span><span class="n">eta_B0</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+            <span class="nf">\</span><span class="n">eta_X1</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+                <span class="kr">case</span> <span class="n">ds</span> <span class="kr">of</span>
+                    <span class="kt">:</span> <span class="n">y</span> <span class="n">ys</span> <span class="ow">-&gt;</span> <span class="n">go1</span> <span class="n">ys</span> <span class="p">(</span><span class="nf">\</span><span class="n">x</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Char</span><span class="p">]</span> <span class="ow">-&gt;</span> 
+                        <span class="n">eta_B0</span> <span class="p">(</span><span class="n">y</span> <span class="n">x</span><span class="p">)</span>
+                    <span class="p">)</span> <span class="n">eta_X1</span>
+                    <span class="kt">[]</span> <span class="ow">-&gt;</span> <span class="n">eta_B0</span> <span class="n">eta_X1</span>
+                    
+                
+            
+        
+     <span class="kr">in</span>
+        <span class="n">go1</span> <span class="n">ww</span> <span class="n">ww</span> <span class="p">(</span><span class="n">unpackCString</span><span class="o">#</span> <span class="s">&quot;Hello Wjfkdsafjaldskfjdskjfklsdjflsajflask;jfklads;jfkladsjflkdsajfklsdjfkdsfklsjfsdklfjakl;fjldsk;ajflskadjfkladsfodsklafjlkads;fjlk;adsfj;sadklfrdsfjdskla;fjdghjfdjghudskjgohgiojis ugisrofhjiesfhjisfghifldldldkfjgndlfitkriodlnlgogkrtidjwjajxjcjerjfjfkfkfkfjitorbjdskjfdskjfskljfaskljfklasjfklsdafddsjflkadsjfklsjfsadkdlffkldshfdsdfhjisldgjiifndslisdhbigirgjijfkldsfjssofhjdsihjioshuisgfhdsifhjsidhfdsifjsjdikfjdsikfld&quot;</span><span class="o">#</span><span class="p">)</span>
+    
+    
+
+<span class="nf">main_s1vZ</span> <span class="ow">=</span> <span class="nf">\</span><span class="n">eta</span> <span class="ow">::</span> <span class="kt">State</span><span class="o">#</span> <span class="kt">RealWorld</span> <span class="ow">-&gt;</span> 
+    <span class="n">hPutStr2</span> <span class="n">stdout</span> <span class="n">msg</span> <span class="kt">True</span> <span class="n">eta</span>
+
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s1vZ</span>
+<span class="nf">main_s2b5</span> <span class="ow">=</span> <span class="n">runMainIO1</span> <span class="p">(</span><span class="n">main_s1vZ</span><span class="p">)</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="n">main_s2b5</span>
+<span class="o">$</span><span class="n">trModule_s2b6</span> <span class="ow">=</span> <span class="s">&quot;main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s2b7</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s2b6</span>
+<span class="o">$</span><span class="n">trModule_s2b8</span> <span class="ow">=</span> <span class="s">&quot;Main&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">trModule_s2b9</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">trModule_s2b8</span>
+<span class="o">$</span><span class="n">trModule</span> <span class="ow">=</span> <span class="kt">Module</span> <span class="o">$</span><span class="n">trModule_s2b7</span> <span class="o">$</span><span class="n">trModule_s2b9</span>
+<span class="o">$</span><span class="n">krep_a13S</span> <span class="ow">=</span> <span class="kt">KindRepTyConApp</span> <span class="o">$</span><span class="n">tcChar</span> <span class="kt">[]</span>
+<span class="o">$</span><span class="n">krep_s2ba</span> <span class="ow">=</span> <span class="kt">:</span> <span class="o">$</span><span class="n">krep_a13S</span> <span class="kt">[]</span>
+<span class="o">$</span><span class="n">krep_a13R</span> <span class="ow">=</span> <span class="kt">KindRepTyConApp</span> <span class="o">$</span><span class="n">tc</span><span class="kt">[]</span> <span class="o">$</span><span class="n">krep_s2ba</span>
+<span class="o">$</span><span class="n">krep_a13N</span> <span class="ow">=</span> <span class="kt">KindRepVar</span> <span class="mi">0</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tcStep_s2bc</span> <span class="ow">=</span> <span class="s">&quot;Step&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tcStep_s2bd</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tcStep_s2bc</span>
+<span class="o">$</span><span class="n">tcStep</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">12766381590924836876</span><span class="o">##</span> <span class="mi">17532131051778711994</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tcStep_s2bd</span> <span class="mi">0</span><span class="o">#</span> <span class="n">krep</span><span class="o">$*</span><span class="kt">Arr</span><span class="o">*</span>
+<span class="o">$</span><span class="n">krep_s2be</span> <span class="ow">=</span> <span class="kt">:</span> <span class="o">$</span><span class="n">krep_a13N</span> <span class="kt">[]</span>
+<span class="o">$</span><span class="n">krep_a13O</span> <span class="ow">=</span> <span class="kt">KindRepTyConApp</span> <span class="o">$</span><span class="n">tcStep</span> <span class="o">$</span><span class="n">krep_s2be</span>
+<span class="o">$</span><span class="n">tc&#39;Done_s2bf</span> <span class="ow">=</span> <span class="s">&quot;&#39;Done&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tc&#39;Done_s2bg</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tc&#39;Done_s2bf</span>
+<span class="o">$</span><span class="n">tc&#39;Done</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">12461457374452162227</span><span class="o">##</span> <span class="mi">16535247372730198091</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tc&#39;Done_s2bg</span> <span class="mi">1</span><span class="o">#</span> <span class="o">$</span><span class="n">krep_a13O</span>
+<span class="o">$</span><span class="n">krep_a13M</span> <span class="ow">=</span> <span class="kt">KindRepFun</span> <span class="o">$</span><span class="n">krep_a13N</span> <span class="o">$</span><span class="n">krep_a13O</span>
+<span class="o">$</span><span class="n">tc&#39;Skip_s2bh</span> <span class="ow">=</span> <span class="s">&quot;&#39;Skip&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tc&#39;Skip_s2bi</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tc&#39;Skip_s2bh</span>
+<span class="o">$</span><span class="n">tc&#39;Skip</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">3094536593620165717</span><span class="o">##</span> <span class="mi">4027393797195985287</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tc&#39;Skip_s2bi</span> <span class="mi">1</span><span class="o">#</span> <span class="o">$</span><span class="n">krep_a13M</span>
+<span class="o">$</span><span class="n">krep_a13U</span> <span class="ow">=</span> <span class="kt">KindRepFun</span> <span class="o">$</span><span class="n">krep_a13S</span> <span class="o">$</span><span class="n">krep_a13M</span>
+<span class="o">$</span><span class="n">tc&#39;Yield_s2bj</span> <span class="ow">=</span> <span class="s">&quot;&#39;Yield&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tc&#39;Yield_s2bk</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tc&#39;Yield_s2bj</span>
+<span class="o">$</span><span class="n">tc&#39;Yield</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">11605012626859213932</span><span class="o">##</span> <span class="mi">10048296928662928533</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tc&#39;Yield_s2bk</span> <span class="mi">1</span><span class="o">#</span> <span class="o">$</span><span class="n">krep_a13U</span>
+<span class="o">$</span><span class="n">tcStream_s2bl</span> <span class="ow">=</span> <span class="s">&quot;Stream&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tcStream_s2bm</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tcStream_s2bl</span>
+<span class="o">$</span><span class="n">tcStream</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">4684828220733693542</span><span class="o">##</span> <span class="mi">9271748289049993304</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tcStream_s2bm</span> <span class="mi">0</span><span class="o">#</span> <span class="n">krep</span><span class="o">$*</span>
+<span class="o">$</span><span class="n">krep_a13T</span> <span class="ow">=</span> <span class="kt">KindRepTyConApp</span> <span class="o">$</span><span class="n">tcStream</span> <span class="kt">[]</span>
+<span class="o">$</span><span class="n">krep_a13Q</span> <span class="ow">=</span> <span class="kt">KindRepFun</span> <span class="o">$</span><span class="n">krep_a13R</span> <span class="o">$</span><span class="n">krep_a13T</span>
+<span class="o">$</span><span class="n">krep_a13P</span> <span class="ow">=</span> <span class="kt">KindRepFun</span> <span class="o">$</span><span class="n">krep_a13N</span> <span class="o">$</span><span class="n">krep_a13Q</span>
+<span class="o">$</span><span class="n">krep_a13L</span> <span class="ow">=</span> <span class="kt">KindRepFun</span> <span class="o">$</span><span class="n">krep_a13M</span> <span class="o">$</span><span class="n">krep_a13P</span>
+<span class="o">$</span><span class="n">tc&#39;Stream_s2bn</span> <span class="ow">=</span> <span class="s">&quot;&#39;Stream&quot;</span><span class="o">#</span>
+<span class="o">$</span><span class="n">tc&#39;Stream_s2bo</span> <span class="ow">=</span> <span class="kt">TrNameS</span> <span class="o">$</span><span class="n">tc&#39;Stream_s2bn</span>
+<span class="o">$</span><span class="n">tc&#39;Stream</span> <span class="ow">=</span> <span class="kt">TyCon</span> <span class="mi">3913242768984846722</span><span class="o">##</span> <span class="mi">15904583103253483572</span><span class="o">##</span> <span class="o">$</span><span class="n">trModule</span> <span class="o">$</span><span class="n">tc&#39;Stream_s2bo</span> <span class="mi">1</span><span class="o">#</span> <span class="o">$</span><span class="n">krep_a13L</span>
+</pre></div>
+
+
+        </pre>
+        <pre class="diff">
+            
+<span class="ansi1">diff --git a/tmp/hs-comprehension-ast-13.html b/tmp/hs-comprehension-ast-14.html</span>
+<span class="ansi1">index 58707eb..4a2221c 100644</span>
+<span class="ansi1">--- a/tmp/hs-comprehension-ast-13.html</span>
+<span class="ansi1">+++ b/tmp/hs-comprehension-ast-14.html</span>
+<span class="ansi36">@@ -11,25 +11,15 @@</span> readUp = \s :: String -&gt;
+ $wwriteUp = \s_s2bE :: * -&gt; 
+     \ww :: s -&gt; Step s -&gt; 
+         \ww :: s -&gt; 
+<span class="ansi31">-            let ww = absentError "Arg: ww\n\</span>
+<span class="ansi31">-\Type: String"# in</span>
+<span class="ansi31">-                let w_s2bB = Stream ww ww ww in</span>
+<span class="ansi31">-                    let ds_d14Q = w_s2bB in</span>
+<span class="ansi31">-                        case ds_d14Q of</span>
+<span class="ansi31">-                            Stream s next s n -&gt; let go = \s :: s -&gt; </span>
+<span class="ansi31">-                                case next s of</span>
+<span class="ansi32">+</span><span class="ansi32">            let go = \s :: s -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">                case ww s of</span>
+                     Skip s -&gt; go s
+                     Yield c s -&gt; : c (go s)
+                     Done -&gt; []
+                     
+                 
+              in
+<span class="ansi31">-                                go s</span>
+<span class="ansi31">-                            </span>
+<span class="ansi31">-                            </span>
+<span class="ansi31">-                        </span>
+<span class="ansi31">-                    </span>
+<span class="ansi31">-                </span>
+<span class="ansi32">+</span><span class="ansi32">                go ww</span>
+             
+         
+     
+<span class="ansi36">@@ -45,23 +35,14 @@</span> $wmapS = \w_s2bK :: Char -&gt; Char -&gt;
+         \ww :: s -&gt; Step s -&gt; 
+             \ww :: s -&gt; 
+                 \ww :: String -&gt; 
+<span class="ansi31">-                    let w_s2bL = Stream ww ww ww in</span>
+<span class="ansi31">-                        let f = w_s2bK in</span>
+<span class="ansi31">-                            let ds_d14E = w_s2bL in</span>
+<span class="ansi31">-                                case ds_d14E of</span>
+<span class="ansi31">-                                    Stream s next s n -&gt; Stream (\s :: s -&gt; </span>
+<span class="ansi31">-                                        case next s of</span>
+<span class="ansi32">+</span><span class="ansi32">                    Stream (\s :: s -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">                        case ww s of</span>
+                             Skip s' -&gt; Skip s'
+<span class="ansi31">-                                            Yield x s' -&gt; Yield (f x) s'</span>
+<span class="ansi32">+</span><span class="ansi32">                            Yield x s' -&gt; Yield (w_s2bK x) s'</span>
+                             Done -&gt; Done
+                             
+                         
+<span class="ansi31">-                                    ) s n</span>
+<span class="ansi31">-                                    </span>
+<span class="ansi31">-                                </span>
+<span class="ansi31">-                            </span>
+<span class="ansi31">-                        </span>
+<span class="ansi31">-                    </span>
+<span class="ansi32">+</span><span class="ansi32">                    ) ww ww</span>
+                 
+             
+         
+<span class="ansi36">@@ -90,50 +71,45 @@</span> myMap = \t :: * -&gt;
+ 
+ myMap = myMap
+ x = \x :: [Char] -&gt; 
+<span class="ansi31">-    writeUp (mapS toUpper (readUp (writeUp (mapS toLower (readUp x)))))</span>
+<span class="ansi31">-</span>
+<span class="ansi31">-$wxs = \ww :: Int# -&gt; </span>
+<span class="ansi31">-    let w_s2bZ = I# ww in</span>
+<span class="ansi31">-        case let m = w_s2bZ in</span>
+<span class="ansi31">-            case m of</span>
+<span class="ansi31">-                I# ds -&gt; case ds of</span>
+<span class="ansi31">-                    1# -&gt; : x []</span>
+<span class="ansi31">-                    _ -&gt; : x (xs (I# (-# ds1 1#)))</span>
+<span class="ansi31">-                    </span>
+<span class="ansi32">+</span><span class="ansi32">    case readUp (case readUp x of</span>
+<span class="ansi32">+</span><span class="ansi32">        Stream s_s2bO ww ww ww -&gt; case $wmapS toLower ww ww ww of</span>
+<span class="ansi32">+</span><span class="ansi32">            Stream s_s2bE ww ww ww -&gt; $wwriteUp ww ww</span>
+             
+         
+         
+<span class="ansi31">-         of</span>
+<span class="ansi31">-            : ww ww -&gt; (#,#) ww ww</span>
+<span class="ansi32">+</span><span class="ansi32">    ) of</span>
+<span class="ansi32">+</span><span class="ansi32">        Stream s_s2bO ww ww ww -&gt; case $wmapS toUpper ww ww ww of</span>
+<span class="ansi32">+</span><span class="ansi32">            Stream s_s2bE ww ww ww -&gt; $wwriteUp ww ww</span>
+             
+         
+         
+     
+<span class="ansi31">-xs = \w_s2bZ :: Int -&gt; </span>
+<span class="ansi31">-    case case w_s2bZ of</span>
+<span class="ansi31">-        I# ww -&gt; $wxs ww</span>
+ 
+<span class="ansi31">-     of</span>
+<span class="ansi32">+</span><span class="ansi32">$wxs = \ww :: Int# -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">    case ww of</span>
+<span class="ansi32">+</span><span class="ansi32">        1# -&gt; (#,#) x []</span>
+<span class="ansi32">+</span><span class="ansi32">        _ -&gt; (#,#) x (case $wxs (-# ds1 1#) of</span>
+             (#,#) ww ww -&gt; : ww ww
+             
+<span class="ansi32">+</span><span class="ansi32">        )</span>
+<span class="ansi32">+</span><span class="ansi41">        </span>
+     
+ 
+<span class="ansi31">-msg = case xs (I# 10000#) of</span>
+<span class="ansi31">-    : x xs -&gt; let go1 = \ds :: [[Char] -&gt; [Char]] -&gt; </span>
+<span class="ansi32">+</span><span class="ansi32">msg = case $wxs 10000# of</span>
+<span class="ansi32">+</span><span class="ansi32">    (#,#) ww ww -&gt; let go1 = \ds :: [[Char] -&gt; [Char]] -&gt;</span><span class="ansi41"> </span>
+         \eta_B0 :: [Char] -&gt; [Char] -&gt; 
+             \eta_X1 :: [Char] -&gt; 
+                 case ds of
+<span class="ansi31">-                    : y ys -&gt; go1 ys (eta_B0 . y) eta_X1</span>
+<span class="ansi32">+</span><span class="ansi32">                    : y ys -&gt; go1 ys (\x :: [Char] -&gt;</span><span class="ansi41"> </span>
+<span class="ansi32">+</span><span class="ansi32">                        eta_B0 (y x)</span>
+<span class="ansi32">+</span><span class="ansi32">                    ) eta_X1</span>
+                     [] -&gt; eta_B0 eta_X1
+                     
+                 
+             
+         
+      in
+<span class="ansi31">-        go1 xs x (unpackCString# "Hello Wjfkdsafjaldskfjdskjfklsdjflsajflask;jfklads;jfkladsjflkdsajfklsdjfkdsfklsjfsdklfjakl;fjldsk;ajflskadjfkladsfodsklafjlkads;fjlk;adsfj;sadklfrdsfjdskla;fjdghjfdjghudskjgohgiojis ugisrofhjiesfhjisfghifldldldkfjgndlfitkriodlnlgogkrtidjwjajxjcjerjfjfkfkfkfjitorbjdskjfdskjfskljfaskljfklasjfklsdafddsjflkadsjfklsjfsadkdlffkldshfdsdfhjisldgjiifndslisdhbigirgjijfkldsfjssofhjdsihjioshuisgfhdsifhjsidhfdsifjsjdikfjdsikfld"#)</span>
+<span class="ansi31">-    </span>
+<span class="ansi31">-    [] -&gt; case foldl2 of</span>
+<span class="ansi31">-        </span>
+<span class="ansi32">+</span><span class="ansi32">        go1 ww ww (unpackCString# "Hello Wjfkdsafjaldskfjdskjfklsdjflsajflask;jfklads;jfkladsjflkdsajfklsdjfkdsfklsjfsdklfjakl;fjldsk;ajflskadjfkladsfodsklafjlkads;fjlk;adsfj;sadklfrdsfjdskla;fjdghjfdjghudskjgohgiojis ugisrofhjiesfhjisfghifldldldkfjgndlfitkriodlnlgogkrtidjwjajxjcjerjfjfkfkfkfjitorbjdskjfdskjfskljfaskljfklasjfklsdafddsjflkadsjfklsjfsadkdlffkldshfdsdfhjisldgjiifndslisdhbigirgjijfkldsfjssofhjdsihjioshuisgfhdsifhjsidhfdsifjsjdikfjdsikfld"#)</span>
+     
+     
+ 
+
+        </pre>
+    </body>
+</html>
+

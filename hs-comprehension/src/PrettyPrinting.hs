@@ -50,10 +50,10 @@ evalPP :: DynFlags -> CorePP -> String
 evalPP dflags pp = output $ execState pp (CorePPState dflags 0 mempty)
 
 showBind :: DynFlags -> CoreBind -> String
-showBind dflags b = evalPP dflags (bindPP b)
+showBind dflags b = evalPP dflags (bindPP (stripBind b))
 
 showExpr :: DynFlags -> CoreExpr -> String
-showExpr dflags e = evalPP dflags (exprPP e)
+showExpr dflags e = evalPP dflags (exprPP (stripExpr e))
 
 
 bindPP :: CoreBind -> CorePP
@@ -67,7 +67,7 @@ exprPP (Lit lit) = showPP (ppr lit)
 exprPP (App e a) = let
     infixSymbols = "!$%&*+./<=>?@\\^-~"
     isInfixOperator = case e of
-                        Var i -> any (\x -> elem x infixSymbols) $ showSDocUnsafe $ ppr $ varName i
+                        Var i -> all (\x -> elem x infixSymbols) $ showSDocUnsafe $ ppr $ varName i
                         _ -> False
 
 
@@ -76,13 +76,15 @@ exprPP (App e a) = let
                           _ -> False
 
     in if isTypeApplication
-          then exprPP e
+          then error "type application should be removed, they cannot be displayed properly in an infix world right now"
           else if isInfixOperator 
                   then parensPP a >> printPP " " >> exprPP e
                   else exprPP e >> printPP " " >> parensPP a
 exprPP (Lam b e) = do
     printPP "\\"
     showPP (ppr b)
+    printPP " :: "
+    showPP (ppr (varType b))
     printPP " -> "
     indented $ exprPP e
 exprPP (Let b e) = do
@@ -99,7 +101,7 @@ exprPP (Case e _ _ alts) = do
 exprPP (Cast e _) = exprPP e
 exprPP (Tick _ e) = exprPP e
 exprPP (Type t) = printPP "@" >> showPP (ppr t)
-exprPP (Coercion _) = printPP "Coercion"
+exprPP (Coercion e) = printPP "Coercion (" >> showPP (ppr e) >> printPP ")" 
 
 altPP :: CoreAlt -> CorePP
 altPP (Alt con bs expr) = do
@@ -112,19 +114,23 @@ altPP (Alt con bs expr) = do
     exprPP expr
 
 
-stripBind :: Bind a -> Bind a
+stripBind :: CoreBind -> CoreBind
 stripBind (NonRec b e) = NonRec b (stripExpr e)
-stripBind b = b
+stripBind (Rec xs) = Rec (map (\(b,e) -> (b, stripExpr e)) xs)
 
-stripExpr :: Expr a -> Expr a
+stripExpr :: CoreExpr -> CoreExpr
 stripExpr (Var i) = Var i
 stripExpr (Lit l) = Lit l
+stripExpr (Type t) = Type t
 stripExpr (App e (Type _)) = stripExpr e
-stripExpr (App e (Var i)) = case showSDocUnsafe (ppr (varName i)) of
-    ('$':_) -> stripExpr e
-    _       -> App (stripExpr e) (Var i)
 stripExpr (App e a) = App (stripExpr e) (stripExpr a)
-
 stripExpr (Lam b e) = Lam b (stripExpr e)
 stripExpr (Let b e) = Let (stripBind b) (stripExpr e)
-stripExpr x = x
+stripExpr (Case e b t alts) = Case (stripExpr e) b t (map stripAlt alts)
+stripExpr (Cast e c) = Cast (stripExpr e) c
+stripExpr (Tick t e) = Tick t (stripExpr e)
+stripExpr (Coercion c) = Coercion c
+
+
+stripAlt :: CoreAlt -> CoreAlt
+stripAlt (Alt con bs e) = Alt con bs (stripExpr e)
