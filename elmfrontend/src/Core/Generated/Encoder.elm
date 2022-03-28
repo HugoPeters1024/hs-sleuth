@@ -7,6 +7,14 @@ import Core.Generated.ElmStreet exposing (..)
 import Core.Generated.Types as T
 
 
+encodePassInfo : T.PassInfo -> Value
+encodePassInfo x = E.object
+    [ ("tag", E.string "PassInfo")
+    , ("idx", E.int x.idx)
+    , ("title", E.string x.title)
+    , ("binds", (E.list encodeCoreBind) x.binds)
+    ]
+
 encodeCoreLiteral : T.CoreLiteral -> Value
 encodeCoreLiteral x = E.object <| case x of
     T.CoreLitNumber x1 -> [("tag", E.string "CoreLitNumber"), ("contents", E.string x1)]

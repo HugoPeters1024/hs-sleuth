@@ -20,12 +20,10 @@ extra-source-files: CHANGELOG.md
 
 library
     exposed-modules:  HsComprehension
+                    , CoreCollection
 
     -- Modules included in this library but not exported.
-    other-modules:    Generation
-                    , PrettyPrinting
-                    , CoreCollection
-                    , CoreLang
+    other-modules:  CoreLang
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

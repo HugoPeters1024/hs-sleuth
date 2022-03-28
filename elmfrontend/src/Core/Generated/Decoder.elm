@@ -8,6 +8,12 @@ import Core.Generated.ElmStreet exposing (..)
 import Core.Generated.Types as T
 
 
+decodePassInfo : Decoder T.PassInfo
+decodePassInfo = D.succeed T.PassInfo
+    |> required "idx" D.int
+    |> required "title" D.string
+    |> required "binds" (D.list decodeCoreBind)
+
 decodeCoreLiteral : Decoder T.CoreLiteral
 decodeCoreLiteral =
     let decide : String -> Decoder T.CoreLiteral

@@ -3,6 +3,12 @@ module Core.Generated.Types exposing (..)
 import Time exposing (Posix)
 
 
+type alias PassInfo =
+    { idx : Int
+    , title : String
+    , binds : List CoreBind
+    }
+
 type CoreLiteral
     = CoreLitNumber String
     | CoreLitString String

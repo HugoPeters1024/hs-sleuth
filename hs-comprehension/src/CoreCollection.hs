@@ -18,10 +18,11 @@ data PassInfo = PassInfo { idx :: Int
                          , raw :: [CoreBind]
                          }
 
-getAllTopLevelDefs :: [CoreBind] -> [(CoreBndr, CoreExpr)]
+-- Basically maps all Rec binding groups to seperate NonRecs
+getAllTopLevelDefs :: [CoreBind] -> [CoreBind]
 getAllTopLevelDefs binds = concatMap go binds
-    where go (NonRec b e) = [(b,e)]
-          go (Rec bs) = bs
+    where go (NonRec b e) = [NonRec b e]
+          go (Rec bs) = map (uncurry NonRec) bs
 
 annotationsOn :: forall a. Data a => ModGuts -> CoreBndr -> CoreM [a]
 annotationsOn guts bndr = do

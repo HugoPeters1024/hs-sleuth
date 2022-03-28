@@ -17,6 +17,14 @@ import GHC.Generics (Generic)
 import Data.Aeson
 import Elm (Elm, ElmStreet (..))
 
+data PassInfo = PassInfo { idx :: Int
+                         , title :: Text
+                         , binds :: [CoreBind]
+                         }
+                 deriving (Show, Generic)
+                 deriving (Elm, ToJSON, FromJSON) via ElmStreet PassInfo
+                         
+
 data CoreLiteral = CoreLitNumber Text
                  | CoreLitString Text
                  | CoreLitOther Text -- underspecicfied catch all value

@@ -1,4 +1,4 @@
-module PprCoreLang exposing (viewCoreBind)
+module PprCoreLang exposing (viewCoreBind, coreBindName)
 
 import Core.Generated.Types exposing (..)
 
@@ -26,11 +26,17 @@ defaultState = { indent = 0, result = [], toplevel = True}
 viewCoreBind : CoreBind -> List (Html msg)
 viewCoreBind bind = (runPP (ppCoreBind bind |> State.vndThen newline) defaultState).result
 
+coreBindName : CoreBind -> String
+coreBindName (NonRec b e) = b.name
+
 emit : Html msg -> PP msg
 emit node = State.stateMap (\s -> { s | result = s.result ++ [node] })
 
 emitText : String -> PP msg
 emitText = emit << text
+
+emitOperator : String -> PP msg
+emitOperator op = emit <| span [class "o"] [text op]
 
 emitKeyword : String -> PP msg
 emitKeyword word = emit <| span [class "kt"] [text word]
@@ -105,7 +111,9 @@ ppCoreTerm : CoreTerm -> PP msg
 ppCoreTerm term = case term of
     Var i -> ppCoreVar i
     Lit l -> ppCoreLit l
-    App e a -> ppSequence [ppCoreTerm e, emitText " ", parensTerm a]
+    App e a -> case a of
+        Type t -> ppSequence [ppCoreTerm e, emitText " ", emitOperator "@", ppCoreTerm a]
+        _      -> ppSequence [ppCoreTerm e, emitText " ", parensTerm a]
     Lam b e -> ppSequence [emitText "\\", ppCoreBndr b, emitText " -> ", ppCoreTerm e]
     Let b e -> ppSequence [emitKeyword "let ", ppCoreBind b, emitKeyword " in ", ppCoreTerm e]
     Case e alts -> ppSequence [ emitKeyword "case "
