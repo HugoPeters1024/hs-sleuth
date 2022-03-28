@@ -80,6 +80,7 @@ coreLangLiteral l = CoreLitOther <$> pprText l
 
 coreLangBind :: C.CoreBind -> C.CoreM CoreBind
 coreLangBind (C.NonRec b e) = NonRec <$> coreLangBndr b <*> coreLangExpr e
+coreLangBind (C.Rec [(b, e)]) = NonRec <$> coreLangBndr b <*> coreLangExpr e
 
 coreLangAltCon :: C.AltCon -> C.CoreM CoreAltCon
 coreLangAltCon con@(C.DataAlt _) = DataAlt <$> pprText con
@@ -95,7 +96,7 @@ coreLangExpr (C.Lit l) = Lit <$> coreLangLiteral l
 coreLangExpr (C.App e a) = App <$> coreLangExpr e <*> coreLangExpr a
 coreLangExpr (C.Lam b e) = Lam <$> coreLangBndr b <*> coreLangExpr e
 coreLangExpr (C.Let b e) = Let <$> coreLangBind b <*> coreLangExpr e
-coreLangExpr (C.Case e _ _ alts) = Case <$> coreLangExpr e <*> mapM coreLangAlt alts
+coreLangExpr (C.Case e _ _ alts) = Case <$> coreLangExpr e <*> mapM coreLangAlt (reverse alts)
 coreLangExpr (C.Cast e _) = coreLangExpr e
 coreLangExpr (C.Coercion _) = pure $ Undef "Coercion"
 coreLangExpr (C.Tick _ e) = coreLangExpr e

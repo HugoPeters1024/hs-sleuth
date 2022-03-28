@@ -1,4 +1,4 @@
-module PprCoreLang exposing (viewCoreBind, coreBindName)
+module PprCoreLang exposing (viewCoreBind, coreBindName, isInfixOperator)
 
 import Core.Generated.Types exposing (..)
 
@@ -7,6 +7,7 @@ import Html.Attributes exposing (class)
 
 import Char
 import List
+import Set
 import State
 import State exposing (State)
 
@@ -21,7 +22,12 @@ runPP : PP msg -> PPState msg -> PPState msg
 runPP = State.evalState 
 
 defaultState : PPState msg
-defaultState = { indent = 0, result = [], toplevel = True}
+defaultState = { indent = 0, result = [], toplevel = True }
+
+isInfixOperator : String -> Bool
+isInfixOperator inp = 
+    let symbols = Set.fromList (String.toList "!$%&*+./<=>?@\\^-~#")
+    in String.all (\c -> Set.member c symbols) inp
 
 viewCoreBind : CoreBind -> List (Html msg)
 viewCoreBind bind = (runPP (ppCoreBind bind |> State.vndThen newline) defaultState).result
@@ -48,7 +54,7 @@ ppSequence : List (PP msg) -> PP msg
 ppSequence = State.void << State.sequence
 
 ppSequenceLines : List (PP msg) -> PP msg
-ppSequenceLines pps = State.void (State.sequence (List.map (\pp -> State.vndThen pp newline) pps))
+ppSequenceLines pps = State.void (State.sequence (List.map (\pp -> State.vndThen newline pp) pps))
 
 newline : PP msg
 newline = State.get 
@@ -56,6 +62,7 @@ newline = State.get
 
 indented : PP msg -> PP msg
 indented pp = State.stateMap (\s -> {s | indent = s.indent + 4})
+           |> State.vndThen newline
            |> State.vndThen pp
            |> State.vndThen newline
            |> State.vndThen (State.stateMap (\s -> {s | indent = s.indent - 4}))
@@ -97,7 +104,12 @@ ppCoreAltCon alt = case alt of
 
 ppCoreAlt : CoreAlt -> PP msg
 ppCoreAlt alt = case alt of
-    (Alt con _ e) -> ppSequence [ppCoreAltCon con, emitText " -> ", ppCoreTerm e]
+    (Alt con bs e) -> ppSequence [ ppCoreAltCon con
+                                 , emitText " "
+                                 , ppSequence (List.map ppCoreBndr bs)
+                                 , emitText " -> "
+                                 , ppCoreTerm e
+                                 ]
 
 ppCoreVar : String -> PP msg
 ppCoreVar name =
@@ -111,15 +123,28 @@ ppCoreTerm : CoreTerm -> PP msg
 ppCoreTerm term = case term of
     Var i -> ppCoreVar i
     Lit l -> ppCoreLit l
-    App e a -> case a of
-        Type t -> ppSequence [ppCoreTerm e, emitText " ", emitOperator "@", ppCoreTerm a]
-        _      -> ppSequence [ppCoreTerm e, emitText " ", parensTerm a]
-    Lam b e -> ppSequence [emitText "\\", ppCoreBndr b, emitText " -> ", ppCoreTerm e]
-    Let b e -> ppSequence [emitKeyword "let ", ppCoreBind b, emitKeyword " in ", ppCoreTerm e]
+    App e a -> 
+        let isInfix = case e of
+                Var i -> isInfixOperator i
+                _     -> False
+
+            render = case a of
+                Type t -> ppSequence [ppCoreTerm e, emitText " ", emitOperator "@", ppCoreTerm a]
+                _      -> ppSequence [ppCoreTerm e, emitText " ", parensTerm a]
+
+        in render
+    Lam b e -> ppSequence [emitText "\\", ppCoreBndr b, emitText " -> ", indented (ppCoreTerm e)]
+    Let b e -> ppSequence [ emitKeyword "let "
+                          , ppCoreBind b
+                          , emitKeyword " in "
+                          , indented (ppCoreTerm e)
+                          ]
     Case e alts -> ppSequence [ emitKeyword "case "
                               , ppCoreTerm e
                               , emitKeyword " of"
-                              , indented <| ppSequenceLines (List.map ppCoreAlt alts)]
+                              , indented <| ppSequenceLines (List.map ppCoreAlt alts)
+                              ]
+
     Type t -> emitText t
 
     _ -> emitText "Unsupported"

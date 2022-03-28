@@ -1,1 +1,20 @@
-pre.code { color: #FFFFFF; background-color: #122a34; padding: 2em; font-size: 13pt; }
+pre.code { 
+    color: #FFFFFF;
+    background-color: #122a34;
+    padding: 2em;
+    font-size: 13pt; 
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.hidden-fields {
+    width: 100%;
+    padding: 1em;
+    box-sizing: border-box;
+}
+
+.panel-4-1 {
+    display: grid;
+    grid-template-columns: 4fr 1fr;
+    width: 100%;
+}

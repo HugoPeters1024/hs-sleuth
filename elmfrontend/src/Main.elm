@@ -28,6 +28,7 @@ type alias Model = { passLoading : PassLoading
 type Msg = GotPass (Result Http.Error PassInfo)
          | FetchPass Int
          | ToggleHiddenBind String
+         | HideAllBinds
 
 
 main : Program () Model Msg
@@ -46,10 +47,16 @@ fetchPass idx = Http.get { url = "http://127.0.0.1:8080/" ++ String.fromInt idx
                          , expect = Http.expectJson GotPass decodePassInfo
                          }
 
+getPass : Model -> Maybe PassInfo
+getPass model = case model.passLoading of
+    Ready p -> Just p
+    _       -> Nothing
+
 initModel : Model
 initModel = { passLoading = Loading Nothing
             , hiddenBindings = Set.empty
             }
+
 
 init : () -> (Model, Cmd Msg)
 init _ = (initModel, fetchPass 1)
@@ -60,24 +67,36 @@ subscriptions _ = Sub.none
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
     GotPass result -> case result of
-        Ok pass -> ({ model | passLoading = Ready pass }, Cmd.none)
-        Err e -> ({ model | passLoading = Failure e}, Cmd.none)
+        Ok pass -> ( { model | passLoading = Ready pass }
+                   , Cmd.none
+                   )
+        Err e   -> ( { model | passLoading = Failure e}
+                   , Cmd.none
+                   )
     FetchPass idx -> 
         let prevPass = case model.passLoading of
                 Ready pass -> Just pass
                 _          -> Nothing
-        in ( {model | passLoading = Loading prevPass }
+
+        in ( { model | passLoading = Loading prevPass }
            , fetchPass idx
            )
     ToggleHiddenBind bind -> ( { model | hiddenBindings = toggleSet bind model.hiddenBindings}
                              , Cmd.none
                              )
+    HideAllBinds -> case getPass model of
+        Just pass -> ( { model 
+                       | hiddenBindings = Set.union model.hiddenBindings (Set.fromList (List.map coreBindName pass.binds)) 
+                       }
+                     , Cmd.none
+                     )
+        Nothing   -> (model, Cmd.none)
 
-checkbox : msg -> String -> Html msg
-checkbox msg name =
+checkbox : Bool -> msg -> String -> Html msg
+checkbox isChecked msg name =
     label
         [ ]
-        [ input [ type_ "checkbox", onClick msg ] []
+        [ input [ type_ "checkbox", checked isChecked, onClick msg ] []
         , text name
         ]
 
@@ -98,8 +117,10 @@ view model =
                 in div []  [ h1 [] [text (String.fromInt pass.idx ++ ": " ++ pass.title)]
                            , button [onClick (FetchPass <| pass.idx - 1)] [text "Previous"]
                            , button [onClick (FetchPass <| pass.idx + 1)] [text "Next"]
-                           , pre [class "code"] (List.concatMap viewCoreBind binds)
-                           , viewHiddenList model pass
+                           , div [ class "panel-4-1" ] 
+                                 [ pre [class "code"] (List.concatMap viewCoreBind binds)
+                                 , viewHiddenList model pass
+                                 ]
                            , pre [] (List.map (text << jsonToString << encodeCoreBind) pass.binds)
                            ]
     in div [] [ css "pygments.css"
@@ -109,9 +130,13 @@ view model =
 
 viewHiddenList : Model -> PassInfo -> Html Msg
 viewHiddenList model pass = 
-    let go bind = li [] [checkbox (ToggleHiddenBind bind) bind]
+    let go bind = li [] [checkbox (Set.member bind model.hiddenBindings) (ToggleHiddenBind bind) bind]
 
-    in ul [] (List.map (go << coreBindName) pass.binds)
+    in div [class "hidden-fields"] 
+           [ h2 [] [text "Functions to hide"]
+           , button [onClick HideAllBinds] [text "hide all" ]
+           , ul [] (List.map (go << coreBindName) pass.binds) 
+           ]
 
 
 css : String -> Html Msg
