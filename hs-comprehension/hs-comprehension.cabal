@@ -25,6 +25,7 @@ library
     other-modules:    Generation
                     , PrettyPrinting
                     , CoreCollection
+                    , CoreLang
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -41,5 +42,11 @@ library
                     , blaze-html
                     , text
                     , filepath
+                    , wai
+                    , warp
+                    , http-types
+                    , elm-street
+                    , aeson
+                    , aeson-pretty
     hs-source-dirs:   src
     default-language: Haskell2010

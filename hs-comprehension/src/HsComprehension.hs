@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE DataKinds #-}
 module HsComprehension (plugin, CoreTrace(..)) where
 
 import Prelude hiding ((<>))
@@ -17,9 +18,18 @@ import GHC
 import GHC.Plugins
 import Data.Data
 
+import Network.Wai
+import Network.Wai.Handler.Warp (run)
+import Network.HTTP.Types
+
 import Generation
 import PrettyPrinting
 import CoreCollection
+
+import qualified CoreLang as CL
+import Data.Aeson.Encode.Pretty (encodePretty)
+
+import Elm (Elm, ElmStreet(..), elmStreetParseJson, elmStreetToJson, generateElm, defaultSettings)
 
 
 plugin :: Plugin
@@ -47,6 +57,7 @@ pass idx prevName ref guts = do
     let passInfo = PassInfo { idx = idx
                             , title = sPrevName
                             , ast = body
+                            , raw = map (uncurry NonRec) binds
                             }
     liftIO $ modifyIORef ref (passInfo:)
     pure guts
@@ -67,8 +78,8 @@ annPassViews views = zipWith3 go (annPred views) (annSucc views) views
 
 printInfoPass :: IORef [PassInfo] -> CoreToDo
 printInfoPass ref = CoreDoPluginPass "Print Info" $ \guts -> do
-    collection <- liftIO $ readIORef ref
-    views <- liftIO $ mapM infoToView (reverse collection)
+    collection <- liftIO $ reverse <$> readIORef ref
+    views <- liftIO $ mapM infoToView collection
 
     -- annotate with previous and next pass if available
     let views' = annPassViews views
@@ -80,6 +91,18 @@ printInfoPass ref = CoreDoPluginPass "Print Info" $ \guts -> do
         putMsgS $ "dumping output after " ++ view.info.title
         liftIO $ renderPass globalInfo view >>= saveToFile view.filepath
 
+
+    liftIO $ generateElm @'[CL.CoreLiteral, CL.CoreTerm, CL.CoreBind, CL.CoreBndr, CL.CoreAltCon, CL.CoreAlt] $ defaultSettings "." ["Core", "Generated"]
+
+    test <- mapM CL.coreLangBind ((collection !! 0).raw)
+    liftIO (server test)
+
     pure guts
 
+app :: [CL.CoreBind] -> Application
+app term _ respond = respond (responseLBS ok200 [("Content-Type", "text/plain"), ("Access-Control-Allow-Origin", "*")] (encodePretty term))
 
+server :: [CL.CoreBind] -> IO ()
+server term = do
+    putStrLn "Running server at http://localhost:8080"
+    run 8080 (app term)

@@ -15,6 +15,7 @@ data CoreTrace = CoreTrace deriving (Show, Data)
 data PassInfo = PassInfo { idx :: Int
                          , title :: String
                          , ast :: String
+                         , raw :: [CoreBind]
                          }
 
 getAllTopLevelDefs :: [CoreBind] -> [(CoreBndr, CoreExpr)]
