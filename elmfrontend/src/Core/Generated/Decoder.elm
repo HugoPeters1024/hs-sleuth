@@ -8,6 +8,11 @@ import Core.Generated.ElmStreet exposing (..)
 import Core.Generated.Types as T
 
 
+decodeCoreId : Decoder T.CoreId
+decodeCoreId = D.succeed T.CoreId
+    |> required "name" D.string
+    |> required "id" D.int
+
 decodePassInfo : Decoder T.PassInfo
 decodePassInfo = D.succeed T.PassInfo
     |> required "idx" D.int
@@ -28,10 +33,10 @@ decodeCoreTerm : Decoder T.CoreTerm
 decodeCoreTerm =
     let decide : String -> Decoder T.CoreTerm
         decide x = case x of
-            "Var" -> D.field "contents" <| D.map T.Var D.string
+            "Var" -> D.field "contents" <| D.map T.Var decodeCoreId
             "Lit" -> D.field "contents" <| D.map T.Lit decodeCoreLiteral
             "App" -> D.field "contents" <| D.map2 T.App (D.index 0 decodeCoreTerm) (D.index 1 decodeCoreTerm)
-            "Lam" -> D.field "contents" <| D.map2 T.Lam (D.index 0 decodeCoreBndr) (D.index 1 decodeCoreTerm)
+            "Lam" -> D.field "contents" <| D.map2 T.Lam (D.index 0 decodeCoreId) (D.index 1 decodeCoreTerm)
             "Let" -> D.field "contents" <| D.map2 T.Let (D.index 0 decodeCoreBind) (D.index 1 decodeCoreTerm)
             "Case" -> D.field "contents" <| D.map2 T.Case (D.index 0 decodeCoreTerm) (D.index 1 (D.list decodeCoreAlt))
             "Type" -> D.field "contents" <| D.map T.Type D.string
@@ -43,13 +48,9 @@ decodeCoreBind : Decoder T.CoreBind
 decodeCoreBind =
     let decide : String -> Decoder T.CoreBind
         decide x = case x of
-            "NonRec" -> D.field "contents" <| D.map2 T.NonRec (D.index 0 decodeCoreBndr) (D.index 1 decodeCoreTerm)
+            "NonRec" -> D.field "contents" <| D.map2 T.NonRec (D.index 0 decodeCoreId) (D.index 1 decodeCoreTerm)
             c -> D.fail <| "CoreBind doesn't have such constructor: " ++ c
     in D.andThen decide (D.field "tag" D.string)
-
-decodeCoreBndr : Decoder T.CoreBndr
-decodeCoreBndr = D.succeed T.CoreBndr
-    |> required "name" D.string
 
 decodeCoreAltCon : Decoder T.CoreAltCon
 decodeCoreAltCon =
@@ -65,6 +66,6 @@ decodeCoreAlt : Decoder T.CoreAlt
 decodeCoreAlt =
     let decide : String -> Decoder T.CoreAlt
         decide x = case x of
-            "Alt" -> D.field "contents" <| D.map3 T.Alt (D.index 0 decodeCoreAltCon) (D.index 1 (D.list decodeCoreBndr)) (D.index 2 decodeCoreTerm)
+            "Alt" -> D.field "contents" <| D.map3 T.Alt (D.index 0 decodeCoreAltCon) (D.index 1 (D.list decodeCoreId)) (D.index 2 decodeCoreTerm)
             c -> D.fail <| "CoreAlt doesn't have such constructor: " ++ c
     in D.andThen decide (D.field "tag" D.string)

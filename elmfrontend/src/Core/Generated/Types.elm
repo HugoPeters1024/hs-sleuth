@@ -3,6 +3,11 @@ module Core.Generated.Types exposing (..)
 import Time exposing (Posix)
 
 
+type alias CoreId =
+    { name : String
+    , id : Int
+    }
+
 type alias PassInfo =
     { idx : Int
     , title : String
@@ -15,21 +20,17 @@ type CoreLiteral
     | CoreLitOther String
 
 type CoreTerm
-    = Var String
+    = Var CoreId
     | Lit CoreLiteral
     | App CoreTerm CoreTerm
-    | Lam CoreBndr CoreTerm
+    | Lam CoreId CoreTerm
     | Let CoreBind CoreTerm
     | Case CoreTerm (List CoreAlt)
     | Type String
     | Undef String
 
 type CoreBind
-    = NonRec CoreBndr CoreTerm
-
-type alias CoreBndr =
-    { name : String
-    }
+    = NonRec CoreId CoreTerm
 
 type CoreAltCon
     = DataAlt String
@@ -37,4 +38,4 @@ type CoreAltCon
     | DEFAULT
 
 type CoreAlt
-    = Alt CoreAltCon (List CoreBndr) CoreTerm
+    = Alt CoreAltCon (List CoreId) CoreTerm

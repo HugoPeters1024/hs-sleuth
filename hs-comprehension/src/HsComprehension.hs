@@ -73,7 +73,7 @@ printInfoPass :: IORef [CL.PassInfo] -> CoreToDo
 printInfoPass ref = CoreDoPluginPass "Print Info" $ \guts -> do
     passes <- liftIO $ reverse <$> readIORef ref
 
-    liftIO $ generateElm @'[CL.PassInfo, CL.CoreLiteral, CL.CoreTerm, CL.CoreBind, CL.CoreBndr, CL.CoreAltCon, CL.CoreAlt] $ defaultSettings "." ["Core", "Generated"]
+    liftIO $ generateElm @'[CL.CoreId, CL.PassInfo, CL.CoreLiteral, CL.CoreTerm, CL.CoreBind, CL.CoreAltCon, CL.CoreAlt] $ defaultSettings "." ["Core", "Generated"]
 
     liftIO (server passes)
 

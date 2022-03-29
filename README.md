@@ -16,6 +16,8 @@ This plugin is ongoing development for my thesis project:
 
 - high level overview of GHC (with Simon as an author): https://www.aosabook.org/en/ghc.html
 
+- overview of the core-to-core pipeline: https://gitlab.haskell.org/ghc/ghc/-/wikis/commentary/compiler/core-to-core-pipeline
+
 - Call Arity paper: https://www.joachim-breitner.de/publications/CallArity-TFP.pdf
 
 - A very interesting discussion about failed fusion in GHC leading to opt problems: https://gitlab.haskell.org/ghc/ghc/-/issues/17075. This discussion also mentions this paper: https://yanniss.github.io/streams-popl17.pdf

@@ -24,6 +24,7 @@ type PassLoading = Loading (Maybe PassInfo) | Failure Http.Error | Ready PassInf
 
 type alias Model = { passLoading : PassLoading
                    , hiddenBindings : Set String
+                   , showTypeApplications : Bool
                    }
 type Msg = GotPass (Result Http.Error PassInfo)
          | FetchPass Int
@@ -55,6 +56,7 @@ getPass model = case model.passLoading of
 initModel : Model
 initModel = { passLoading = Loading Nothing
             , hiddenBindings = Set.empty
+            , showTypeApplications = True
             }
 
 
@@ -111,7 +113,15 @@ view model =
             Loading Nothing -> text "loading pass "
             -- Pevent screen flashes
             Loading (Just prevPass) -> view ({model | passLoading = Ready prevPass})
-            Failure _ -> text "Something went wrong"
+            Failure err -> case err of
+                Http.BadUrl _ -> text "Bad url"
+                Http.Timeout -> text "timeout"
+                Http.NetworkError -> text "network error"
+                Http.BadStatus _ -> text "bad status"
+                Http.BadBody _ -> text "bad body"
+
+
+
             Ready pass -> 
                 let binds = List.filter (\b -> not <| Set.member (coreBindName b) model.hiddenBindings) pass.binds
                 in div []  [ h1 [] [text (String.fromInt pass.idx ++ ": " ++ pass.title)]

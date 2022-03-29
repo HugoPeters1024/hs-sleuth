@@ -33,7 +33,7 @@ viewCoreBind : CoreBind -> List (Html msg)
 viewCoreBind bind = (runPP (ppCoreBind bind |> State.vndThen newline) defaultState).result
 
 coreBindName : CoreBind -> String
-coreBindName (NonRec b e) = b.name
+coreBindName (NonRec id _) = id.name
 
 emit : Html msg -> PP msg
 emit node = State.stateMap (\s -> { s | result = s.result ++ [node] })
@@ -46,9 +46,6 @@ emitOperator op = emit <| span [class "o"] [text op]
 
 emitKeyword : String -> PP msg
 emitKeyword word = emit <| span [class "kt"] [text word]
-
-emitN : List (Html msg) -> PP msg
-emitN nodes = State.stateMap (\s -> { s | result = s.result ++ nodes })
 
 ppSequence : List (PP msg) -> PP msg
 ppSequence = State.void << State.sequence
@@ -83,12 +80,22 @@ ppCoreLit lit = case lit of
     CoreLitString l -> emit <| span [class "s"] [text l]
     CoreLitOther l -> emitText l
 
-ppCoreBndr : CoreBndr -> PP msg
+
+ppCoreBndr : CoreId -> PP msg
 ppCoreBndr bndr = State.withState <| \s -> 
     let node = if s.toplevel 
-               then span [class "nf"] [text bndr.name] 
-               else text bndr.name 
+               then span [class "nf"] [text (bndr.name ++ "(" ++ String.fromInt bndr.id ++ ")")] 
+               else text (bndr.name ++ "(" ++ String.fromInt bndr.id ++ ")")
     in emit node
+
+ppCoreVar : CoreId -> PP msg
+ppCoreVar id =
+    let cons = case List.head (String.toList id.name) of
+            Just x -> Char.isUpper x
+            Nothing -> False
+        node = if cons then span [class "kt"] [text id.name] else text id.name
+    in emit node
+       |> State.vndThen (emitText ("(" ++ String.fromInt id.id ++ ")"))
 
 ppCoreBind : CoreBind -> PP msg
 ppCoreBind (NonRec b e) = ppCoreBndr b 
@@ -98,7 +105,7 @@ ppCoreBind (NonRec b e) = ppCoreBndr b
 
 ppCoreAltCon : CoreAltCon -> PP msg
 ppCoreAltCon alt = case alt of
-    DataAlt i -> ppCoreVar i
+    DataAlt i -> emitKeyword i
     LitAlt l -> ppCoreLit l
     DEFAULT -> emitText "_"
 
@@ -111,13 +118,6 @@ ppCoreAlt alt = case alt of
                                  , ppCoreTerm e
                                  ]
 
-ppCoreVar : String -> PP msg
-ppCoreVar name =
-    let cons = case List.head (String.toList name) of
-            Just x -> Char.isUpper x
-            Nothing -> False
-        node = if cons then span [class "kt"] [text name] else text name
-    in emit node
 
 ppCoreTerm : CoreTerm -> PP msg
 ppCoreTerm term = case term of
@@ -125,11 +125,11 @@ ppCoreTerm term = case term of
     Lit l -> ppCoreLit l
     App e a -> 
         let isInfix = case e of
-                Var i -> isInfixOperator i
+                Var id -> isInfixOperator id.name
                 _     -> False
 
             render = case a of
-                Type t -> ppSequence [ppCoreTerm e, emitText " ", emitOperator "@", ppCoreTerm a]
+                Type t -> ppSequence [ppCoreTerm e, emitText " ", emitOperator "@", emitText t]
                 _      -> ppSequence [ppCoreTerm e, emitText " ", parensTerm a]
 
         in render
@@ -144,9 +144,7 @@ ppCoreTerm term = case term of
                               , emitKeyword " of"
                               , indented <| ppSequenceLines (List.map ppCoreAlt alts)
                               ]
-
     Type t -> emitText t
-
     _ -> emitText "Unsupported"
 
 

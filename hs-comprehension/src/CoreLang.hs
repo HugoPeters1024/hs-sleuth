@@ -8,6 +8,7 @@ module CoreLang where
 import GHC.Utils.Outputable (Outputable (..))
 import qualified GHC.Core as C
 import qualified GHC.Types as C
+import qualified GHC.Types.Unique as C
 import qualified GHC.Plugins as C
 
 import qualified Data.Text as T
@@ -31,13 +32,13 @@ data CoreLiteral = CoreLitNumber Text
                  deriving (Show, Generic)
                  deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreLiteral
 
-data CoreBndr = CoreBndr { name :: Text
-                 }
-     deriving (Show, Generic)
-     deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreBndr
+data CoreId = CoreId { name :: Text
+                     , bindId :: Int 
+                     }
+                     deriving (Show, Generic)
+                     deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreId
 
-
-data CoreBind = NonRec CoreBndr CoreTerm
+data CoreBind = NonRec CoreId CoreTerm
      deriving (Show, Generic)
      deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreBind
 
@@ -47,15 +48,16 @@ data CoreAltCon = DataAlt Text    -- should only be a variable
      deriving (Show, Generic)
      deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreAltCon
 
-data CoreAlt = Alt CoreAltCon [CoreBndr] CoreTerm
+data CoreAlt = Alt CoreAltCon [CoreId] CoreTerm
      deriving (Show, Generic)
      deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreAlt
 
+
 data CoreTerm
-    = Var Text
+    = Var CoreId
     | Lit CoreLiteral
     | App CoreTerm CoreTerm
-    | Lam CoreBndr CoreTerm
+    | Lam CoreId CoreTerm
     | Let CoreBind CoreTerm
     | Case CoreTerm [CoreAlt]
     | Type Text
@@ -66,12 +68,16 @@ data CoreTerm
 pprText :: Outputable a => a -> C.CoreM Text
 pprText el = do
     dflags <- C.getDynFlags 
-    pure $ T.pack $ C.showSDoc dflags $ ppr el
+    pure $ T.pack $ C.showPpr dflags el
 
-coreLangBndr :: Outputable b => b -> C.CoreM CoreBndr
-coreLangBndr b = do
-    name <- pprText b
-    pure $ CoreBndr {..}
+coreLangId :: C.Var -> C.CoreM CoreId
+coreLangId var = do
+    name <- pprText (C.varName var)
+    let bindId = C.getKey (C.getUnique var)
+    pure CoreId {..}
+
+coreLangBndr :: C.CoreBndr -> C.CoreM CoreId
+coreLangBndr bndr = coreLangId bndr
 
 coreLangLiteral :: C.Literal -> C.CoreM CoreLiteral
 coreLangLiteral l@(C.LitNumber _ i) = CoreLitNumber <$> pprText l
@@ -91,7 +97,7 @@ coreLangAlt :: C.CoreAlt -> C.CoreM CoreAlt
 coreLangAlt (C.Alt con bs e) = Alt <$> coreLangAltCon con <*> mapM coreLangBndr bs <*> coreLangExpr e
 
 coreLangExpr :: C.CoreExpr -> C.CoreM CoreTerm
-coreLangExpr (C.Var i) = Var <$> pprText i
+coreLangExpr (C.Var i) = Var <$> coreLangId i
 coreLangExpr (C.Lit l) = Lit <$> coreLangLiteral l
 coreLangExpr (C.App e a) = App <$> coreLangExpr e <*> coreLangExpr a
 coreLangExpr (C.Lam b e) = Lam <$> coreLangBndr b <*> coreLangExpr e
