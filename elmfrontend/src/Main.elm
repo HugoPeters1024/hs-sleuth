@@ -92,11 +92,11 @@ update msg model = case msg of
            , fetchPass idx
            )
     MsgToggleHiddenBind bind -> ( { model | hiddenBindings = toggleSet bind model.hiddenBindings}
-                             , Cmd.none
-                             )
+                                , Cmd.none
+                                )
     MsgHideAllBinds -> case getPass model of
         Just pass -> ( { model 
-                       | hiddenBindings = Set.union model.hiddenBindings (Set.fromList (List.map coreBindName pass.binds)) 
+                       | hiddenBindings = Set.union model.hiddenBindings (Set.fromList (List.map coreBindBndrUnique pass.binds)) 
                        }
                      , Cmd.none
                      )
@@ -104,9 +104,9 @@ update msg model = case msg of
     MsgSelectTerm term -> ( { model | selectedTerm = Just term }
                           , Cmd.none
                           )
-    MsgRenameTerm oldname name -> ( { model | renames = Dict.insert oldname name model.renames }
-                             , Cmd.none
-                             )
+    MsgRenameTerm unique name -> ( { model | renames = Dict.insert unique name model.renames }
+                                 , Cmd.none
+                                 )
 
 checkbox : Bool -> msg -> String -> Html msg
 checkbox isChecked msg name =
@@ -146,7 +146,7 @@ view rawmodel =
 
 
             Ready pass -> 
-                let binds = List.filter (\b -> not <| Set.member (coreBindName b) model.hiddenBindings) pass.binds
+                let binds = List.filter (\b -> not <| Set.member (coreBindBndrUnique b) model.hiddenBindings) pass.binds
                 in div []  [ h1 [] [text (String.fromInt pass.idx ++ ": " ++ pass.title)]
                            , text (Debug.toString model.selectedTerm)
                            , br [] []
@@ -164,14 +164,18 @@ view rawmodel =
               , body
               ]
 
+isHidden : Model -> CoreId -> Bool
+isHidden model bind = Set.member bind.unique model.hiddenBindings
+
 viewHiddenList : Model -> PassInfo -> Html Msg
 viewHiddenList model pass = 
-    let go bind = li [] [checkbox (Set.member bind model.hiddenBindings) (MsgToggleHiddenBind bind) bind]
+    let go : CoreBind -> Html Msg
+        go bind = li [] [checkbox (isHidden model (coreBindBndr bind)) (MsgToggleHiddenBind (coreBindBndrUnique bind)) (coreBindBndrName bind ++ "_" ++ coreBindBndrUnique bind)]
 
     in div [ class "hidden-fields"] 
            [ h2 [] [text "Functions to hide"]
            , button [onClick MsgHideAllBinds] [text "hide all" ]
-           , ul [] (List.map (go << coreBindName) pass.binds) 
+           , ul [] (List.map go pass.binds) 
            ]
 
 viewTermInfo : Model -> Html Msg
@@ -179,8 +183,9 @@ viewTermInfo model =
     let showMenu : CoreId -> Html Msg
         showMenu id =
             ul [] [ li [] [ text ("name: " ++ id.name) ]
-                  , li [] [ text ("udi: " ++ String.fromInt id.id)]
-                  , input [ type_ "text", placeholder id.name, onInput (MsgRenameTerm id.name)] [] 
+                  , li [] [ text ("udi: " ++ id.unique)]
+                  , li [] [ input [ type_ "text", placeholder id.name, onInput (MsgRenameTerm id.unique)] [] ]
+                  , li [] [ checkbox (isHidden model id) (MsgToggleHiddenBind id.unique) "hidden" ]
                   ]
     in div [ class "term-info" ]
            [ h2 [] [text "Selected term"]

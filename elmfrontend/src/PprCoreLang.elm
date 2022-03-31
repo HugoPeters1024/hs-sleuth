@@ -1,4 +1,4 @@
-module PprCoreLang exposing (viewCoreBind, coreBindName, isInfixOperator)
+module PprCoreLang exposing (viewCoreBind, coreBindBndrUnique, coreBindBndrName, coreBindBndr, isInfixOperator)
 
 import Core.Generated.Types exposing (..)
 import MsgTypes exposing (..)
@@ -34,8 +34,14 @@ isInfixOperator inp =
 viewCoreBind : CoreBind -> List (Html Msg)
 viewCoreBind bind = (runPP (ppCoreBind bind |> State.vndThen newline) defaultState).result
 
-coreBindName : CoreBind -> String
-coreBindName (NonRec id _) = id.name
+coreBindBndr : CoreBind -> CoreId
+coreBindBndr (NonRec id _) = id
+
+coreBindBndrName : CoreBind -> String
+coreBindBndrName (NonRec id _) = id.name
+
+coreBindBndrUnique : CoreBind -> String
+coreBindBndrUnique (NonRec id _) = id.unique
 
 emit : Html Msg -> PP
 emit node = State.stateMap (\s -> { s | result = s.result ++ [node] })

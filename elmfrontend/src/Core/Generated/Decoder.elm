@@ -11,7 +11,7 @@ import Core.Generated.Types as T
 decodeCoreId : Decoder T.CoreId
 decodeCoreId = D.succeed T.CoreId
     |> required "name" D.string
-    |> required "id" D.int
+    |> required "unique" D.string
 
 decodePassInfo : Decoder T.PassInfo
 decodePassInfo = D.succeed T.PassInfo

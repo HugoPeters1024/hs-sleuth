@@ -23,8 +23,8 @@ pprText el = do
 
 coreLangId :: C.Var -> C.CoreM CoreId
 coreLangId var = do
-    let name = T.pack $ C.showSDocUnsafe $ C.ppr $ var
-    let bindId = C.getKey $ C.getUnique (C.varName var)
+    name <- pprText (C.occName var)
+    unique <- pprText (C.getUnique var)
     pure CoreId {..}
 
 coreLangBndr :: C.CoreBndr -> C.CoreM CoreId

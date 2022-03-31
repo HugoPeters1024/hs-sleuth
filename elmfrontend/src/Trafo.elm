@@ -17,7 +17,7 @@ applyRenames r =
             Undef x -> Undef x
 
         tid : CoreId -> CoreId
-        tid id = case Dict.get id.name r of
+        tid id = case Dict.get id.unique r of
             Nothing -> id
             Just name -> {id | name = name}
 

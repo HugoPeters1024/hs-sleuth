@@ -5,6 +5,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE StandaloneDeriving #-}
 module CoreLang.Types where
 
 import GHC.Utils.Outputable (Outputable (..))
@@ -35,7 +36,7 @@ data CoreLiteral = CoreLitNumber Text
                  deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreLiteral
 
 data CoreId = CoreId { name :: Text
-                     , bindId :: Int 
+                     , unique :: Text
                      }
                      deriving (Show, Generic)
                      deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreId
@@ -53,7 +54,6 @@ data CoreAltCon = DataAlt Text    -- should only be a variable
 data CoreAlt = Alt CoreAltCon [CoreId] CoreTerm
      deriving (Show, Generic)
      deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreAlt
-
 
 data CoreTerm
     = Var CoreId
