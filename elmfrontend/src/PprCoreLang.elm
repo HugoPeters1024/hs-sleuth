@@ -1,27 +1,29 @@
 module PprCoreLang exposing (viewCoreBind, coreBindName, isInfixOperator)
 
 import Core.Generated.Types exposing (..)
+import MsgTypes exposing (..)
 
-import Html exposing (Html, text, span)
-import Html.Attributes exposing (class)
+import Html exposing (Html, text, span, a)
+import Html.Attributes exposing (class, href)
+import Html.Events exposing (onClick)
 
 import Char
 import List
 import Set
-import State
+import Dict exposing (Dict)
 import State exposing (State)
 
-type alias PPState msg = { indent : Int
-                         , result : List (Html msg)
-                         , toplevel : Bool
-                         }
+type alias PPState = { indent : Int
+                     , result : List (Html Msg)
+                     , toplevel : Bool
+                     }
 
-type alias PP msg = State (PPState msg) ()
+type alias PP = State PPState ()
 
-runPP : PP msg -> PPState msg -> PPState msg
+runPP : PP -> PPState -> PPState
 runPP = State.evalState 
 
-defaultState : PPState msg
+defaultState : PPState
 defaultState = { indent = 0, result = [], toplevel = True }
 
 isInfixOperator : String -> Bool
@@ -29,87 +31,89 @@ isInfixOperator inp =
     let symbols = Set.fromList (String.toList "!$%&*+./<=>?@\\^-~#")
     in String.all (\c -> Set.member c symbols) inp
 
-viewCoreBind : CoreBind -> List (Html msg)
+viewCoreBind : CoreBind -> List (Html Msg)
 viewCoreBind bind = (runPP (ppCoreBind bind |> State.vndThen newline) defaultState).result
 
 coreBindName : CoreBind -> String
 coreBindName (NonRec id _) = id.name
 
-emit : Html msg -> PP msg
+emit : Html Msg -> PP
 emit node = State.stateMap (\s -> { s | result = s.result ++ [node] })
 
-emitText : String -> PP msg
+emitText : String -> PP
 emitText = emit << text
 
-emitOperator : String -> PP msg
+emitOperator : String -> PP
 emitOperator op = emit <| span [class "o"] [text op]
 
-emitKeyword : String -> PP msg
+emitKeyword : String -> PP
 emitKeyword word = emit <| span [class "kt"] [text word]
 
-ppSequence : List (PP msg) -> PP msg
+ppSequence : List PP -> PP
 ppSequence = State.void << State.sequence
 
-ppSequenceLines : List (PP msg) -> PP msg
+ppSequenceLines : List PP -> PP
 ppSequenceLines pps = State.void (State.sequence (List.map (\pp -> State.vndThen newline pp) pps))
 
-newline : PP msg
+ppa : List (Html Msg) -> Msg -> Html Msg
+ppa nodes msg = a [class "no-style", onClick msg] nodes
+
+newline : PP
 newline = State.get 
     |> State.andThen (\s -> emit (text ("\n" ++ String.fromList (List.repeat s.indent ' '))))
 
-indented : PP msg -> PP msg
+indented : PP -> PP
 indented pp = State.stateMap (\s -> {s | indent = s.indent + 4})
            |> State.vndThen newline
            |> State.vndThen pp
            |> State.vndThen newline
            |> State.vndThen (State.stateMap (\s -> {s | indent = s.indent - 4}))
 
-parens : PP msg -> PP msg
+parens : PP -> PP
 parens pp = ppSequence [emitText "(", pp, emitText ")"]
 
-parensTerm : CoreTerm -> PP msg
+parensTerm : CoreTerm -> PP
 parensTerm term = case term of
     Var i -> ppCoreTerm (Var i)
     Lit l -> ppCoreTerm (Lit l)
     t -> parens (ppCoreTerm t)
 
 
-ppCoreLit : CoreLiteral -> PP msg
+ppCoreLit : CoreLiteral -> PP
 ppCoreLit lit = case lit of
     CoreLitNumber l -> emit <| span [class "mi"] [text l]
     CoreLitString l -> emit <| span [class "s"] [text l]
     CoreLitOther l -> emitText l
 
 
-ppCoreBndr : CoreId -> PP msg
+ppCoreBndr : CoreId -> PP
 ppCoreBndr bndr = State.withState <| \s -> 
     let node = if s.toplevel 
-               then span [class "nf"] [text (bndr.name ++ "(" ++ String.fromInt bndr.id ++ ")")] 
-               else text (bndr.name ++ "(" ++ String.fromInt bndr.id ++ ")")
-    in emit node
+               then span [class "nf"] [text bndr.name] 
+               else text bndr.name
+    in emit <| ppa [node] (MsgSelectTerm bndr)
 
-ppCoreVar : CoreId -> PP msg
+ppCoreVar : CoreId -> PP
 ppCoreVar id =
-    let cons = case List.head (String.toList id.name) of
+    let constructor = case List.head (String.toList id.name) of
             Just x -> Char.isUpper x
             Nothing -> False
-        node = if cons then span [class "kt"] [text id.name] else text id.name
-    in emit node
-       |> State.vndThen (emitText ("(" ++ String.fromInt id.id ++ ")"))
+        node = if constructor then span [class "kt"] [text id.name] else text id.name
+    in emit <| ppa [node] (MsgSelectTerm id)
 
-ppCoreBind : CoreBind -> PP msg
+ppCoreBind : CoreBind -> PP
 ppCoreBind (NonRec b e) = ppCoreBndr b 
                                   |> State.vndThen (State.stateMap (\s -> { s | toplevel = False }))
                                   |> State.vndThen (emit (text " = "))
                                   |> State.vndThen (ppCoreTerm e)
 
-ppCoreAltCon : CoreAltCon -> PP msg
+ppCoreAltCon : CoreAltCon -> PP
 ppCoreAltCon alt = case alt of
     DataAlt i -> emitKeyword i
     LitAlt l -> ppCoreLit l
     DEFAULT -> emitText "_"
 
-ppCoreAlt : CoreAlt -> PP msg
+ppCoreAlt : CoreAlt -> PP
 ppCoreAlt alt = case alt of
     (Alt con bs e) -> ppSequence [ ppCoreAltCon con
                                  , emitText " "
@@ -119,7 +123,7 @@ ppCoreAlt alt = case alt of
                                  ]
 
 
-ppCoreTerm : CoreTerm -> PP msg
+ppCoreTerm : CoreTerm -> PP
 ppCoreTerm term = case term of
     Var i -> ppCoreVar i
     Lit l -> ppCoreLit l

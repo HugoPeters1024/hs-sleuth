@@ -26,6 +26,10 @@ This plugin is ongoing development for my thesis project:
 
 - More fusion, but by Gabriele Keller!: https://www.deepdyve.com/lp/association-for-computing-machinery/functional-array-fusion-7rgCUpOaY1
 
+- People writing there own CoreToDo to inline recursive functions: https://reasonablypolymorphic.com/blog/writing-custom-optimizations/index.html
+
+- Thesis on call arity but with a great introduction to ghc, rewrite rules etc: https://www.joachim-breitner.de/thesis/Diss-Breitner-Published.pdf
+
 ### What is the plan?
 
 - An output that describes precisely what optimisation are done.

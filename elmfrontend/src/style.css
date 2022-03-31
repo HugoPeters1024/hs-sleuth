@@ -2,6 +2,10 @@ body {
     padding: 3em;
 }
 
+a.no-style {
+    cursor: pointer;
+}
+
 pre.code { 
     color: #FFFFFF;
     background-color: #122a34;

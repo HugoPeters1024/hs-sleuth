@@ -27,7 +27,8 @@ import Network.HTTP.Types
 import qualified Data.Text as T
 import Text.Read
 
-import qualified CoreLang as CL
+import qualified CoreLang.Types as CL
+import qualified CoreLang.Cvt as CL
 import Data.Aeson.Encode.Pretty (encodePretty)
 
 import Elm (Elm, ElmStreet(..), elmStreetParseJson, elmStreetToJson, generateElm, defaultSettings)
@@ -53,7 +54,7 @@ pass :: Int -> SDoc -> IORef [CL.PassInfo] -> ModGuts -> CoreM ModGuts
 pass idx prevName ref guts = do
     dflags <- getDynFlags
     let title = T.pack $ showSDoc dflags prevName
-    binds <- mapM CL.coreLangBind $ getAllTopLevelDefs (mg_binds guts)
+    binds <- CL.cvtCoreLang $ getAllTopLevelDefs (mg_binds guts)
 
     let passInfo = CL.PassInfo {..}
     liftIO $ modifyIORef ref (passInfo:)

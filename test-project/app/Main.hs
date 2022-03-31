@@ -1,10 +1,7 @@
 module Main where
 
-say :: String -> String
-say msg = let ap = "!" in msg ++ ap
+machteld :: [Int] -> [Int]
+machteld = map (+1) . map (+1) . map (+1)
 
 main :: IO ()
-main = do
-    putStrLn $ say "hello"
-    putStrLn $ say "world"
-
+main = putStrLn "Hello Haskell"
