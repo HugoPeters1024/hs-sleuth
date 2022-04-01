@@ -107,6 +107,11 @@ update msg model = case msg of
     MsgRenameTerm unique name -> ( { model | renames = Dict.insert unique name model.renames }
                                  , Cmd.none
                                  )
+    MsgToggleViewTypes -> ( { model | showTypeApplications = not model.showTypeApplications } 
+                          , Cmd.none
+                          )
+                         
+
 
 checkbox : Bool -> msg -> String -> Html msg
 checkbox isChecked msg name =
@@ -147,25 +152,37 @@ view rawmodel =
 
             Ready pass -> 
                 let binds = List.filter (\b -> not <| Set.member (coreBindBndrUnique b) model.hiddenBindings) pass.binds
+                    viewBind = PprCoreLang.viewCoreBind model.showTypeApplications model.selectedTerm
                 in div []  [ h1 [] [text (String.fromInt pass.idx ++ ": " ++ pass.title)]
-                           , text (Debug.toString model.selectedTerm)
                            , br [] []
                            , button [onClick (MsgFetchPass <| pass.idx - 1)] [text "Previous"]
                            , button [onClick (MsgFetchPass <| pass.idx + 1)] [text "Next"]
                            , div [ class "panel-4-1" ] 
-                                 [ pre [class "code"] (List.concatMap viewCoreBind binds)
-                                 , viewHiddenList model pass
-                                 , viewTermInfo model
+                                 [ pre [class "code"] (List.concatMap viewBind binds)
+                                 , div [class "info-panel"] 
+                                    [ viewDisplayOptions model
+                                    , hr [] []
+                                    , viewTermInfo model
+                                    , hr [] []
+                                    , viewHiddenList model pass
+                                    ]
                                  ]
-                           , pre [] [text ((jsonToString (encodePassInfo pass)))]
+--                           , pre [] [text ((jsonToString (encodePassInfo pass)))]
                            ]
     in div [] [ css "pygments.css"
               , css "style.css"
+              , css "https://fonts.googleapis.com/css?family=Ubuntu"
               , body
               ]
 
 isHidden : Model -> CoreId -> Bool
 isHidden model bind = Set.member bind.unique model.hiddenBindings
+
+viewDisplayOptions : Model -> Html Msg
+viewDisplayOptions model = div []
+    [ h2 [] [text "Options"]
+    , checkbox (model.showTypeApplications) MsgToggleViewTypes "Show type applications"
+    ]
 
 viewHiddenList : Model -> PassInfo -> Html Msg
 viewHiddenList model pass = 
@@ -175,25 +192,23 @@ viewHiddenList model pass =
     in div [ class "hidden-fields"] 
            [ h2 [] [text "Functions to hide"]
            , button [onClick MsgHideAllBinds] [text "hide all" ]
-           , ul [] (List.map go pass.binds) 
+           , ul [class "no-dot"] (List.map go pass.binds) 
            ]
 
 viewTermInfo : Model -> Html Msg
 viewTermInfo model =
     let showMenu : CoreId -> Html Msg
         showMenu id =
-            ul [] [ li [] [ text ("name: " ++ id.name) ]
-                  , li [] [ text ("udi: " ++ id.unique)]
-                  , li [] [ input [ type_ "text", placeholder id.name, onInput (MsgRenameTerm id.unique)] [] ]
-                  , li [] [ checkbox (isHidden model id) (MsgToggleHiddenBind id.unique) "hidden" ]
-                  ]
+            ul [class "no-dot"] [ li [] [ text ("name: " ++ id.name) ]
+                                , li [] [ text ("type: "), span [class "kt"] [text id.vartype]]
+                                , li [] [ text ("udi: " ++ id.unique)]
+                                , li [] [ input [ type_ "text", placeholder id.name, onInput (MsgRenameTerm id.unique)] [] ]
+                                , li [] [ checkbox (isHidden model id) (MsgToggleHiddenBind id.unique) "hidden" ]
+                                ]
     in div [ class "term-info" ]
            [ h2 [] [text "Selected term"]
-           , maybeHtml showMenu model.selectedTerm 
+           , Maybe.withDefault (text "Nothing selected") (Maybe.map showMenu model.selectedTerm)
            ]
    
-
-
-
 css : String -> Html Msg
 css path = node "link" [ rel "stylesheet", href path ] []

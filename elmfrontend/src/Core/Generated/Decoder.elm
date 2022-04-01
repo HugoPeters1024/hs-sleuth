@@ -12,6 +12,7 @@ decodeCoreId : Decoder T.CoreId
 decodeCoreId = D.succeed T.CoreId
     |> required "name" D.string
     |> required "unique" D.string
+    |> required "vartype" D.string
 
 decodePassInfo : Decoder T.PassInfo
 decodePassInfo = D.succeed T.PassInfo

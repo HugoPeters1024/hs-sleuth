@@ -37,6 +37,7 @@ data CoreLiteral = CoreLitNumber Text
 
 data CoreId = CoreId { name :: Text
                      , unique :: Text
+                     , vartype :: Text
                      }
                      deriving (Show, Generic)
                      deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreId
@@ -45,7 +46,7 @@ data CoreBind = NonRec CoreId CoreTerm
      deriving (Show, Generic)
      deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreBind
 
-data CoreAltCon = DataAlt Text    -- should only be a variable
+data CoreAltCon = DataAlt Text
                 | LitAlt CoreLiteral 
                 | DEFAULT
      deriving (Show, Generic)

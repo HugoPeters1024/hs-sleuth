@@ -25,7 +25,8 @@ coreLangId :: C.Var -> C.CoreM CoreId
 coreLangId var = do
     name <- pprText (C.occName var)
     unique <- pprText (C.getUnique var)
-    pure CoreId {..}
+    vartype <- pprText (C.varType var)
+    pure $ CoreId {..}
 
 coreLangBndr :: C.CoreBndr -> C.CoreM CoreId
 coreLangBndr bndr = coreLangId bndr

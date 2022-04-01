@@ -48,8 +48,6 @@ how to be resilient to different kinds of noise introduced by artifacts
 - This plugin is related https://github.com/bgamari/ghc-dump but is not up to date and not really easy to use,
   the pretty printer looks good though
 
-
-
 ### Scratch Board
 
 diff command:

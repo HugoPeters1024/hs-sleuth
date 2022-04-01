@@ -16,6 +16,8 @@ import State exposing (State)
 type alias PPState = { indent : Int
                      , result : List (Html Msg)
                      , toplevel : Bool
+                     , showTypes : Bool
+                     , selectedTerm : Maybe CoreId
                      }
 
 type alias PP = State PPState ()
@@ -23,16 +25,24 @@ type alias PP = State PPState ()
 runPP : PP -> PPState -> PPState
 runPP = State.evalState 
 
-defaultState : PPState
-defaultState = { indent = 0, result = [], toplevel = True }
+defaultState : Bool -> Maybe CoreId -> PPState
+defaultState showTypes selectedTerm = 
+    { indent = 0
+    , result = []
+    , toplevel = True
+    , showTypes = showTypes 
+    , selectedTerm = selectedTerm
+    }
 
 isInfixOperator : String -> Bool
 isInfixOperator inp = 
     let symbols = Set.fromList (String.toList "!$%&*+./<=>?@\\^-~#")
     in String.all (\c -> Set.member c symbols) inp
 
-viewCoreBind : CoreBind -> List (Html Msg)
-viewCoreBind bind = (runPP (ppCoreBind bind |> State.vndThen newline) defaultState).result
+viewCoreBind : Bool -> Maybe CoreId -> CoreBind -> List (Html Msg)
+viewCoreBind showTypes selectedTerm bind = 
+    let state = defaultState showTypes selectedTerm
+    in (runPP (ppCoreBind bind |> State.vndThen newline) state).result
 
 coreBindBndr : CoreBind -> CoreId
 coreBindBndr (NonRec id _) = id
@@ -92,23 +102,35 @@ ppCoreLit lit = case lit of
     CoreLitOther l -> emitText l
 
 
-ppCoreBndr : CoreId -> PP
-ppCoreBndr bndr = State.withState <| \s -> 
-    let node = if s.toplevel 
-               then span [class "nf"] [text bndr.name] 
-               else text bndr.name
-    in emit <| ppa [node] (MsgSelectTerm bndr)
+concatMaybe : List (Maybe a) -> List a
+concatMaybe xs = case xs of
+    (Just x::tl) -> x :: concatMaybe tl
+    (Nothing::tl) -> concatMaybe tl
+    []            -> []
 
 ppCoreVar : CoreId -> PP
-ppCoreVar id =
-    let constructor = case List.head (String.toList id.name) of
+ppCoreVar id = State.withState <| \state ->
+    let selected = case state.selectedTerm of
+            Just oid       -> oid.unique == id.unique
+            _              -> False
+        constructor = case List.head (String.toList id.name) of
             Just x -> Char.isUpper x
             Nothing -> False
-        node = if constructor then span [class "kt"] [text id.name] else text id.name
+
+        classes = concatMaybe 
+            [ if selected then Just (class "highlight") else Nothing
+            , if state.toplevel 
+                 then Just (class "nf") 
+                 else if constructor 
+                         then Just (class "kt") 
+                         else Nothing
+            ]
+
+        node =  span classes [text id.name]
     in emit <| ppa [node] (MsgSelectTerm id)
 
 ppCoreBind : CoreBind -> PP
-ppCoreBind (NonRec b e) = ppCoreBndr b 
+ppCoreBind (NonRec b e) = ppCoreVar b 
                                   |> State.vndThen (State.stateMap (\s -> { s | toplevel = False }))
                                   |> State.vndThen (emit (text " = "))
                                   |> State.vndThen (ppCoreTerm e)
@@ -123,7 +145,7 @@ ppCoreAlt : CoreAlt -> PP
 ppCoreAlt alt = case alt of
     (Alt con bs e) -> ppSequence [ ppCoreAltCon con
                                  , emitText " "
-                                 , ppSequence (List.map ppCoreBndr bs)
+                                 , ppSequence (List.map ppCoreVar bs)
                                  , emitText " -> "
                                  , ppCoreTerm e
                                  ]
@@ -133,17 +155,19 @@ ppCoreTerm : CoreTerm -> PP
 ppCoreTerm term = case term of
     Var i -> ppCoreVar i
     Lit l -> ppCoreLit l
-    App e a -> 
+    App e a -> State.withState <| \state ->
         let isInfix = case e of
                 Var id -> isInfixOperator id.name
                 _     -> False
 
             render = case a of
-                Type t -> ppSequence [ppCoreTerm e, emitText " ", emitOperator "@", emitText t]
+                Type t -> if state.showTypes 
+                          then ppSequence [ppCoreTerm e, emitText " ", emitOperator "@", emitText t]
+                          else ppCoreTerm e
                 _      -> ppSequence [ppCoreTerm e, emitText " ", parensTerm a]
 
         in render
-    Lam b e -> ppSequence [emitText "\\", ppCoreBndr b, emitText " -> ", indented (ppCoreTerm e)]
+    Lam b e -> ppSequence [emitText "\\", ppCoreVar b, emitText " -> ", indented (ppCoreTerm e)]
     Let b e -> ppSequence [ emitKeyword "let "
                           , ppCoreBind b
                           , emitKeyword " in "

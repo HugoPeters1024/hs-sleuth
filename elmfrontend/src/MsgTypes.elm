@@ -10,3 +10,4 @@ type Msg = MsgGotPass (Result Http.Error PassInfo)
          | MsgHideAllBinds
          | MsgSelectTerm CoreId
          | MsgRenameTerm String String
+         | MsgToggleViewTypes

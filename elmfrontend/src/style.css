@@ -1,5 +1,6 @@
 body {
     padding: 3em;
+    font-family: Ubuntu, sans-serif;
 }
 
 a.no-style {
@@ -12,11 +13,23 @@ pre.code {
     padding: 2em;
     font-size: 13pt; 
     box-sizing: border-box;
+    margin: 0;
 }
 
-.hidden-fields {
+.info-panel {
     padding: 1em;
     box-sizing: border-box;
+    color: white;
+    background-color: #181818;
+}
+
+ul.no-dot {
+  list-style-type: none;
+}
+
+.highlight {
+    background-color: yellow;
+    color: black;
 }
 
 .panel-4-1 {
