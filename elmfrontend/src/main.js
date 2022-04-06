@@ -5422,9 +5422,9 @@ var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $author$project$MsgTypes$MsgGotPass = function (a) {
 	return {$: 'MsgGotPass', a: a};
 };
-var $author$project$Core$Generated$Types$PassInfo = F3(
-	function (idx, title, binds) {
-		return {binds: binds, idx: idx, title: title};
+var $author$project$Core$Generated$Types$PassInfo = F4(
+	function (idx, title, binds, passes) {
+		return {binds: binds, idx: idx, passes: passes, title: title};
 	});
 var $author$project$Core$Generated$Types$Alt = F3(
 	function (a, b, c) {
@@ -5733,17 +5733,21 @@ try {
 	throw 'Some top-level definitions from `Core.Generated.Decoder` are causing infinite recursion:\n\n  ┌─────┐\n  │    decodeCoreAlt\n  │     ↓\n  │    decodeCoreBind\n  │     ↓\n  │    decodeCoreTerm\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.1/bad-recursion to learn how to fix it!';}
 var $author$project$Core$Generated$Decoder$decodePassInfo = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'binds',
-	$elm$json$Json$Decode$list($author$project$Core$Generated$Decoder$decodeCoreBind),
+	'passes',
+	$elm$json$Json$Decode$int,
 	A3(
 		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'title',
-		$elm$json$Json$Decode$string,
+		'binds',
+		$elm$json$Json$Decode$list($author$project$Core$Generated$Decoder$decodeCoreBind),
 		A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'idx',
-			$elm$json$Json$Decode$int,
-			$elm$json$Json$Decode$succeed($author$project$Core$Generated$Types$PassInfo))));
+			'title',
+			$elm$json$Json$Decode$string,
+			A3(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'idx',
+				$elm$json$Json$Decode$int,
+				$elm$json$Json$Decode$succeed($author$project$Core$Generated$Types$PassInfo)))));
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
@@ -6565,6 +6569,7 @@ var $author$project$Main$initModel = {
 	passLoading: $author$project$Main$Loading($elm$core$Maybe$Nothing),
 	renames: $elm$core$Dict$empty,
 	selectedTerm: $elm$core$Maybe$Nothing,
+	showSource: true,
 	showTypeApplications: true,
 	showUniqueName: false,
 	shownBindings: $elm$core$Set$empty,
@@ -6720,17 +6725,24 @@ var $author$project$Main$update = F2(
 						model,
 						{showTypeApplications: !model.showTypeApplications}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'MsgToggleUniqueName':
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{showUniqueName: !model.showUniqueName}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{showSource: !model.showSource}),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$MsgTypes$MsgFetchPass = function (a) {
 	return {$: 'MsgFetchPass', a: a};
 };
+var $author$project$MsgTypes$MsgToggleShowSource = {$: 'MsgToggleShowSource'};
 var $elm$html$Html$br = _VirtualDom_node('br');
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$json$Json$Encode$string = _Json_wrap;
@@ -6758,331 +6770,11 @@ var $elm$core$List$concatMap = F2(
 		return $elm$core$List$concat(
 			A2($elm$core$List$map, f, list));
 	});
-var $author$project$PprCoreLang$coreBindBndrUnique = function (_v0) {
+var $author$project$CoreLangUtils$coreBindBndrUnique = function (_v0) {
 	var id = _v0.a;
 	return id.unique;
 };
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
-var $author$project$Core$Generated$Encoder$encodeCoreLiteral = function (x) {
-	return $elm$json$Json$Encode$object(
-		function () {
-			switch (x.$) {
-				case 'CoreLitNumber':
-					var x1 = x.a;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('CoreLitNumber')),
-							_Utils_Tuple2(
-							'contents',
-							$elm$json$Json$Encode$string(x1))
-						]);
-				case 'CoreLitString':
-					var x1 = x.a;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('CoreLitString')),
-							_Utils_Tuple2(
-							'contents',
-							$elm$json$Json$Encode$string(x1))
-						]);
-				default:
-					var x1 = x.a;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('CoreLitOther')),
-							_Utils_Tuple2(
-							'contents',
-							$elm$json$Json$Encode$string(x1))
-						]);
-			}
-		}());
-};
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
-var $author$project$Core$Generated$Encoder$encodeCoreAltCon = function (x) {
-	return $elm$json$Json$Encode$object(
-		function () {
-			switch (x.$) {
-				case 'DataAlt':
-					var x1 = x.a;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('DataAlt')),
-							_Utils_Tuple2(
-							'contents',
-							$elm$json$Json$Encode$string(x1))
-						]);
-				case 'LitAlt':
-					var x1 = x.a;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('LitAlt')),
-							_Utils_Tuple2(
-							'contents',
-							$author$project$Core$Generated$Encoder$encodeCoreLiteral(x1))
-						]);
-				default:
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('DEFAULT')),
-							_Utils_Tuple2(
-							'contents',
-							A2($elm$json$Json$Encode$list, $elm$core$Basics$identity, _List_Nil))
-						]);
-			}
-		}());
-};
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $elm$json$Json$Encode$int = _Json_wrap;
-var $author$project$Core$Generated$Encoder$encodeCoreId = function (x) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'tag',
-				$elm$json$Json$Encode$string('CoreId')),
-				_Utils_Tuple2(
-				'name',
-				$elm$json$Json$Encode$string(x.name)),
-				_Utils_Tuple2(
-				'uniquetag',
-				$elm$json$Json$Encode$string(x.uniquetag)),
-				_Utils_Tuple2(
-				'unique',
-				$elm$json$Json$Encode$int(x.unique)),
-				_Utils_Tuple2(
-				'vartype',
-				$elm$json$Json$Encode$string(x.vartype)),
-				_Utils_Tuple2(
-				'istyvar',
-				$elm$json$Json$Encode$bool(x.istyvar))
-			]));
-};
-var $author$project$Core$Generated$Encoder$encodeCoreAlt = function (x) {
-	return $elm$json$Json$Encode$object(
-		function () {
-			var x1 = x.a;
-			var x2 = x.b;
-			var x3 = x.c;
-			return _List_fromArray(
-				[
-					_Utils_Tuple2(
-					'tag',
-					$elm$json$Json$Encode$string('Alt')),
-					_Utils_Tuple2(
-					'contents',
-					A2(
-						$elm$json$Json$Encode$list,
-						$elm$core$Basics$identity,
-						_List_fromArray(
-							[
-								$author$project$Core$Generated$Encoder$encodeCoreAltCon(x1),
-								$elm$json$Json$Encode$list($author$project$Core$Generated$Encoder$encodeCoreId)(x2),
-								$author$project$Core$Generated$Encoder$encodeCoreTerm(x3)
-							])))
-				]);
-		}());
-};
-var $author$project$Core$Generated$Encoder$encodeCoreBind = function (x) {
-	return $elm$json$Json$Encode$object(
-		function () {
-			var x1 = x.a;
-			var x2 = x.b;
-			return _List_fromArray(
-				[
-					_Utils_Tuple2(
-					'tag',
-					$elm$json$Json$Encode$string('NonRec')),
-					_Utils_Tuple2(
-					'contents',
-					A2(
-						$elm$json$Json$Encode$list,
-						$elm$core$Basics$identity,
-						_List_fromArray(
-							[
-								$author$project$Core$Generated$Encoder$encodeCoreId(x1),
-								$author$project$Core$Generated$Encoder$encodeCoreTerm(x2)
-							])))
-				]);
-		}());
-};
-var $author$project$Core$Generated$Encoder$encodeCoreTerm = function (x) {
-	return $elm$json$Json$Encode$object(
-		function () {
-			switch (x.$) {
-				case 'Var':
-					var x1 = x.a;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('Var')),
-							_Utils_Tuple2(
-							'contents',
-							$author$project$Core$Generated$Encoder$encodeCoreId(x1))
-						]);
-				case 'Lit':
-					var x1 = x.a;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('Lit')),
-							_Utils_Tuple2(
-							'contents',
-							$author$project$Core$Generated$Encoder$encodeCoreLiteral(x1))
-						]);
-				case 'App':
-					var x1 = x.a;
-					var x2 = x.b;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('App')),
-							_Utils_Tuple2(
-							'contents',
-							A2(
-								$elm$json$Json$Encode$list,
-								$elm$core$Basics$identity,
-								_List_fromArray(
-									[
-										$author$project$Core$Generated$Encoder$encodeCoreTerm(x1),
-										$author$project$Core$Generated$Encoder$encodeCoreTerm(x2)
-									])))
-						]);
-				case 'Lam':
-					var x1 = x.a;
-					var x2 = x.b;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('Lam')),
-							_Utils_Tuple2(
-							'contents',
-							A2(
-								$elm$json$Json$Encode$list,
-								$elm$core$Basics$identity,
-								_List_fromArray(
-									[
-										$author$project$Core$Generated$Encoder$encodeCoreId(x1),
-										$author$project$Core$Generated$Encoder$encodeCoreTerm(x2)
-									])))
-						]);
-				case 'Let':
-					var x1 = x.a;
-					var x2 = x.b;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('Let')),
-							_Utils_Tuple2(
-							'contents',
-							A2(
-								$elm$json$Json$Encode$list,
-								$elm$core$Basics$identity,
-								_List_fromArray(
-									[
-										$author$project$Core$Generated$Encoder$encodeCoreBind(x1),
-										$author$project$Core$Generated$Encoder$encodeCoreTerm(x2)
-									])))
-						]);
-				case 'Case':
-					var x1 = x.a;
-					var x2 = x.b;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('Case')),
-							_Utils_Tuple2(
-							'contents',
-							A2(
-								$elm$json$Json$Encode$list,
-								$elm$core$Basics$identity,
-								_List_fromArray(
-									[
-										$author$project$Core$Generated$Encoder$encodeCoreTerm(x1),
-										$elm$json$Json$Encode$list($author$project$Core$Generated$Encoder$encodeCoreAlt)(x2)
-									])))
-						]);
-				case 'Type':
-					var x1 = x.a;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('Type')),
-							_Utils_Tuple2(
-							'contents',
-							$elm$json$Json$Encode$string(x1))
-						]);
-				default:
-					var x1 = x.a;
-					return _List_fromArray(
-						[
-							_Utils_Tuple2(
-							'tag',
-							$elm$json$Json$Encode$string('Undef')),
-							_Utils_Tuple2(
-							'contents',
-							$elm$json$Json$Encode$string(x1))
-						]);
-			}
-		}());
-};
-var $author$project$Core$Generated$Encoder$encodePassInfo = function (x) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'tag',
-				$elm$json$Json$Encode$string('PassInfo')),
-				_Utils_Tuple2(
-				'idx',
-				$elm$json$Json$Encode$int(x.idx)),
-				_Utils_Tuple2(
-				'title',
-				$elm$json$Json$Encode$string(x.title)),
-				_Utils_Tuple2(
-				'binds',
-				$elm$json$Json$Encode$list($author$project$Core$Generated$Encoder$encodeCoreBind)(x.binds))
-			]));
-};
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -7096,570 +6788,10 @@ var $elm$core$List$filter = F2(
 	});
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$hr = _VirtualDom_node('hr');
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$Config = F2(
-	function (indent, columns) {
-		return {columns: columns, indent: indent};
+var $elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
 	});
-var $the_sett$elm_pretty_printer$Pretty$Text = function (a) {
-	return {$: 'Text', a: a};
-};
-var $the_sett$elm_pretty_printer$Pretty$string = $the_sett$elm_pretty_printer$Pretty$Text;
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$boolToDoc = function (bool) {
-	return bool ? $the_sett$elm_pretty_printer$Pretty$string('true') : $the_sett$elm_pretty_printer$Pretty$string('false');
-};
-var $elm$json$Json$Decode$float = _Json_decodeFloat;
-var $elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
-var $elm$json$Json$Decode$lazy = function (thunk) {
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		thunk,
-		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
-};
-var $the_sett$elm_pretty_printer$Pretty$Concatenate = F2(
-	function (a, b) {
-		return {$: 'Concatenate', a: a, b: b};
-	});
-var $the_sett$elm_pretty_printer$Pretty$append = F2(
-	function (doc1, doc2) {
-		return A2(
-			$the_sett$elm_pretty_printer$Pretty$Concatenate,
-			function (_v0) {
-				return doc1;
-			},
-			function (_v1) {
-				return doc2;
-			});
-	});
-var $elm$core$String$cons = _String_cons;
-var $elm$core$String$fromChar = function (_char) {
-	return A2($elm$core$String$cons, _char, '');
-};
-var $the_sett$elm_pretty_printer$Pretty$char = function (c) {
-	return $the_sett$elm_pretty_printer$Pretty$Text(
-		$elm$core$String$fromChar(c));
-};
-var $the_sett$elm_pretty_printer$Pretty$Line = F2(
-	function (a, b) {
-		return {$: 'Line', a: a, b: b};
-	});
-var $the_sett$elm_pretty_printer$Pretty$line = A2($the_sett$elm_pretty_printer$Pretty$Line, ' ', '');
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$closeBracket = A2(
-	$the_sett$elm_pretty_printer$Pretty$append,
-	$the_sett$elm_pretty_printer$Pretty$line,
-	$the_sett$elm_pretty_printer$Pretty$char(
-		_Utils_chr(']')));
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$commaLine = A2(
-	$the_sett$elm_pretty_printer$Pretty$append,
-	$the_sett$elm_pretty_printer$Pretty$char(
-		_Utils_chr(',')),
-	$the_sett$elm_pretty_printer$Pretty$line);
-var $elm$core$List$isEmpty = function (xs) {
-	if (!xs.b) {
-		return true;
-	} else {
-		return false;
-	}
-};
-var $the_sett$elm_pretty_printer$Pretty$Empty = {$: 'Empty'};
-var $the_sett$elm_pretty_printer$Pretty$empty = $the_sett$elm_pretty_printer$Pretty$Empty;
-var $the_sett$elm_pretty_printer$Pretty$join = F2(
-	function (sep, docs) {
-		join:
-		while (true) {
-			if (!docs.b) {
-				return $the_sett$elm_pretty_printer$Pretty$empty;
-			} else {
-				if (docs.a.$ === 'Empty') {
-					var _v1 = docs.a;
-					var ds = docs.b;
-					var $temp$sep = sep,
-						$temp$docs = ds;
-					sep = $temp$sep;
-					docs = $temp$docs;
-					continue join;
-				} else {
-					var d = docs.a;
-					var ds = docs.b;
-					var step = F2(
-						function (x, rest) {
-							if (x.$ === 'Empty') {
-								return rest;
-							} else {
-								var doc = x;
-								return A2(
-									$the_sett$elm_pretty_printer$Pretty$append,
-									sep,
-									A2($the_sett$elm_pretty_printer$Pretty$append, doc, rest));
-							}
-						});
-					var spersed = A3($elm$core$List$foldr, step, $the_sett$elm_pretty_printer$Pretty$empty, ds);
-					return A2($the_sett$elm_pretty_printer$Pretty$append, d, spersed);
-				}
-			}
-		}
-	});
-var $the_sett$elm_pretty_printer$Pretty$Nest = F2(
-	function (a, b) {
-		return {$: 'Nest', a: a, b: b};
-	});
-var $the_sett$elm_pretty_printer$Pretty$nest = F2(
-	function (depth, doc) {
-		return A2(
-			$the_sett$elm_pretty_printer$Pretty$Nest,
-			depth,
-			function (_v0) {
-				return doc;
-			});
-	});
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$openBracket = A2(
-	$the_sett$elm_pretty_printer$Pretty$append,
-	$the_sett$elm_pretty_printer$Pretty$char(
-		_Utils_chr('[')),
-	$the_sett$elm_pretty_printer$Pretty$line);
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$listToDoc = F2(
-	function (indent, list) {
-		return $elm$core$List$isEmpty(list) ? $the_sett$elm_pretty_printer$Pretty$string('[]') : A2(
-			$the_sett$elm_pretty_printer$Pretty$append,
-			A2(
-				$the_sett$elm_pretty_printer$Pretty$nest,
-				indent,
-				A2(
-					$the_sett$elm_pretty_printer$Pretty$append,
-					$ThinkAlexandria$elm_pretty_print_json$Json$Print$openBracket,
-					A2($the_sett$elm_pretty_printer$Pretty$join, $ThinkAlexandria$elm_pretty_print_json$Json$Print$commaLine, list))),
-			$ThinkAlexandria$elm_pretty_print_json$Json$Print$closeBracket);
-	});
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $elm$json$Json$Decode$maybe = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
-				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
-			]));
-};
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$nullToDoc = function (maybeDoc) {
-	if (maybeDoc.$ === 'Just') {
-		var doc = maybeDoc.a;
-		return doc;
-	} else {
-		return $the_sett$elm_pretty_printer$Pretty$string('null');
-	}
-};
-var $elm$core$String$fromFloat = _String_fromNumber;
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$numberToDoc = function (num) {
-	return $the_sett$elm_pretty_printer$Pretty$string(
-		$elm$core$String$fromFloat(num));
-};
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$closeBrace = A2(
-	$the_sett$elm_pretty_printer$Pretty$append,
-	$the_sett$elm_pretty_printer$Pretty$line,
-	$the_sett$elm_pretty_printer$Pretty$char(
-		_Utils_chr('}')));
-var $the_sett$elm_pretty_printer$Pretty$space = $the_sett$elm_pretty_printer$Pretty$char(
-	_Utils_chr(' '));
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$colonSpace = A2(
-	$the_sett$elm_pretty_printer$Pretty$append,
-	$the_sett$elm_pretty_printer$Pretty$char(
-		_Utils_chr(':')),
-	$the_sett$elm_pretty_printer$Pretty$space);
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$openBrace = A2(
-	$the_sett$elm_pretty_printer$Pretty$append,
-	$the_sett$elm_pretty_printer$Pretty$char(
-		_Utils_chr('{')),
-	$the_sett$elm_pretty_printer$Pretty$line);
-var $the_sett$elm_pretty_printer$Pretty$surround = F3(
-	function (left, right, doc) {
-		return A2(
-			$the_sett$elm_pretty_printer$Pretty$append,
-			A2($the_sett$elm_pretty_printer$Pretty$append, left, doc),
-			right);
-	});
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$stringToDoc = function (s) {
-	return A3(
-		$the_sett$elm_pretty_printer$Pretty$surround,
-		$the_sett$elm_pretty_printer$Pretty$char(
-			_Utils_chr('\"')),
-		$the_sett$elm_pretty_printer$Pretty$char(
-			_Utils_chr('\"')),
-		$the_sett$elm_pretty_printer$Pretty$string(s));
-};
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$objectToDoc = F2(
-	function (indent, pairs) {
-		return $elm$core$List$isEmpty(pairs) ? $the_sett$elm_pretty_printer$Pretty$string('{}') : A2(
-			$the_sett$elm_pretty_printer$Pretty$append,
-			A2(
-				$the_sett$elm_pretty_printer$Pretty$nest,
-				indent,
-				A2(
-					$the_sett$elm_pretty_printer$Pretty$append,
-					$ThinkAlexandria$elm_pretty_print_json$Json$Print$openBrace,
-					A2(
-						$the_sett$elm_pretty_printer$Pretty$join,
-						A2(
-							$the_sett$elm_pretty_printer$Pretty$append,
-							$the_sett$elm_pretty_printer$Pretty$char(
-								_Utils_chr(',')),
-							$the_sett$elm_pretty_printer$Pretty$line),
-						A2(
-							$elm$core$List$map,
-							function (_v0) {
-								var key = _v0.a;
-								var doc = _v0.b;
-								return A2(
-									$the_sett$elm_pretty_printer$Pretty$append,
-									$ThinkAlexandria$elm_pretty_print_json$Json$Print$stringToDoc(key),
-									A2($the_sett$elm_pretty_printer$Pretty$append, $ThinkAlexandria$elm_pretty_print_json$Json$Print$colonSpace, doc));
-							},
-							pairs)))),
-			$ThinkAlexandria$elm_pretty_print_json$Json$Print$closeBrace);
-	});
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$decodeDoc = function (indent) {
-	return A2(
-		$elm$json$Json$Decode$map,
-		$ThinkAlexandria$elm_pretty_print_json$Json$Print$nullToDoc,
-		$elm$json$Json$Decode$maybe(
-			$elm$json$Json$Decode$oneOf(
-				_List_fromArray(
-					[
-						A2($elm$json$Json$Decode$map, $ThinkAlexandria$elm_pretty_print_json$Json$Print$stringToDoc, $elm$json$Json$Decode$string),
-						A2($elm$json$Json$Decode$map, $ThinkAlexandria$elm_pretty_print_json$Json$Print$numberToDoc, $elm$json$Json$Decode$float),
-						A2($elm$json$Json$Decode$map, $ThinkAlexandria$elm_pretty_print_json$Json$Print$boolToDoc, $elm$json$Json$Decode$bool),
-						A2(
-						$elm$json$Json$Decode$map,
-						$ThinkAlexandria$elm_pretty_print_json$Json$Print$listToDoc(indent),
-						$elm$json$Json$Decode$lazy(
-							function (_v0) {
-								return $elm$json$Json$Decode$list(
-									$ThinkAlexandria$elm_pretty_print_json$Json$Print$decodeDoc(indent));
-							})),
-						A2(
-						$elm$json$Json$Decode$map,
-						$ThinkAlexandria$elm_pretty_print_json$Json$Print$objectToDoc(indent),
-						$elm$json$Json$Decode$lazy(
-							function (_v1) {
-								return $elm$json$Json$Decode$keyValuePairs(
-									$ThinkAlexandria$elm_pretty_print_json$Json$Print$decodeDoc(indent));
-							}))
-					]))));
-};
-var $elm$core$Result$map = F2(
-	function (func, ra) {
-		if (ra.$ === 'Ok') {
-			var a = ra.a;
-			return $elm$core$Result$Ok(
-				func(a));
-		} else {
-			var e = ra.a;
-			return $elm$core$Result$Err(e);
-		}
-	});
-var $the_sett$elm_pretty_printer$Pretty$NLine = F3(
-	function (a, b, c) {
-		return {$: 'NLine', a: a, b: b, c: c};
-	});
-var $the_sett$elm_pretty_printer$Pretty$NNil = {$: 'NNil'};
-var $the_sett$elm_pretty_printer$Pretty$NText = F2(
-	function (a, b) {
-		return {$: 'NText', a: a, b: b};
-	});
-var $the_sett$elm_pretty_printer$Pretty$fits = F2(
-	function (w, normal) {
-		fits:
-		while (true) {
-			if (w < 0) {
-				return false;
-			} else {
-				switch (normal.$) {
-					case 'NNil':
-						return true;
-					case 'NText':
-						var text = normal.a;
-						var innerNormal = normal.b;
-						var $temp$w = w - $elm$core$String$length(text),
-							$temp$normal = innerNormal(_Utils_Tuple0);
-						w = $temp$w;
-						normal = $temp$normal;
-						continue fits;
-					default:
-						return true;
-				}
-			}
-		}
-	});
-var $the_sett$elm_pretty_printer$Pretty$better = F4(
-	function (w, k, doc, doc2Fn) {
-		return A2($the_sett$elm_pretty_printer$Pretty$fits, w - k, doc) ? doc : doc2Fn(_Utils_Tuple0);
-	});
-var $the_sett$elm_pretty_printer$Pretty$best = F3(
-	function (width, startCol, x) {
-		var be = F3(
-			function (w, k, docs) {
-				be:
-				while (true) {
-					if (!docs.b) {
-						return $the_sett$elm_pretty_printer$Pretty$NNil;
-					} else {
-						switch (docs.a.b.$) {
-							case 'Empty':
-								var _v1 = docs.a;
-								var i = _v1.a;
-								var _v2 = _v1.b;
-								var ds = docs.b;
-								var $temp$w = w,
-									$temp$k = k,
-									$temp$docs = ds;
-								w = $temp$w;
-								k = $temp$k;
-								docs = $temp$docs;
-								continue be;
-							case 'Concatenate':
-								var _v3 = docs.a;
-								var i = _v3.a;
-								var _v4 = _v3.b;
-								var doc = _v4.a;
-								var doc2 = _v4.b;
-								var ds = docs.b;
-								var $temp$w = w,
-									$temp$k = k,
-									$temp$docs = A2(
-									$elm$core$List$cons,
-									_Utils_Tuple2(
-										i,
-										doc(_Utils_Tuple0)),
-									A2(
-										$elm$core$List$cons,
-										_Utils_Tuple2(
-											i,
-											doc2(_Utils_Tuple0)),
-										ds));
-								w = $temp$w;
-								k = $temp$k;
-								docs = $temp$docs;
-								continue be;
-							case 'Nest':
-								var _v5 = docs.a;
-								var i = _v5.a;
-								var _v6 = _v5.b;
-								var j = _v6.a;
-								var doc = _v6.b;
-								var ds = docs.b;
-								var $temp$w = w,
-									$temp$k = k,
-									$temp$docs = A2(
-									$elm$core$List$cons,
-									_Utils_Tuple2(
-										i + j,
-										doc(_Utils_Tuple0)),
-									ds);
-								w = $temp$w;
-								k = $temp$k;
-								docs = $temp$docs;
-								continue be;
-							case 'Text':
-								var _v7 = docs.a;
-								var i = _v7.a;
-								var text = _v7.b.a;
-								var ds = docs.b;
-								return A2(
-									$the_sett$elm_pretty_printer$Pretty$NText,
-									text,
-									function (_v8) {
-										return A3(
-											be,
-											w,
-											k + $elm$core$String$length(text),
-											ds);
-									});
-							case 'Line':
-								var _v9 = docs.a;
-								var i = _v9.a;
-								var _v10 = _v9.b;
-								var vsep = _v10.b;
-								var ds = docs.b;
-								return A3(
-									$the_sett$elm_pretty_printer$Pretty$NLine,
-									i,
-									vsep,
-									function (_v11) {
-										return A3(
-											be,
-											w,
-											i + $elm$core$String$length(vsep),
-											ds);
-									});
-							case 'Union':
-								var _v12 = docs.a;
-								var i = _v12.a;
-								var _v13 = _v12.b;
-								var doc = _v13.a;
-								var doc2 = _v13.b;
-								var ds = docs.b;
-								return A4(
-									$the_sett$elm_pretty_printer$Pretty$better,
-									w,
-									k,
-									A3(
-										be,
-										w,
-										k,
-										A2(
-											$elm$core$List$cons,
-											_Utils_Tuple2(i, doc),
-											ds)),
-									function (_v14) {
-										return A3(
-											be,
-											w,
-											k,
-											A2(
-												$elm$core$List$cons,
-												_Utils_Tuple2(i, doc2),
-												ds));
-									});
-							case 'Nesting':
-								var _v15 = docs.a;
-								var i = _v15.a;
-								var fn = _v15.b.a;
-								var ds = docs.b;
-								var $temp$w = w,
-									$temp$k = k,
-									$temp$docs = A2(
-									$elm$core$List$cons,
-									_Utils_Tuple2(
-										i,
-										fn(i)),
-									ds);
-								w = $temp$w;
-								k = $temp$k;
-								docs = $temp$docs;
-								continue be;
-							default:
-								var _v16 = docs.a;
-								var i = _v16.a;
-								var fn = _v16.b.a;
-								var ds = docs.b;
-								var $temp$w = w,
-									$temp$k = k,
-									$temp$docs = A2(
-									$elm$core$List$cons,
-									_Utils_Tuple2(
-										i,
-										fn(k)),
-									ds);
-								w = $temp$w;
-								k = $temp$k;
-								docs = $temp$docs;
-								continue be;
-						}
-					}
-				}
-			});
-		return A3(
-			be,
-			width,
-			startCol,
-			_List_fromArray(
-				[
-					_Utils_Tuple2(0, x)
-				]));
-	});
-var $elm$core$String$concat = function (strings) {
-	return A2($elm$core$String$join, '', strings);
-};
-var $the_sett$elm_pretty_printer$Pretty$copy = F2(
-	function (i, s) {
-		return (!i) ? '' : _Utils_ap(
-			s,
-			A2($the_sett$elm_pretty_printer$Pretty$copy, i - 1, s));
-	});
-var $the_sett$elm_pretty_printer$Pretty$layout = function (normal) {
-	var layoutInner = F2(
-		function (normal2, acc) {
-			layoutInner:
-			while (true) {
-				switch (normal2.$) {
-					case 'NNil':
-						return acc;
-					case 'NText':
-						var text = normal2.a;
-						var innerNormal = normal2.b;
-						var $temp$normal2 = innerNormal(_Utils_Tuple0),
-							$temp$acc = A2($elm$core$List$cons, text, acc);
-						normal2 = $temp$normal2;
-						acc = $temp$acc;
-						continue layoutInner;
-					default:
-						var i = normal2.a;
-						var sep = normal2.b;
-						var innerNormal = normal2.c;
-						var norm = innerNormal(_Utils_Tuple0);
-						if (norm.$ === 'NLine') {
-							var $temp$normal2 = innerNormal(_Utils_Tuple0),
-								$temp$acc = A2($elm$core$List$cons, '\n' + sep, acc);
-							normal2 = $temp$normal2;
-							acc = $temp$acc;
-							continue layoutInner;
-						} else {
-							var $temp$normal2 = innerNormal(_Utils_Tuple0),
-								$temp$acc = A2(
-								$elm$core$List$cons,
-								'\n' + (A2($the_sett$elm_pretty_printer$Pretty$copy, i, ' ') + sep),
-								acc);
-							normal2 = $temp$normal2;
-							acc = $temp$acc;
-							continue layoutInner;
-						}
-				}
-			}
-		});
-	return $elm$core$String$concat(
-		$elm$core$List$reverse(
-			A2(layoutInner, normal, _List_Nil)));
-};
-var $the_sett$elm_pretty_printer$Pretty$pretty = F2(
-	function (w, doc) {
-		return $the_sett$elm_pretty_printer$Pretty$layout(
-			A3($the_sett$elm_pretty_printer$Pretty$best, w, 0, doc));
-	});
-var $ThinkAlexandria$elm_pretty_print_json$Json$Print$prettyString = F2(
-	function (_v0, json) {
-		var columns = _v0.columns;
-		var indent = _v0.indent;
-		return A2(
-			$elm$core$Result$mapError,
-			$elm$json$Json$Decode$errorToString,
-			A2(
-				$elm$core$Result$map,
-				$the_sett$elm_pretty_printer$Pretty$pretty(columns),
-				A2(
-					$elm$json$Json$Decode$decodeString,
-					$ThinkAlexandria$elm_pretty_print_json$Json$Print$decodeDoc(indent),
-					json)));
-	});
-var $elm$core$Result$withDefault = F2(
-	function (def, result) {
-		if (result.$ === 'Ok') {
-			var a = result.a;
-			return a;
-		} else {
-			return def;
-		}
-	});
-var $author$project$Main$jsonToString = function (json) {
-	return A2(
-		$elm$core$Result$withDefault,
-		'',
-		A2(
-			$ThinkAlexandria$elm_pretty_print_json$Json$Print$prettyString,
-			A2($ThinkAlexandria$elm_pretty_print_json$Json$Print$Config, 4, 50),
-			A2($elm$json$Json$Encode$encode, 0, json)));
-};
-var $elm$virtual_dom$VirtualDom$node = function (tag) {
-	return _VirtualDom_node(
-		_VirtualDom_noScript(tag));
-};
-var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -7676,6 +6808,16 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		$elm$html$Html$Events$on,
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $author$project$Main$panelStyle = function (model) {
+	return _List_fromArray(
+		[
+			A2($elm$html$Html$Attributes$style, 'display', 'grid'),
+			A2($elm$html$Html$Attributes$style, 'width', '100%'),
+			model.showSource ? A2($elm$html$Html$Attributes$style, 'grid-template-columns', '2fr 2fr 1fr') : A2($elm$html$Html$Attributes$style, 'grid-template-columns', '4fr 1fr')
+		]);
 };
 var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $author$project$Trafo$applyRenames = function (r) {
@@ -7860,12 +7002,6 @@ var $author$project$Main$prepareModelView = function (model) {
 			passLoading: filterTypes(
 				applyRenames(model.passLoading))
 		});
-};
-var $elm$html$Html$Attributes$src = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'src',
-		_VirtualDom_noJavaScriptOrHtmlUri(url));
 };
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
@@ -8059,7 +7195,7 @@ var $elm$core$String$foldr = _String_foldr;
 var $elm$core$String$toList = function (string) {
 	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
 };
-var $author$project$PprCoreLang$isInfixOperator = function (inp) {
+var $author$project$CoreLangUtils$isInfixOperator = function (inp) {
 	var symbols = $elm$core$Set$fromList(
 		$elm$core$String$toList('!$%&*+./<=>?@\\^-~#'));
 	return A2(
@@ -8361,7 +7497,7 @@ var $author$project$PprCoreLang$ppCoreTerm = function (term) {
 					var isInfix = function () {
 						if (e.$ === 'Var') {
 							var id = e.a;
-							return $author$project$PprCoreLang$isInfixOperator(id.name);
+							return $author$project$CoreLangUtils$isInfixOperator(id.name);
 						} else {
 							return false;
 						}
@@ -8432,6 +7568,7 @@ var $author$project$PprCoreLang$viewCoreBind = F3(
 	});
 var $author$project$MsgTypes$MsgToggleUniqueName = {$: 'MsgToggleUniqueName'};
 var $author$project$MsgTypes$MsgToggleViewTypes = {$: 'MsgToggleViewTypes'};
+var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -8509,15 +7646,15 @@ var $elm$html$Html$summary = _VirtualDom_node('summary');
 var $author$project$MsgTypes$MsgToggleHiddenBind = function (a) {
 	return {$: 'MsgToggleHiddenBind', a: a};
 };
-var $author$project$PprCoreLang$coreBindBndr = function (_v0) {
+var $author$project$CoreLangUtils$coreBindBndr = function (_v0) {
 	var id = _v0.a;
 	return id;
 };
-var $author$project$PprCoreLang$coreBindBndrName = function (_v0) {
+var $author$project$CoreLangUtils$coreBindBndrName = function (_v0) {
 	var id = _v0.a;
 	return id.name;
 };
-var $author$project$PprCoreLang$coreBindBndrUniqueTag = function (_v0) {
+var $author$project$CoreLangUtils$coreBindBndrUniqueTag = function (_v0) {
 	var id = _v0.a;
 	return id.uniquetag;
 };
@@ -8532,10 +7669,10 @@ var $author$project$Main$viewShownCheckbox = F2(
 			A2(
 				$author$project$Main$isShown,
 				model,
-				$author$project$PprCoreLang$coreBindBndr(bind)),
+				$author$project$CoreLangUtils$coreBindBndr(bind)),
 			$author$project$MsgTypes$MsgToggleHiddenBind(
-				$author$project$PprCoreLang$coreBindBndrUnique(bind)),
-			$author$project$PprCoreLang$coreBindBndrName(bind) + ('_' + $author$project$PprCoreLang$coreBindBndrUniqueTag(bind)));
+				$author$project$CoreLangUtils$coreBindBndrUnique(bind)),
+			$author$project$CoreLangUtils$coreBindBndrName(bind) + ('_' + $author$project$CoreLangUtils$coreBindBndrUniqueTag(bind)));
 	});
 var $author$project$Main$viewHiddenList = F2(
 	function (model, pass) {
@@ -8818,7 +7955,7 @@ var $author$project$Main$view = function (rawmodel) {
 					function (b) {
 						return A2(
 							$elm$core$Set$member,
-							$author$project$PprCoreLang$coreBindBndrUnique(b),
+							$author$project$CoreLangUtils$coreBindBndrUnique(b),
 							model.shownBindings);
 					},
 					pass.binds);
@@ -8840,8 +7977,19 @@ var $author$project$Main$view = function (rawmodel) {
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
+									$elm$html$Html$Events$onClick($author$project$MsgTypes$MsgToggleShowSource)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Toggle source')
+								])),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
 									$elm$html$Html$Events$onClick(
-									$author$project$MsgTypes$MsgFetchPass(pass.idx - 1))
+									$author$project$MsgTypes$MsgFetchPass(
+										A2($elm$core$Basics$max, 1, pass.idx - 1)))
 								]),
 							_List_fromArray(
 								[
@@ -8852,7 +8000,8 @@ var $author$project$Main$view = function (rawmodel) {
 							_List_fromArray(
 								[
 									$elm$html$Html$Events$onClick(
-									$author$project$MsgTypes$MsgFetchPass(pass.idx + 1))
+									$author$project$MsgTypes$MsgFetchPass(
+										A2($elm$core$Basics$min, pass.passes, pass.idx + 1)))
 								]),
 							_List_fromArray(
 								[
@@ -8860,13 +8009,10 @@ var $author$project$Main$view = function (rawmodel) {
 								])),
 							A2(
 							$elm$html$Html$div,
+							$author$project$Main$panelStyle(model),
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('panel-4-1')
-								]),
-							_List_fromArray(
-								[
-									$author$project$Main$tryViewSrc(model),
+									model.showSource ? $author$project$Main$tryViewSrc(model) : $elm$html$Html$text(''),
 									A2(
 									$elm$html$Html$pre,
 									_List_fromArray(
@@ -8888,15 +8034,6 @@ var $author$project$Main$view = function (rawmodel) {
 											A2($elm$html$Html$hr, _List_Nil, _List_Nil),
 											A2($author$project$Main$viewHiddenList, model, pass)
 										]))
-								])),
-							A2(
-							$elm$html$Html$pre,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									$author$project$Main$jsonToString(
-										$author$project$Core$Generated$Encoder$encodePassInfo(pass)))
 								]))
 						]));
 		}
@@ -8905,26 +8042,7 @@ var $author$project$Main$view = function (rawmodel) {
 		$elm$html$Html$div,
 		_List_Nil,
 		_List_fromArray(
-			[
-				body,
-				A3(
-				$elm$html$Html$node,
-				'script',
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$src('highlight.min.js')
-					]),
-				_List_Nil),
-				A3(
-				$elm$html$Html$node,
-				'script',
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('hljs.highlightAll();')
-					])),
-				body
-			]));
+			[body]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});

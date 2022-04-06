@@ -1,7 +1,6 @@
 module MsgTypes exposing (..)
 
 import Http
-
 import Core.Generated.Types exposing (..)
 
 type Msg = MsgFetchPass Int
@@ -14,3 +13,4 @@ type Msg = MsgFetchPass Int
          | MsgRenameTerm Int String
          | MsgToggleViewTypes
          | MsgToggleUniqueName
+         | MsgToggleShowSource

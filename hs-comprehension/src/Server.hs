@@ -22,11 +22,11 @@ import Data.Aeson.Encode.Pretty (encodePretty)
 import CoreLang.Types 
 
 app :: [PassInfo] -> Application
-app passes rec respond = do
+app pages rec respond = do
     let fetchCore :: Text -> IO ByteString
         fetchCore idString = 
             let idx :: Int = fromMaybe 1 $ T.readMaybe $ T.unpack $ idString
-            in pure $ encodePretty $ passes !! (idx-1)
+            in pure $ encodePretty $ pages !! (idx-1)
 
 
         fetchSource :: Text -> IO ByteString
@@ -42,10 +42,10 @@ app passes rec respond = do
           p           -> pure "unknown path"
 
 
-    respond (responseLBS ok200 [("Content-Type", "text/json"), ("Access-Control-Allow-Origin", "*")] content)
+    respond (responseLBS ok200 [("Content-Type", "text/plain"), ("Access-Control-Allow-Origin", "*")] content)
 
 server :: [PassInfo] -> IO ()
-server passes = do
+server pages = do
     putStrLn "Running server at http://localhost:8080"
-    run 8080 (app passes)
+    run 8080 (app pages)
 

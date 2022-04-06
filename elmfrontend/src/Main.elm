@@ -21,6 +21,7 @@ import Markdown
 import Core.Generated.Encoder exposing (encodePassInfo)
 import Core.Generated.Decoder exposing (decodePassInfo)
 import Core.Generated.Types exposing (..)
+import CoreLangUtils exposing (..)
 
 import List
 import PprCoreLang exposing (..)
@@ -35,6 +36,7 @@ type alias Model = { passLoading : Loading PassInfo
                    , showUniqueName : Bool
                    , selectedTerm : Maybe CoreId
                    , renames : Dict Int String
+                   , showSource : Bool
                    }
 
 main : Program () Model Msg
@@ -76,6 +78,7 @@ initModel = { passLoading = Loading Nothing
             , showUniqueName = False
             , selectedTerm = Nothing
             , renames = Dict.empty
+            , showSource = True
             }
 
 loadFromResult : Result Http.Error a -> Loading a
@@ -103,24 +106,13 @@ update msg model = case msg of
     MsgGotPass result -> ( { model | passLoading = loadFromResult result } , Cmd.none)
     MsgFetchSrc mod -> ({model | srcLoading = Loading Nothing }, fetchSrc mod)
     MsgGotSrc result -> ({model | srcLoading = loadFromResult result }, Cmd.none)
-    MsgToggleHiddenBind bind -> ( { model | shownBindings = toggleSet bind model.shownBindings}
-                                , Cmd.none
-                                )
-    MsgHideAllBinds -> ( { model | shownBindings = Set.empty }
-                       , Cmd.none
-                       )
-    MsgSelectTerm term -> ( { model | selectedTerm = Just term }
-                          , Cmd.none
-                          )
-    MsgRenameTerm unique name -> ( { model | renames = Dict.insert unique name model.renames }
-                                 , Cmd.none
-                                 )
-    MsgToggleViewTypes -> ( { model | showTypeApplications = not model.showTypeApplications } 
-                          , Cmd.none
-                          )
-    MsgToggleUniqueName -> ( { model | showUniqueName = not model.showUniqueName } 
-                           , Cmd.none
-                           )
+    MsgToggleHiddenBind bind -> ( { model | shownBindings = toggleSet bind model.shownBindings} , Cmd.none)
+    MsgHideAllBinds -> ( { model | shownBindings = Set.empty } , Cmd.none)
+    MsgSelectTerm term -> ( { model | selectedTerm = Just term } , Cmd.none)
+    MsgRenameTerm unique name -> ( { model | renames = Dict.insert unique name model.renames } , Cmd.none)
+    MsgToggleViewTypes -> ( { model | showTypeApplications = not model.showTypeApplications } , Cmd.none)
+    MsgToggleUniqueName -> ( { model | showUniqueName = not model.showUniqueName } , Cmd.none)
+    MsgToggleShowSource -> ( {model | showSource = not model.showSource  }, Cmd.none)
 
                          
 
@@ -182,10 +174,11 @@ view rawmodel =
                     viewBind = PprCoreLang.viewCoreBind model.showUniqueName model.selectedTerm
                 in div []  [ h1 [] [text (String.fromInt pass.idx ++ ": " ++ pass.title)]
                            , br [] []
-                           , button [onClick (MsgFetchPass <| pass.idx - 1)] [text "Previous"]
-                           , button [onClick (MsgFetchPass <| pass.idx + 1)] [text "Next"]
-                           , div [ class "panel-4-1" ] 
-                                 [ tryViewSrc model
+                           , button [onClick MsgToggleShowSource] [text "Toggle source"]
+                           , button [onClick (MsgFetchPass <| Basics.max 1 (pass.idx - 1))] [text "Previous"]
+                           , button [onClick (MsgFetchPass <| Basics.min pass.passes (pass.idx + 1))] [text "Next"]
+                           , div (panelStyle model)
+                                 [ if model.showSource then tryViewSrc model else text ""
                                  , pre [class "code"] (List.concatMap viewBind binds)
                                  , div [class "info-panel"] 
                                     [ viewDisplayOptions model
@@ -195,13 +188,18 @@ view rawmodel =
                                     , viewHiddenList model pass
                                     ]
                                  ]
-                           , pre [] [text ((jsonToString (encodePassInfo pass)))]
+--                           , pre [] [text ((jsonToString (encodePassInfo pass)))]
                            ]
-    in div [] [body
-              , node "script" [src "highlight.min.js"] []
-              , node "script" [] [text "hljs.highlightAll();"]
-              , body
-              ]
+    in div [] [ body ]
+
+panelStyle : Model -> List (Attribute Msg)
+panelStyle model = 
+    [ style "display" "grid"
+    , style "width" "100%"
+    , if model.showSource
+      then style "grid-template-columns" "2fr 2fr 1fr"
+      else style "grid-template-columns" "4fr 1fr"
+    ]
 
 isShown : Model -> CoreId -> Bool
 isShown model bind = Set.member bind.unique model.shownBindings

@@ -1,7 +1,10 @@
 module Trafo exposing (..)
 
 import Core.Generated.Types exposing (..)
+import CoreLangUtils exposing (..)
 import Dict exposing (Dict)
+import Set
+import Dict
 
 applyRenames : Dict Int String -> CoreBind -> CoreBind
 applyRenames r =
@@ -48,6 +51,8 @@ eraseTypesTerm term = case term of
 
 eraseTypeAlt : CoreAlt -> CoreAlt
 eraseTypeAlt (Alt con bs e) = Alt con bs (eraseTypesTerm e)
+
+
 
 
 

@@ -15,6 +15,7 @@ type alias PassInfo =
     { idx : Int
     , title : String
     , binds : List CoreBind
+    , passes : Int
     }
 
 type CoreLiteral

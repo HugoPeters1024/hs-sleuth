@@ -21,6 +21,7 @@ decodePassInfo = D.succeed T.PassInfo
     |> required "idx" D.int
     |> required "title" D.string
     |> required "binds" (D.list decodeCoreBind)
+    |> required "passes" D.int
 
 decodeCoreLiteral : Decoder T.CoreLiteral
 decodeCoreLiteral =

@@ -1,11 +1,14 @@
-module PprCoreLang exposing (viewCoreBind, coreBindBndrUnique, coreBindBndrName, coreBindBndrUniqueTag, coreBindBndr, isInfixOperator)
+module PprCoreLang exposing (viewCoreBind)
 
 import Core.Generated.Types exposing (..)
+import CoreLangUtils exposing (..)
+
 import MsgTypes exposing (..)
 
 import Html exposing (Html, text, span, a)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
+
 
 import Char
 import List
@@ -34,27 +37,12 @@ defaultState showUniqueName selectedTerm =
     , showUniqueName = showUniqueName
     }
 
-isInfixOperator : String -> Bool
-isInfixOperator inp = 
-    let symbols = Set.fromList (String.toList "!$%&*+./<=>?@\\^-~#")
-    in String.all (\c -> Set.member c symbols) inp
 
 viewCoreBind : Bool -> Maybe CoreId -> CoreBind -> List (Html Msg)
 viewCoreBind showTypes selectedTerm bind = 
     let state = defaultState showTypes selectedTerm
     in (runPP (ppCoreBind bind |> State.vndThen newline) state).result
 
-coreBindBndr : CoreBind -> CoreId
-coreBindBndr (NonRec id _) = id
-
-coreBindBndrName : CoreBind -> String
-coreBindBndrName (NonRec id _) = id.name
-
-coreBindBndrUnique : CoreBind -> Int
-coreBindBndrUnique (NonRec id _) = id.unique
-
-coreBindBndrUniqueTag : CoreBind -> String
-coreBindBndrUniqueTag (NonRec id _) = id.uniquetag
 
 emit : Html Msg -> PP
 emit node = State.stateMap (\s -> { s | result = s.result ++ [node] })

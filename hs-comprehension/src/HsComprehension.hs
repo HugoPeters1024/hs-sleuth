@@ -60,13 +60,14 @@ pass idx prevName ref guts = do
     liftIO $ putStrLn $ showSDoc dflags (ppr (mg_module guts))
     let title = T.pack $ showSDoc dflags prevName
 
-    uniqified <- liftIO $ (runUnique $ uniqProgram (mg_binds guts) >>= pure . map sinkSpan)
+    uniqified <- liftIO $ runUnique $ uniqProgram (mg_binds guts)
 
     cvtBinds <- CL.cvtCoreLang $ getAllTopLevelDefs uniqified
 
     let passInfo = CL.PassInfo { idx = idx
                                , title = title
                                , binds = cvtBinds
+                               , totalPasses = -1
                                }
 
     liftIO $ modifyIORef ref (\s -> 
@@ -85,13 +86,20 @@ annSucc [] = []
 annSucc [x] = [Nothing]
 annSucc (x:y:xs) = Just y:annSucc (y:xs)
 
+
 printInfoPass :: IORef PlugState -> CoreToDo
 printInfoPass ref = CoreDoPluginPass "Print Info" $ \guts -> do
     passes <- liftIO $ readIORef ref >>= \s -> pure $ reverse s.passes
+    let embellishPass :: CL.PassInfo -> CL.PassInfo
+        embellishPass pass = 
+            let totalPasses = length passes
+            in pass { CL.totalPasses = totalPasses }
+
+    let pages = map embellishPass passes
 
     liftIO $ generateElm @'[CL.CoreId, CL.PassInfo, CL.CoreLiteral, CL.CoreTerm, CL.CoreBind, CL.CoreAltCon, CL.CoreAlt] $ defaultSettings "." ["Core", "Generated"]
 
-    liftIO (server passes)
+    liftIO (server pages)
 
     pure guts
 

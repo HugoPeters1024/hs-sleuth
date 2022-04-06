@@ -23,6 +23,7 @@ encodePassInfo x = E.object
     , ("idx", E.int x.idx)
     , ("title", E.string x.title)
     , ("binds", (E.list encodeCoreBind) x.binds)
+    , ("passes", E.int x.passes)
     ]
 
 encodeCoreLiteral : T.CoreLiteral -> Value
