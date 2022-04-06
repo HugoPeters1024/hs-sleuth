@@ -155,7 +155,7 @@ prepareModelView model =
 
 tryViewSrc : Model -> Html Msg
 tryViewSrc model = case model.srcLoading of
-    Ready src -> pre [class "code"] [text src]
+    Ready src -> pre [class "code"] [Markdown.toHtml [] ("```haskell\n" ++ src ++ "\n```")]
     Loading _ -> text "Loading"
     Failure _ -> text "Source not available"
 
@@ -197,9 +197,9 @@ view rawmodel =
                                  ]
                            , pre [] [text ((jsonToString (encodePassInfo pass)))]
                            ]
-    in div [] [ css "pygments.css"
-              , css "style.css"
-              , css "https://fonts.googleapis.com/css?family=Ubuntu"
+    in div [] [body
+              , node "script" [src "highlight.min.js"] []
+              , node "script" [] [text "hljs.highlightAll();"]
               , body
               ]
 
@@ -251,6 +251,3 @@ viewTermInfo model =
            [ h2 [] [text "Selected term"]
            , Maybe.withDefault (text "Nothing selected") (Maybe.map showMenu model.selectedTerm)
            ]
-   
-css : String -> Html Msg
-css path = node "link" [ rel "stylesheet", href path ] []
