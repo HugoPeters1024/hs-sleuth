@@ -4,10 +4,13 @@ import Http
 
 import Core.Generated.Types exposing (..)
 
-type Msg = MsgGotPass (Result Http.Error PassInfo)
-         | MsgFetchPass Int
-         | MsgToggleHiddenBind String
+type Msg = MsgFetchPass Int
+         | MsgGotPass (Result Http.Error PassInfo)
+         | MsgFetchSrc String
+         | MsgGotSrc (Result Http.Error String)
+         | MsgToggleHiddenBind Int
          | MsgHideAllBinds
          | MsgSelectTerm CoreId
-         | MsgRenameTerm String String
+         | MsgRenameTerm Int String
          | MsgToggleViewTypes
+         | MsgToggleUniqueName

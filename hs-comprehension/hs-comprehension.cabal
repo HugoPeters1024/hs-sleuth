@@ -25,6 +25,9 @@ library
     -- Modules included in this library but not exported.
     other-modules:  CoreLang.Types
                   , CoreLang.Cvt
+                  , Uniqify
+                  , SinkSpan
+                  , Server
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -48,5 +51,6 @@ library
                     , aeson
                     , aeson-pretty
                     , random
+                    , hashable
     hs-source-dirs:   src
     default-language: Haskell2010

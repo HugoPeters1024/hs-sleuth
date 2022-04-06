@@ -11,8 +11,10 @@ encodeCoreId : T.CoreId -> Value
 encodeCoreId x = E.object
     [ ("tag", E.string "CoreId")
     , ("name", E.string x.name)
-    , ("unique", E.string x.unique)
+    , ("uniquetag", E.string x.uniquetag)
+    , ("unique", E.int x.unique)
     , ("vartype", E.string x.vartype)
+    , ("istyvar", E.bool x.istyvar)
     ]
 
 encodePassInfo : T.PassInfo -> Value

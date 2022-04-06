@@ -12,6 +12,7 @@ import Prelude hiding ((<>))
 import Data.List
 import Data.Maybe
 import Data.IORef
+
 import Control.Monad
 
 import CoreCollection
@@ -20,16 +21,15 @@ import GHC
 import GHC.Plugins
 import Data.Data
 
-import Network.Wai
-import Network.Wai.Handler.Warp (run)
-import Network.HTTP.Types
 
 import qualified Data.Text as T
-import Text.Read
+
+import Uniqify
+import SinkSpan
+import Server
 
 import qualified CoreLang.Types as CL
 import qualified CoreLang.Cvt as CL
-import Data.Aeson.Encode.Pretty (encodePretty)
 
 import Elm (Elm, ElmStreet(..), elmStreetParseJson, elmStreetToJson, generateElm, defaultSettings)
 
@@ -40,25 +40,40 @@ plugin = defaultPlugin
   , pluginRecompile = purePlugin
   }
 
+data PlugState = PlugState 
+    { passes :: [CL.PassInfo]
+    }
+
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install _ todo = do
-    ref <- liftIO $ newIORef []
+    let plugState = PlugState []
+    ref <- liftIO $ newIORef plugState
     let mkPass = \idx prevName -> CoreDoPluginPass "Collection Pass" (pass idx prevName ref)
     let firstPass = mkPass 1 "Desugared" 
 
     let passes = concat $ zipWith3 (\idx x y -> [x, y idx (ppr x)]) [2..] todo (repeat mkPass)
     pure (firstPass : passes ++ [printInfoPass ref])
 
-
-pass :: Int -> SDoc -> IORef [CL.PassInfo] -> ModGuts -> CoreM ModGuts
+pass :: Int -> SDoc -> IORef PlugState -> ModGuts -> CoreM ModGuts
 pass idx prevName ref guts = do
     dflags <- getDynFlags
+    liftIO $ putStrLn $ showSDoc dflags (ppr (mg_module guts))
     let title = T.pack $ showSDoc dflags prevName
-    binds <- CL.cvtCoreLang $ getAllTopLevelDefs (mg_binds guts)
 
-    let passInfo = CL.PassInfo {..}
-    liftIO $ modifyIORef ref (passInfo:)
-    pure guts
+    uniqified <- liftIO $ (runUnique $ uniqProgram (mg_binds guts) >>= pure . map sinkSpan)
+
+    cvtBinds <- CL.cvtCoreLang $ getAllTopLevelDefs uniqified
+
+    let passInfo = CL.PassInfo { idx = idx
+                               , title = title
+                               , binds = cvtBinds
+                               }
+
+    liftIO $ modifyIORef ref (\s -> 
+        s { passes = passInfo:s.passes
+          })
+
+    pure guts { mg_binds = uniqified }
 
 annPred :: [a] -> [Maybe a]
 annPred [] = []
@@ -70,9 +85,9 @@ annSucc [] = []
 annSucc [x] = [Nothing]
 annSucc (x:y:xs) = Just y:annSucc (y:xs)
 
-printInfoPass :: IORef [CL.PassInfo] -> CoreToDo
+printInfoPass :: IORef PlugState -> CoreToDo
 printInfoPass ref = CoreDoPluginPass "Print Info" $ \guts -> do
-    passes <- liftIO $ reverse <$> readIORef ref
+    passes <- liftIO $ readIORef ref >>= \s -> pure $ reverse s.passes
 
     liftIO $ generateElm @'[CL.CoreId, CL.PassInfo, CL.CoreLiteral, CL.CoreTerm, CL.CoreBind, CL.CoreAltCon, CL.CoreAlt] $ defaultSettings "." ["Core", "Generated"]
 
@@ -80,12 +95,5 @@ printInfoPass ref = CoreDoPluginPass "Print Info" $ \guts -> do
 
     pure guts
 
-app :: [CL.PassInfo] -> Application
-app passes rec respond = let 
-    idx :: Int = fromMaybe 1 $ listToMaybe (pathInfo rec) >>= readMaybe . T.unpack
-    in respond (responseLBS ok200 [("Content-Type", "text/plain"), ("Access-Control-Allow-Origin", "*")] (encodePretty (passes !! (idx-1))))
 
-server :: [CL.PassInfo] -> IO ()
-server passes = do
-    putStrLn "Running server at http://localhost:8080"
-    run 8080 (app passes)
+

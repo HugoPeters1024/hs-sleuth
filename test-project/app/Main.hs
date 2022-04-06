@@ -1,7 +1,12 @@
 module Main where
 
-addThreeN :: Num a => [a] -> [a]
-addThreeN = map (+1) . map (+1) . map (+1)
+plusOne :: Int -> Int
+plusOne x = let 
+    y = 
+        x 
+        + 
+        1 
+    in y * y
 
 main :: IO ()
-main = putStrLn "Hello Haskell"
+main = pure ()

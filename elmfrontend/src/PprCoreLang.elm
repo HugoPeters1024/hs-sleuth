@@ -1,4 +1,4 @@
-module PprCoreLang exposing (viewCoreBind, coreBindBndrUnique, coreBindBndrName, coreBindBndr, isInfixOperator)
+module PprCoreLang exposing (viewCoreBind, coreBindBndrUnique, coreBindBndrName, coreBindBndrUniqueTag, coreBindBndr, isInfixOperator)
 
 import Core.Generated.Types exposing (..)
 import MsgTypes exposing (..)
@@ -16,8 +16,8 @@ import State exposing (State)
 type alias PPState = { indent : Int
                      , result : List (Html Msg)
                      , toplevel : Bool
-                     , showTypes : Bool
                      , selectedTerm : Maybe CoreId
+                     , showUniqueName : Bool
                      }
 
 type alias PP = State PPState ()
@@ -26,12 +26,12 @@ runPP : PP -> PPState -> PPState
 runPP = State.evalState 
 
 defaultState : Bool -> Maybe CoreId -> PPState
-defaultState showTypes selectedTerm = 
+defaultState showUniqueName selectedTerm = 
     { indent = 0
     , result = []
     , toplevel = True
-    , showTypes = showTypes 
     , selectedTerm = selectedTerm
+    , showUniqueName = showUniqueName
     }
 
 isInfixOperator : String -> Bool
@@ -50,8 +50,11 @@ coreBindBndr (NonRec id _) = id
 coreBindBndrName : CoreBind -> String
 coreBindBndrName (NonRec id _) = id.name
 
-coreBindBndrUnique : CoreBind -> String
+coreBindBndrUnique : CoreBind -> Int
 coreBindBndrUnique (NonRec id _) = id.unique
+
+coreBindBndrUniqueTag : CoreBind -> String
+coreBindBndrUniqueTag (NonRec id _) = id.uniquetag
 
 emit : Html Msg -> PP
 emit node = State.stateMap (\s -> { s | result = s.result ++ [node] })
@@ -117,6 +120,8 @@ ppCoreVar id = State.withState <| \state ->
             Just x -> Char.isUpper x
             Nothing -> False
 
+        name = id.name ++ (if state.showUniqueName then "_" ++ id.uniquetag else "")
+
         classes = concatMaybe 
             [ if selected then Just (class "highlight") else Nothing
             , if state.toplevel 
@@ -126,7 +131,7 @@ ppCoreVar id = State.withState <| \state ->
                          else Nothing
             ]
 
-        node =  span classes [text id.name]
+        node =  span classes [text name]
     in emit <| ppa [node] (MsgSelectTerm id)
 
 ppCoreBind : CoreBind -> PP
@@ -145,8 +150,8 @@ ppCoreAlt : CoreAlt -> PP
 ppCoreAlt alt = case alt of
     (Alt con bs e) -> ppSequence [ ppCoreAltCon con
                                  , emitText " "
-                                 , ppSequence (List.map ppCoreVar bs)
-                                 , emitText " -> "
+                                 , ppSequence (List.map (\var -> ppCoreVar var |> State.vndThen (emitText " ")) bs)
+                                 , emitText "-> "
                                  , ppCoreTerm e
                                  ]
 
@@ -161,9 +166,7 @@ ppCoreTerm term = case term of
                 _     -> False
 
             render = case a of
-                Type t -> if state.showTypes 
-                          then ppSequence [ppCoreTerm e, emitText " ", emitOperator "@", emitText t]
-                          else ppCoreTerm e
+                Type t -> ppSequence [ppCoreTerm e, emitText " ", emitOperator "@", emitText t]
                 _      -> ppSequence [ppCoreTerm e, emitText " ", parensTerm a]
 
         in render

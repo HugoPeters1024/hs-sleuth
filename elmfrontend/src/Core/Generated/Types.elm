@@ -5,8 +5,10 @@ import Time exposing (Posix)
 
 type alias CoreId =
     { name : String
-    , unique : String
+    , uniquetag : String
+    , unique : Int
     , vartype : String
+    , istyvar : Bool
     }
 
 type alias PassInfo =

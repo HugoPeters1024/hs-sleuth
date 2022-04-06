@@ -36,8 +36,12 @@ data CoreLiteral = CoreLitNumber Text
                  deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreLiteral
 
 data CoreId = CoreId { name :: Text
-                     , unique :: Text
+                     -- only unique in certain scopes
+                     , uniquetag :: Text
+                     -- actually unique
+                     , unique :: Int
                      , vartype :: Text
+                     , istyvar :: Bool
                      }
                      deriving (Show, Generic)
                      deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreId

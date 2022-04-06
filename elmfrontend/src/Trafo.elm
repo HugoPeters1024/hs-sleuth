@@ -3,7 +3,7 @@ module Trafo exposing (..)
 import Core.Generated.Types exposing (..)
 import Dict exposing (Dict)
 
-applyRenames : Dict String String -> CoreBind -> CoreBind
+applyRenames : Dict Int String -> CoreBind -> CoreBind
 applyRenames r =
     let t : CoreTerm -> CoreTerm
         t b = case b of
@@ -29,5 +29,27 @@ applyRenames r =
     in tbind
 
 
+eraseTypes : CoreBind -> CoreBind
+eraseTypes (NonRec b e) = NonRec b (eraseTypesTerm e)
 
+eraseTypesTerm : CoreTerm -> CoreTerm
+eraseTypesTerm term = case term of
+    Var i -> Var i
+    Lit i -> Lit i
+    App e a -> case a of
+        Type _ -> eraseTypesTerm e
+        _      -> App (eraseTypesTerm e) (eraseTypesTerm a)
+    Lam bndr e -> let ne = eraseTypesTerm e in if bndr.istyvar then ne else Lam bndr ne
+    Let bind e -> Let (eraseTypes bind) (eraseTypesTerm e)
+    Case e alts -> Case (eraseTypesTerm e) (List.map eraseTypeAlt alts)
+    Type t -> Type t
+    Undef e -> Undef e
+
+
+eraseTypeAlt : CoreAlt -> CoreAlt
+eraseTypeAlt (Alt con bs e) = Alt con bs (eraseTypesTerm e)
+
+
+
+        
 

@@ -1,5 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE TupleSections #-}
 module CoreLang.Cvt (cvtCoreLang) where
 
 import CoreLang.Types
@@ -8,10 +11,16 @@ import GHC.Utils.Outputable (Outputable (..))
 import qualified GHC.Core as C
 import qualified GHC.Types as C
 import qualified GHC.Types.Unique as C
+import qualified GHC.Types.Var as C
 import qualified GHC.Plugins as C
+
+import Control.Monad
+import System.Random
+import Data.Hashable (hash)
 
 import qualified Data.Text as T
 import Data.Text (Text)
+import qualified System.IO as C
 
 cvtCoreLang :: [C.CoreBind] -> C.CoreM [CoreBind]
 cvtCoreLang bs = mapM coreLangBind bs
@@ -24,8 +33,10 @@ pprText el = do
 coreLangId :: C.Var -> C.CoreM CoreId
 coreLangId var = do
     name <- pprText (C.occName var)
-    unique <- pprText (C.getUnique var)
+    uniquetag <- pprText (C.getUnique var)
     vartype <- pprText (C.varType var)
+    let (_, unique) = C.unpkUnique (C.getUnique var)
+    let istyvar = C.isTyVar var
     pure $ CoreId {..}
 
 coreLangBndr :: C.CoreBndr -> C.CoreM CoreId
@@ -49,7 +60,8 @@ coreLangAlt :: C.CoreAlt -> C.CoreM CoreAlt
 coreLangAlt (C.Alt con bs e) = Alt <$> coreLangAltCon con <*> mapM coreLangBndr bs <*> coreLangExpr e
 
 coreLangExpr :: C.CoreExpr -> C.CoreM CoreTerm
-coreLangExpr (C.Var i) = Var <$> coreLangId i
+coreLangExpr (C.Var i) = do
+    Var <$> coreLangId i
 coreLangExpr (C.Lit l) = Lit <$> coreLangLiteral l
 coreLangExpr (C.App e a) = App <$> coreLangExpr e <*> coreLangExpr a
 coreLangExpr (C.Lam b e) = Lam <$> coreLangBndr b <*> coreLangExpr e
@@ -59,3 +71,4 @@ coreLangExpr (C.Cast e _) = coreLangExpr e
 coreLangExpr (C.Coercion _) = pure $ Undef "Coercion"
 coreLangExpr (C.Tick _ e) = coreLangExpr e
 coreLangExpr (C.Type t) = Type <$> pprText t
+
