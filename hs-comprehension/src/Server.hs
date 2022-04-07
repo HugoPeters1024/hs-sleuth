@@ -1,3 +1,4 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedRecordDot #-}
@@ -29,12 +30,12 @@ app :: PlugState -> Application
 app state rec respond = do
     let fetchCore :: Text -> Text -> IO ByteString
         fetchCore modString idString = 
-            let mod = T.unpack modString
+            let modName = T.unpack modString
                 idx :: Int = fromMaybe 1 $ T.readMaybe $ T.unpack $ idString
-                passes = M.lookup mod state.modulePasses
-             in case passes of
+                modInfo = M.lookup modName state
+             in case modInfo of
                   Nothing -> pure $ "Module not found"
-                  Just passes -> pure $ encodePretty $ passes !! (idx-1)
+                  Just modInfo -> pure $ encodePretty $ modInfo.passes !! (idx-1)
 
 
         fetchSource :: Text -> IO ByteString
@@ -44,11 +45,11 @@ app state rec respond = do
             B.hGetContents handle
 
         dumpState :: IO ByteString
-        dumpState = pure $ encodePretty state.modulePasses
+        dumpState = pure $ encodePretty state
 
         fetchMeta :: IO ByteString
         fetchMeta = let
-            meta = MetaInfo { modules = map T.pack $ M.keys state.modulePasses
+            meta = MetaInfo { modules = map T.pack $ M.keys state
                             }
             in pure $ encodePretty meta
 

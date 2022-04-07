@@ -32,6 +32,7 @@ import qualified Data.Map as M
 
 import qualified CoreLang.Types as CL
 import qualified CoreLang.Cvt as CL
+import qualified CoreLang.Utils as CL
 
 import System.IO.Unsafe
 import Elm (Elm, ElmStreet(..), elmStreetParseJson, elmStreetToJson, generateElm, defaultSettings)
@@ -44,20 +45,27 @@ plugin = defaultPlugin
   }
 
 ref :: IORef PlugState
-ref = unsafePerformIO $ newIORef $ PlugState M.empty
+ref = unsafePerformIO $ newIORef $ M.empty
 
 
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install _ todo = do
-    let plugState = PlugState M.empty
-    let mkPass = \idx prevName -> CoreDoPluginPass "Collection Pass" (pass idx prevName ref)
-    let firstPass = mkPass 1 "Desugared" 
+    modName <- (showSDocUnsafe . ppr) <$> getModule
+    liftIO $ do
+        putStrLn $ "Installing plugin for " ++ modName
+        let moduleInfo = ModuleInfo { passes = []
+                                    , srcbindings = []
+                                    }
+        modifyIORef ref $ M.insert modName moduleInfo 
 
-    let passes = concat $ zipWith3 (\idx x y -> [x, y idx (ppr x)]) [2..] todo (repeat mkPass)
+    let mkPass = \first idx prevName -> CoreDoPluginPass "Collection Pass" (pass first idx prevName ref)
+    let firstPass = mkPass True 1 "Desugared" 
+
+    let passes = concat $ zipWith3 (\idx x y -> [x, y idx (ppr x)]) [2..] todo (repeat (mkPass False))
     pure (firstPass : passes ++ [printInfoPass ref])
 
-pass :: Int -> SDoc -> IORef PlugState -> ModGuts -> CoreM ModGuts
-pass idx prevName ref guts = do
+pass :: Bool -> Int -> SDoc -> IORef PlugState -> ModGuts -> CoreM ModGuts
+pass first idx prevName ref guts = do
     dflags <- getDynFlags
     let title = T.pack $ showSDoc dflags prevName
 
@@ -65,16 +73,23 @@ pass idx prevName ref guts = do
 
     cvtBinds <- CL.cvtCoreLang $ getAllTopLevelDefs uniqified
 
+    when first $ liftIO $ do
+        let filterFunc :: CL.CoreId -> Bool
+            filterFunc var = not $ T.isPrefixOf "$" var.name
+
+            srcbindings = map (\x -> x.unique) $ filter filterFunc (map CL.coreLangBindBndr cvtBinds)
+        modifyIORef ref $ M.update (Just . setSrcBindings srcbindings) (modName guts)
+
     let moduleName = showSDocUnsafe (ppr (mg_module guts))
     let passInfo = CL.PassInfo { idx = idx
                                , title = title
                                , binds = cvtBinds
-                               , totalpasses = -1
                                , modname = T.pack moduleName
+                               , totalpasses = -1
+                               , srcbinders = []
                                }
 
-    liftIO $ modifyIORef ref (\s -> s { modulePasses = M.insertWith (++) moduleName [passInfo] s.modulePasses })
-
+    liftIO $ modifyIORef ref $ M.update (Just . addPass passInfo) moduleName
     pure guts { mg_binds = uniqified }
 
 annPred :: [a] -> [Maybe a]
@@ -90,22 +105,13 @@ annSucc (x:y:xs) = Just y:annSucc (y:xs)
 
 printInfoPass :: IORef PlugState -> CoreToDo
 printInfoPass ref = CoreDoPluginPass "Print Info" $ \guts -> do
-
     liftIO $ do
-        state <- readIORef ref
-        let embellishPass :: Int -> CL.PassInfo -> CL.PassInfo
-            embellishPass length pass = pass { CL.totalpasses = length }
+        putStrLn $ "finalizing info for module " ++ modName guts
+        modifyIORef ref $ M.update (Just . embellishPasses) (modName guts)
 
-        passes <- case M.lookup (modName guts) state.modulePasses of
-                       Nothing -> error "Module was not collected.."
-                       Just passes -> pure $ map (embellishPass (length passes)) (reverse passes)
-
-        
-        writeIORef ref $ state { modulePasses = M.insert (modName guts) passes state.modulePasses }
-
-    when (modName guts == "Main") $ do
-        liftIO $ generateElm @'[CL.MetaInfo, CL.CoreId, CL.PassInfo, CL.CoreLiteral, CL.CoreTerm, CL.CoreBind, CL.CoreAltCon, CL.CoreAlt] $ defaultSettings "." ["Core", "Generated"]
-        liftIO $ server =<< readIORef ref
+        when (modName guts == "Main") $ do
+            generateElm @'[CL.MetaInfo, CL.CoreId, CL.PassInfo, CL.CoreLiteral, CL.CoreTerm, CL.CoreBind, CL.CoreAltCon, CL.CoreAlt] $ defaultSettings "." ["Core", "Generated"]
+            server =<< readIORef ref
 
     pure guts
 

@@ -25,6 +25,7 @@ decodePassInfo = D.succeed T.PassInfo
     |> required "idx" D.int
     |> required "title" D.string
     |> required "binds" (D.list decodeCoreBind)
+    |> required "srcbinders" (D.list D.int)
     |> required "totalpasses" D.int
     |> required "modname" D.string
 

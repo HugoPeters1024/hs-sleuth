@@ -55,6 +55,24 @@ eraseTypeAlt : CoreAlt -> CoreAlt
 eraseTypeAlt (Alt con bs e) = Alt con (List.filter (\bndr -> not bndr.istyvar) bs) (eraseTypesTerm e)
 
 
+collectAllVarsBind : CoreBind -> List CoreId
+collectAllVarsBind (NonRec _ e) = collectAllVarTerm e
+
+collectAllVarTerm : CoreTerm -> List CoreId
+collectAllVarTerm term = case term of
+    Var v -> [v]
+    Lit _ -> []
+    App e a -> collectAllVarTerm e ++ collectAllVarTerm a
+    Lam _ e -> collectAllVarTerm e
+    Let _ e -> collectAllVarTerm e
+    Case e alts -> collectAllVarTerm e ++ List.concatMap collectAllVarsAlt alts
+    Type _ -> []
+    Cast e _ -> collectAllVarTerm e
+    Coercion _ -> []
+
+collectAllVarsAlt : CoreAlt -> List CoreId
+collectAllVarsAlt (Alt _ _ e) = collectAllVarTerm e
+
 
 
 

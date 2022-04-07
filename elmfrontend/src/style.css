@@ -14,13 +14,14 @@ pre.code {
     font-size: 12pt; 
     box-sizing: border-box;
     margin: 0;
+    overflow: scroll;
 }
 
 .info-panel {
     padding: 1em;
     box-sizing: border-box;
-    color: white;
-    background-color: #181818;
+    color: #dddddd;
+    background-color: #212128;
 }
 
 ul.no-dot {

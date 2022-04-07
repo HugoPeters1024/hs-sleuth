@@ -29,6 +29,7 @@ encodePassInfo x = E.object
     , ("idx", E.int x.idx)
     , ("title", E.string x.title)
     , ("binds", (E.list encodeCoreBind) x.binds)
+    , ("srcbinders", (E.list E.int) x.srcbinders)
     , ("totalpasses", E.int x.totalpasses)
     , ("modname", E.string x.modname)
     ]

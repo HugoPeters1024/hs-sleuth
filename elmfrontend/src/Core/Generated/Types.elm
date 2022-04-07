@@ -19,6 +19,7 @@ type alias PassInfo =
     { idx : Int
     , title : String
     , binds : List CoreBind
+    , srcbinders : List Int
     , totalpasses : Int
     , modname : String
     }

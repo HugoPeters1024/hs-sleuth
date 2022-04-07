@@ -108,10 +108,7 @@ subscriptions _ = Sub.none
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
     MsgFetchPass mod idx -> 
-        let prevPass = case model.passLoading of
-                Ready pass -> Just pass
-                _          -> Nothing
-
+        let prevPass = getPass model
         in ( { model | passLoading = Loading prevPass }
            , Cmd.batch [fetchPass mod idx, fetchSrc mod]
            )
@@ -233,25 +230,45 @@ viewDisplayOptions model = div []
          ]
     ]
 
-viewShownCheckbox : Model -> CoreBind -> Html Msg
-viewShownCheckbox model bind = checkbox (isShown model (coreBindBndr bind)) (MsgToggleHiddenBind (coreBindBndrUnique bind)) (coreBindBndrName bind ++ "_" ++ coreBindBndrUniqueTag bind)
+viewShownCheckbox : Model -> CoreId -> Html Msg
+viewShownCheckbox model bndr = checkbox (isShown model bndr) (MsgToggleHiddenBind bndr.unique) (bndr.name ++ "_" ++ bndr.uniquetag)
 
 viewHiddenList : Model -> PassInfo -> Html Msg
 viewHiddenList model pass = 
     let go : CoreBind -> Html Msg
-        go bind = li [] [ details [] 
-                                  [ summary [] [viewShownCheckbox model bind]
-                                  , ul [class "no-dot"] [ li [] [text "work in progress"]
-                                                        , li [] [text "and more"]
-                                                        , li [] [checkbox True (MsgHideAllBinds) "dont click!"]
-                                                        ] 
-                                  ]
-                        ]
+        go bind = 
+            let lis = liSet bind
+            in li [] [ if List.length lis == 0
+                       then viewShownCheckbox model (coreBindBndr bind)
+                       else details [] [ summary [] [viewShownCheckbox model (coreBindBndr bind)]
+                                       , ul [class "no-dot"] (liSet bind)
+                                       ]
+                     ]
+
+        liSet : CoreBind -> List (Html Msg)
+        liSet bind = 
+            let childrenIds = List.filter isTopLevel (Trafo.collectAllVarsBind bind)
+            in List.map (\id -> li [] [viewShownCheckbox model id]) childrenIds
+
+        topLevelSet : Set Int
+        topLevelSet = Set.fromList <| List.map coreBindBndrUnique pass.binds
+
+        isTopLevel : CoreId -> Bool
+        isTopLevel var = Set.member var.unique topLevelSet
+
+        srcSet : Set Int
+        srcSet = Set.fromList pass.srcbinders
+
+        isSrc : CoreBind -> Bool
+        isSrc var = Set.member (coreBindBndrUnique var) srcSet
 
     in div [ class "hidden-fields"] 
            [ h2 [] [text "Functions to show"]
            , button [onClick MsgHideAllBinds] [text "hide all" ]
-           , ul [class "no-dot"] (List.map go pass.binds) 
+           , h3 [] [text "Source binds"]
+           , ul [class "no-dot"] (List.map go (List.filter isSrc pass.binds))
+           , h3 [] [text "Others"]
+           , ul [class "no-dot"] (List.map go (List.filter (not << isSrc) pass.binds))
            ]
 
 viewTermInfo : Model -> Html Msg

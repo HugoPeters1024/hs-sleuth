@@ -29,6 +29,7 @@ data MetaInfo = MetaInfo { modules :: [Text]
 data PassInfo = PassInfo { idx :: Int
                          , title :: Text
                          , binds :: [CoreBind]
+                         , srcbinders :: [Int]
                          , totalpasses :: Int
                          , modname :: Text
                          }
