@@ -67,8 +67,8 @@ coreLangExpr (C.App e a) = App <$> coreLangExpr e <*> coreLangExpr a
 coreLangExpr (C.Lam b e) = Lam <$> coreLangBndr b <*> coreLangExpr e
 coreLangExpr (C.Let b e) = Let <$> coreLangBind b <*> coreLangExpr e
 coreLangExpr (C.Case e _ _ alts) = Case <$> coreLangExpr e <*> mapM coreLangAlt (reverse alts)
-coreLangExpr (C.Cast e _) = coreLangExpr e
-coreLangExpr (C.Coercion _) = pure $ Undef "Coercion"
+coreLangExpr (C.Cast e c) = Cast <$> coreLangExpr e <*> pprText c
+coreLangExpr (C.Coercion c) = Coercion <$> pprText c
 coreLangExpr (C.Tick _ e) = coreLangExpr e
 coreLangExpr (C.Type t) = Type <$> pprText t
 

@@ -36,7 +36,8 @@ type CoreTerm
     | Let CoreBind CoreTerm
     | Case CoreTerm (List CoreAlt)
     | Type String
-    | Undef String
+    | Cast CoreTerm String
+    | Coercion String
 
 type CoreBind
     = NonRec CoreId CoreTerm

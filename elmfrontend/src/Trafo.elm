@@ -17,7 +17,8 @@ applyRenames r =
             Let bind e -> Let (tbind bind) (t e)
             Case e alts -> Case (t e) (List.map talt alts)
             Type tp -> Type tp
-            Undef x -> Undef x
+            Cast e c -> Cast (t e) c
+            Coercion c -> Coercion c
 
         tid : CoreId -> CoreId
         tid id = case Dict.get id.unique r of
@@ -46,11 +47,12 @@ eraseTypesTerm term = case term of
     Let bind e -> Let (eraseTypes bind) (eraseTypesTerm e)
     Case e alts -> Case (eraseTypesTerm e) (List.map eraseTypeAlt alts)
     Type t -> Type t
-    Undef e -> Undef e
+    Cast e _ -> eraseTypesTerm e
+    Coercion c -> Coercion c
 
 
 eraseTypeAlt : CoreAlt -> CoreAlt
-eraseTypeAlt (Alt con bs e) = Alt con bs (eraseTypesTerm e)
+eraseTypeAlt (Alt con bs e) = Alt con (List.filter (\bndr -> not bndr.istyvar) bs) (eraseTypesTerm e)
 
 
 

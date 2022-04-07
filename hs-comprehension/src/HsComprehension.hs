@@ -40,7 +40,7 @@ import Elm (Elm, ElmStreet(..), elmStreetParseJson, elmStreetToJson, generateElm
 plugin :: Plugin
 plugin = defaultPlugin
   { installCoreToDos = install
-  , pluginRecompile = purePlugin
+--  , pluginRecompile = purePlugin
   }
 
 ref :: IORef PlugState

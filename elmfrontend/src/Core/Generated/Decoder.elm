@@ -49,7 +49,8 @@ decodeCoreTerm =
             "Let" -> D.field "contents" <| D.map2 T.Let (D.index 0 decodeCoreBind) (D.index 1 decodeCoreTerm)
             "Case" -> D.field "contents" <| D.map2 T.Case (D.index 0 decodeCoreTerm) (D.index 1 (D.list decodeCoreAlt))
             "Type" -> D.field "contents" <| D.map T.Type D.string
-            "Undef" -> D.field "contents" <| D.map T.Undef D.string
+            "Cast" -> D.field "contents" <| D.map2 T.Cast (D.index 0 decodeCoreTerm) (D.index 1 D.string)
+            "Coercion" -> D.field "contents" <| D.map T.Coercion D.string
             c -> D.fail <| "CoreTerm doesn't have such constructor: " ++ c
     in D.andThen decide (D.field "tag" D.string)
 

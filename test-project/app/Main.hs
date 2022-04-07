@@ -3,6 +3,7 @@
 module Main where
 
 import TreeMap
+import Palin
 
 import Data.Char
 

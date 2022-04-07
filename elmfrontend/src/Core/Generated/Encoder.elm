@@ -48,7 +48,8 @@ encodeCoreTerm x = E.object <| case x of
     T.Let x1 x2 -> [("tag", E.string "Let"), ("contents", E.list identity [encodeCoreBind x1, encodeCoreTerm x2])]
     T.Case x1 x2 -> [("tag", E.string "Case"), ("contents", E.list identity [encodeCoreTerm x1, (E.list encodeCoreAlt) x2])]
     T.Type x1 -> [("tag", E.string "Type"), ("contents", E.string x1)]
-    T.Undef x1 -> [("tag", E.string "Undef"), ("contents", E.string x1)]
+    T.Cast x1 x2 -> [("tag", E.string "Cast"), ("contents", E.list identity [encodeCoreTerm x1, E.string x2])]
+    T.Coercion x1 -> [("tag", E.string "Coercion"), ("contents", E.string x1)]
 
 encodeCoreBind : T.CoreBind -> Value
 encodeCoreBind x = E.object <| case x of

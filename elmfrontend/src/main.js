@@ -6252,6 +6252,13 @@ var $author$project$Core$Generated$Types$Case = F2(
 	function (a, b) {
 		return {$: 'Case', a: a, b: b};
 	});
+var $author$project$Core$Generated$Types$Cast = F2(
+	function (a, b) {
+		return {$: 'Cast', a: a, b: b};
+	});
+var $author$project$Core$Generated$Types$Coercion = function (a) {
+	return {$: 'Coercion', a: a};
+};
 var $author$project$Core$Generated$Types$Lam = F2(
 	function (a, b) {
 		return {$: 'Lam', a: a, b: b};
@@ -6269,9 +6276,6 @@ var $author$project$Core$Generated$Types$NonRec = F2(
 	});
 var $author$project$Core$Generated$Types$Type = function (a) {
 	return {$: 'Type', a: a};
-};
-var $author$project$Core$Generated$Types$Undef = function (a) {
-	return {$: 'Undef', a: a};
 };
 var $author$project$Core$Generated$Types$Var = function (a) {
 	return {$: 'Var', a: a};
@@ -6504,11 +6508,23 @@ function $author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm() {
 					$elm$json$Json$Decode$field,
 					'contents',
 					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$Type, $elm$json$Json$Decode$string));
-			case 'Undef':
+			case 'Cast':
 				return A2(
 					$elm$json$Json$Decode$field,
 					'contents',
-					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$Undef, $elm$json$Json$Decode$string));
+					A3(
+						$elm$json$Json$Decode$map2,
+						$author$project$Core$Generated$Types$Cast,
+						A2(
+							$elm$json$Json$Decode$index,
+							0,
+							$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm()),
+						A2($elm$json$Json$Decode$index, 1, $elm$json$Json$Decode$string)));
+			case 'Coercion':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$Coercion, $elm$json$Json$Decode$string));
 			default:
 				var c = x;
 				return $elm$json$Json$Decode$fail('CoreTerm doesn\'t have such constructor: ' + c);
@@ -7001,9 +7017,16 @@ var $author$project$Trafo$applyRenames = function (r) {
 			case 'Type':
 				var tp = b.a;
 				return $author$project$Core$Generated$Types$Type(tp);
+			case 'Cast':
+				var e = b.a;
+				var c = b.b;
+				return A2(
+					$author$project$Core$Generated$Types$Cast,
+					t(e),
+					c);
 			default:
-				var x = b.a;
-				return $author$project$Core$Generated$Types$Undef(x);
+				var c = b.a;
+				return $author$project$Core$Generated$Types$Coercion(c);
 		}
 	};
 	var talt = function (_v1) {
@@ -7033,7 +7056,12 @@ var $author$project$Trafo$eraseTypeAlt = function (_v3) {
 	return A3(
 		$author$project$Core$Generated$Types$Alt,
 		con,
-		bs,
+		A2(
+			$elm$core$List$filter,
+			function (bndr) {
+				return !bndr.istyvar;
+			},
+			bs),
 		$author$project$Trafo$eraseTypesTerm(e));
 };
 var $author$project$Trafo$eraseTypes = function (_v2) {
@@ -7089,9 +7117,14 @@ var $author$project$Trafo$eraseTypesTerm = function (term) {
 			case 'Type':
 				var t = term.a;
 				return $author$project$Core$Generated$Types$Type(t);
-			default:
+			case 'Cast':
 				var e = term.a;
-				return $author$project$Core$Generated$Types$Undef(e);
+				var $temp$term = e;
+				term = $temp$term;
+				continue eraseTypesTerm;
+			default:
+				var c = term.a;
+				return $author$project$Core$Generated$Types$Coercion(c);
 		}
 	}
 };
@@ -7671,8 +7704,20 @@ var $author$project$PprCoreLang$ppCoreTerm = function (term) {
 		case 'Type':
 			var t = term.a;
 			return $author$project$PprCoreLang$emitText(t);
+		case 'Cast':
+			var e = term.a;
+			var c = term.b;
+			return $author$project$PprCoreLang$parens(
+				$author$project$PprCoreLang$ppSequence(
+					_List_fromArray(
+						[
+							$author$project$PprCoreLang$ppCoreTerm(e),
+							$author$project$PprCoreLang$emitKeyword(' as '),
+							$author$project$PprCoreLang$emitText(c)
+						])));
 		default:
-			return $author$project$PprCoreLang$emitText('Unsupported');
+			var c = term.a;
+			return $author$project$PprCoreLang$emitText(c);
 	}
 };
 var $author$project$State$evalState = function (s) {

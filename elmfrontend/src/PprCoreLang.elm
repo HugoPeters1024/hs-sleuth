@@ -170,7 +170,8 @@ ppCoreTerm term = case term of
                               , indented <| ppSequenceLines (List.map ppCoreAlt alts)
                               ]
     Type t -> emitText t
-    _ -> emitText "Unsupported"
+    Cast e c -> parens <| ppSequence [ppCoreTerm e, emitKeyword " as ", emitText c]
+    Coercion c -> emitText c
 
 
 

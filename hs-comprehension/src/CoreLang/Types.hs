@@ -74,7 +74,8 @@ data CoreTerm
     | Let CoreBind CoreTerm
     | Case CoreTerm [CoreAlt]
     | Type Text
-    | Undef Text
+    | Cast CoreTerm Text
+    | Coercion Text
      deriving (Show, Generic)
      deriving (Elm, ToJSON, FromJSON) via ElmStreet CoreTerm
 
