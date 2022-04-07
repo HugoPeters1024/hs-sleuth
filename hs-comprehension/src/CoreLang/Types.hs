@@ -21,10 +21,16 @@ import GHC.Generics (Generic)
 import Data.Aeson
 import Elm (Elm, ElmStreet (..))
 
+data MetaInfo = MetaInfo { modules :: [Text]
+                         }
+                         deriving (Show, Generic)
+                         deriving (Elm, ToJSON, FromJSON) via ElmStreet MetaInfo
+
 data PassInfo = PassInfo { idx :: Int
                          , title :: Text
                          , binds :: [CoreBind]
-                         , totalPasses :: Int
+                         , totalpasses :: Int
+                         , modname :: Text
                          }
                  deriving (Show, Generic)
                  deriving (Elm, ToJSON, FromJSON) via ElmStreet PassInfo

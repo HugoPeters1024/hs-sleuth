@@ -2,6 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import TreeMap
+
 import Data.Char
 
 data Step s c = Done | Yield c s | Skip s
@@ -46,7 +48,7 @@ mapS f (Stream next s n) = Stream next' s n
                       Skip s' -> Skip s'
 
 bigOp :: [Int] -> [Int]
-bigOp = myMap (+1) . myMap (+1) . myMap (+1)
+bigOp = map (+1) . map (+1) . map (+1)
 
 
 
@@ -54,5 +56,5 @@ msg = bigOp [0,1,2,3]
 
 
 main :: IO ()
-main = print msg
+main = print $ Node (Leaf 0) (Leaf 5)
 

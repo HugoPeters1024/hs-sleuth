@@ -7,6 +7,12 @@ import Core.Generated.ElmStreet exposing (..)
 import Core.Generated.Types as T
 
 
+encodeMetaInfo : T.MetaInfo -> Value
+encodeMetaInfo x = E.object
+    [ ("tag", E.string "MetaInfo")
+    , ("modules", (E.list E.string) x.modules)
+    ]
+
 encodeCoreId : T.CoreId -> Value
 encodeCoreId x = E.object
     [ ("tag", E.string "CoreId")
@@ -23,7 +29,8 @@ encodePassInfo x = E.object
     , ("idx", E.int x.idx)
     , ("title", E.string x.title)
     , ("binds", (E.list encodeCoreBind) x.binds)
-    , ("passes", E.int x.passes)
+    , ("totalpasses", E.int x.totalpasses)
+    , ("modname", E.string x.modname)
     ]
 
 encodeCoreLiteral : T.CoreLiteral -> Value

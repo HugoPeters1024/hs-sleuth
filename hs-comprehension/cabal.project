@@ -1,3 +1,2 @@
 packages: .
-        , ../../ihp/ihp-hsx
 allow-newer: all

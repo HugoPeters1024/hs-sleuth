@@ -8,6 +8,10 @@ import Core.Generated.ElmStreet exposing (..)
 import Core.Generated.Types as T
 
 
+decodeMetaInfo : Decoder T.MetaInfo
+decodeMetaInfo = D.succeed T.MetaInfo
+    |> required "modules" (D.list D.string)
+
 decodeCoreId : Decoder T.CoreId
 decodeCoreId = D.succeed T.CoreId
     |> required "name" D.string
@@ -21,7 +25,8 @@ decodePassInfo = D.succeed T.PassInfo
     |> required "idx" D.int
     |> required "title" D.string
     |> required "binds" (D.list decodeCoreBind)
-    |> required "passes" D.int
+    |> required "totalpasses" D.int
+    |> required "modname" D.string
 
 decodeCoreLiteral : Decoder T.CoreLiteral
 decodeCoreLiteral =

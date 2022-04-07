@@ -5419,129 +5419,15 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$element = _Browser_element;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $author$project$MsgTypes$MsgGotPass = function (a) {
-	return {$: 'MsgGotPass', a: a};
+var $author$project$MsgTypes$MsgGotMeta = function (a) {
+	return {$: 'MsgGotMeta', a: a};
 };
-var $author$project$Core$Generated$Types$PassInfo = F4(
-	function (idx, title, binds, passes) {
-		return {binds: binds, idx: idx, passes: passes, title: title};
-	});
-var $author$project$Core$Generated$Types$Alt = F3(
-	function (a, b, c) {
-		return {$: 'Alt', a: a, b: b, c: c};
-	});
-var $author$project$Core$Generated$Types$App = F2(
-	function (a, b) {
-		return {$: 'App', a: a, b: b};
-	});
-var $author$project$Core$Generated$Types$Case = F2(
-	function (a, b) {
-		return {$: 'Case', a: a, b: b};
-	});
-var $author$project$Core$Generated$Types$Lam = F2(
-	function (a, b) {
-		return {$: 'Lam', a: a, b: b};
-	});
-var $author$project$Core$Generated$Types$Let = F2(
-	function (a, b) {
-		return {$: 'Let', a: a, b: b};
-	});
-var $author$project$Core$Generated$Types$Lit = function (a) {
-	return {$: 'Lit', a: a};
+var $author$project$Core$Generated$Types$MetaInfo = function (modules) {
+	return {modules: modules};
 };
-var $author$project$Core$Generated$Types$NonRec = F2(
-	function (a, b) {
-		return {$: 'NonRec', a: a, b: b};
-	});
-var $author$project$Core$Generated$Types$Type = function (a) {
-	return {$: 'Type', a: a};
-};
-var $author$project$Core$Generated$Types$Undef = function (a) {
-	return {$: 'Undef', a: a};
-};
-var $author$project$Core$Generated$Types$Var = function (a) {
-	return {$: 'Var', a: a};
-};
-var $elm$json$Json$Decode$andThen = _Json_andThen;
-var $author$project$Core$Generated$Types$DEFAULT = {$: 'DEFAULT'};
-var $author$project$Core$Generated$Types$DataAlt = function (a) {
-	return {$: 'DataAlt', a: a};
-};
-var $author$project$Core$Generated$Types$LitAlt = function (a) {
-	return {$: 'LitAlt', a: a};
-};
-var $author$project$Core$Generated$Types$CoreLitNumber = function (a) {
-	return {$: 'CoreLitNumber', a: a};
-};
-var $author$project$Core$Generated$Types$CoreLitOther = function (a) {
-	return {$: 'CoreLitOther', a: a};
-};
-var $author$project$Core$Generated$Types$CoreLitString = function (a) {
-	return {$: 'CoreLitString', a: a};
-};
-var $elm$json$Json$Decode$fail = _Json_fail;
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$Core$Generated$Decoder$decodeCoreLiteral = function () {
-	var decide = function (x) {
-		switch (x) {
-			case 'CoreLitNumber':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$CoreLitNumber, $elm$json$Json$Decode$string));
-			case 'CoreLitString':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$CoreLitString, $elm$json$Json$Decode$string));
-			case 'CoreLitOther':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$CoreLitOther, $elm$json$Json$Decode$string));
-			default:
-				var c = x;
-				return $elm$json$Json$Decode$fail('CoreLiteral doesn\'t have such constructor: ' + c);
-		}
-	};
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		decide,
-		A2($elm$json$Json$Decode$field, 'tag', $elm$json$Json$Decode$string));
-}();
-var $author$project$Core$Generated$Decoder$decodeCoreAltCon = function () {
-	var decide = function (x) {
-		switch (x) {
-			case 'DataAlt':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$DataAlt, $elm$json$Json$Decode$string));
-			case 'LitAlt':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$LitAlt, $author$project$Core$Generated$Decoder$decodeCoreLiteral));
-			case 'DEFAULT':
-				return $elm$json$Json$Decode$succeed($author$project$Core$Generated$Types$DEFAULT);
-			default:
-				var c = x;
-				return $elm$json$Json$Decode$fail('CoreAltCon doesn\'t have such constructor: ' + c);
-		}
-	};
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		decide,
-		A2($elm$json$Json$Decode$field, 'tag', $elm$json$Json$Decode$string));
-}();
-var $author$project$Core$Generated$Types$CoreId = F5(
-	function (name, uniquetag, unique, vartype, istyvar) {
-		return {istyvar: istyvar, name: name, unique: unique, uniquetag: uniquetag, vartype: vartype};
-	});
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$list = _Json_decodeList;
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
+var $elm$json$Json$Decode$field = _Json_decodeField;
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 	function (key, valDecoder, decoder) {
 		return A2(
@@ -5549,205 +5435,12 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 			A2($elm$json$Json$Decode$field, key, valDecoder),
 			decoder);
 	});
-var $author$project$Core$Generated$Decoder$decodeCoreId = A3(
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Core$Generated$Decoder$decodeMetaInfo = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'istyvar',
-	$elm$json$Json$Decode$bool,
-	A3(
-		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'vartype',
-		$elm$json$Json$Decode$string,
-		A3(
-			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'unique',
-			$elm$json$Json$Decode$int,
-			A3(
-				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'uniquetag',
-				$elm$json$Json$Decode$string,
-				A3(
-					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-					'name',
-					$elm$json$Json$Decode$string,
-					$elm$json$Json$Decode$succeed($author$project$Core$Generated$Types$CoreId))))));
-var $elm$json$Json$Decode$index = _Json_decodeIndex;
-var $elm$json$Json$Decode$list = _Json_decodeList;
-var $elm$json$Json$Decode$map3 = _Json_map3;
-function $author$project$Core$Generated$Decoder$cyclic$decodeCoreAlt() {
-	var decide = function (x) {
-		if (x === 'Alt') {
-			return A2(
-				$elm$json$Json$Decode$field,
-				'contents',
-				A4(
-					$elm$json$Json$Decode$map3,
-					$author$project$Core$Generated$Types$Alt,
-					A2($elm$json$Json$Decode$index, 0, $author$project$Core$Generated$Decoder$decodeCoreAltCon),
-					A2(
-						$elm$json$Json$Decode$index,
-						1,
-						$elm$json$Json$Decode$list($author$project$Core$Generated$Decoder$decodeCoreId)),
-					A2(
-						$elm$json$Json$Decode$index,
-						2,
-						$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm())));
-		} else {
-			var c = x;
-			return $elm$json$Json$Decode$fail('CoreAlt doesn\'t have such constructor: ' + c);
-		}
-	};
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		decide,
-		A2($elm$json$Json$Decode$field, 'tag', $elm$json$Json$Decode$string));
-}
-function $author$project$Core$Generated$Decoder$cyclic$decodeCoreBind() {
-	var decide = function (x) {
-		if (x === 'NonRec') {
-			return A2(
-				$elm$json$Json$Decode$field,
-				'contents',
-				A3(
-					$elm$json$Json$Decode$map2,
-					$author$project$Core$Generated$Types$NonRec,
-					A2($elm$json$Json$Decode$index, 0, $author$project$Core$Generated$Decoder$decodeCoreId),
-					A2(
-						$elm$json$Json$Decode$index,
-						1,
-						$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm())));
-		} else {
-			var c = x;
-			return $elm$json$Json$Decode$fail('CoreBind doesn\'t have such constructor: ' + c);
-		}
-	};
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		decide,
-		A2($elm$json$Json$Decode$field, 'tag', $elm$json$Json$Decode$string));
-}
-function $author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm() {
-	var decide = function (x) {
-		switch (x) {
-			case 'Var':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$Var, $author$project$Core$Generated$Decoder$decodeCoreId));
-			case 'Lit':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$Lit, $author$project$Core$Generated$Decoder$decodeCoreLiteral));
-			case 'App':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A3(
-						$elm$json$Json$Decode$map2,
-						$author$project$Core$Generated$Types$App,
-						A2(
-							$elm$json$Json$Decode$index,
-							0,
-							$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm()),
-						A2(
-							$elm$json$Json$Decode$index,
-							1,
-							$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm())));
-			case 'Lam':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A3(
-						$elm$json$Json$Decode$map2,
-						$author$project$Core$Generated$Types$Lam,
-						A2($elm$json$Json$Decode$index, 0, $author$project$Core$Generated$Decoder$decodeCoreId),
-						A2(
-							$elm$json$Json$Decode$index,
-							1,
-							$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm())));
-			case 'Let':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A3(
-						$elm$json$Json$Decode$map2,
-						$author$project$Core$Generated$Types$Let,
-						A2(
-							$elm$json$Json$Decode$index,
-							0,
-							$author$project$Core$Generated$Decoder$cyclic$decodeCoreBind()),
-						A2(
-							$elm$json$Json$Decode$index,
-							1,
-							$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm())));
-			case 'Case':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A3(
-						$elm$json$Json$Decode$map2,
-						$author$project$Core$Generated$Types$Case,
-						A2(
-							$elm$json$Json$Decode$index,
-							0,
-							$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm()),
-						A2(
-							$elm$json$Json$Decode$index,
-							1,
-							$elm$json$Json$Decode$list(
-								$author$project$Core$Generated$Decoder$cyclic$decodeCoreAlt()))));
-			case 'Type':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$Type, $elm$json$Json$Decode$string));
-			case 'Undef':
-				return A2(
-					$elm$json$Json$Decode$field,
-					'contents',
-					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$Undef, $elm$json$Json$Decode$string));
-			default:
-				var c = x;
-				return $elm$json$Json$Decode$fail('CoreTerm doesn\'t have such constructor: ' + c);
-		}
-	};
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		decide,
-		A2($elm$json$Json$Decode$field, 'tag', $elm$json$Json$Decode$string));
-}
-try {
-	var $author$project$Core$Generated$Decoder$decodeCoreAlt = $author$project$Core$Generated$Decoder$cyclic$decodeCoreAlt();
-	$author$project$Core$Generated$Decoder$cyclic$decodeCoreAlt = function () {
-		return $author$project$Core$Generated$Decoder$decodeCoreAlt;
-	};
-	var $author$project$Core$Generated$Decoder$decodeCoreBind = $author$project$Core$Generated$Decoder$cyclic$decodeCoreBind();
-	$author$project$Core$Generated$Decoder$cyclic$decodeCoreBind = function () {
-		return $author$project$Core$Generated$Decoder$decodeCoreBind;
-	};
-	var $author$project$Core$Generated$Decoder$decodeCoreTerm = $author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm();
-	$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm = function () {
-		return $author$project$Core$Generated$Decoder$decodeCoreTerm;
-	};
-} catch ($) {
-	throw 'Some top-level definitions from `Core.Generated.Decoder` are causing infinite recursion:\n\n  ┌─────┐\n  │    decodeCoreAlt\n  │     ↓\n  │    decodeCoreBind\n  │     ↓\n  │    decodeCoreTerm\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.1/bad-recursion to learn how to fix it!';}
-var $author$project$Core$Generated$Decoder$decodePassInfo = A3(
-	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'passes',
-	$elm$json$Json$Decode$int,
-	A3(
-		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'binds',
-		$elm$json$Json$Decode$list($author$project$Core$Generated$Decoder$decodeCoreBind),
-		A3(
-			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'title',
-			$elm$json$Json$Decode$string,
-			A3(
-				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'idx',
-				$elm$json$Json$Decode$int,
-				$elm$json$Json$Decode$succeed($author$project$Core$Generated$Types$PassInfo)))));
+	'modules',
+	$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+	$elm$json$Json$Decode$succeed($author$project$Core$Generated$Types$MetaInfo));
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
@@ -6535,13 +6228,341 @@ var $elm$http$Http$get = function (r) {
 	return $elm$http$Http$request(
 		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
 };
-var $author$project$Main$fetchPass = function (idx) {
-	return $elm$http$Http$get(
-		{
-			expect: A2($elm$http$Http$expectJson, $author$project$MsgTypes$MsgGotPass, $author$project$Core$Generated$Decoder$decodePassInfo),
-			url: 'http://127.0.0.1:8080/core/' + $elm$core$String$fromInt(idx)
-		});
+var $author$project$Main$fetchMeta = $elm$http$Http$get(
+	{
+		expect: A2($elm$http$Http$expectJson, $author$project$MsgTypes$MsgGotMeta, $author$project$Core$Generated$Decoder$decodeMetaInfo),
+		url: 'http://127.0.0.1:8080/meta'
+	});
+var $author$project$MsgTypes$MsgGotPass = function (a) {
+	return {$: 'MsgGotPass', a: a};
 };
+var $author$project$Core$Generated$Types$PassInfo = F5(
+	function (idx, title, binds, totalpasses, modname) {
+		return {binds: binds, idx: idx, modname: modname, title: title, totalpasses: totalpasses};
+	});
+var $author$project$Core$Generated$Types$Alt = F3(
+	function (a, b, c) {
+		return {$: 'Alt', a: a, b: b, c: c};
+	});
+var $author$project$Core$Generated$Types$App = F2(
+	function (a, b) {
+		return {$: 'App', a: a, b: b};
+	});
+var $author$project$Core$Generated$Types$Case = F2(
+	function (a, b) {
+		return {$: 'Case', a: a, b: b};
+	});
+var $author$project$Core$Generated$Types$Lam = F2(
+	function (a, b) {
+		return {$: 'Lam', a: a, b: b};
+	});
+var $author$project$Core$Generated$Types$Let = F2(
+	function (a, b) {
+		return {$: 'Let', a: a, b: b};
+	});
+var $author$project$Core$Generated$Types$Lit = function (a) {
+	return {$: 'Lit', a: a};
+};
+var $author$project$Core$Generated$Types$NonRec = F2(
+	function (a, b) {
+		return {$: 'NonRec', a: a, b: b};
+	});
+var $author$project$Core$Generated$Types$Type = function (a) {
+	return {$: 'Type', a: a};
+};
+var $author$project$Core$Generated$Types$Undef = function (a) {
+	return {$: 'Undef', a: a};
+};
+var $author$project$Core$Generated$Types$Var = function (a) {
+	return {$: 'Var', a: a};
+};
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $author$project$Core$Generated$Types$DEFAULT = {$: 'DEFAULT'};
+var $author$project$Core$Generated$Types$DataAlt = function (a) {
+	return {$: 'DataAlt', a: a};
+};
+var $author$project$Core$Generated$Types$LitAlt = function (a) {
+	return {$: 'LitAlt', a: a};
+};
+var $author$project$Core$Generated$Types$CoreLitNumber = function (a) {
+	return {$: 'CoreLitNumber', a: a};
+};
+var $author$project$Core$Generated$Types$CoreLitOther = function (a) {
+	return {$: 'CoreLitOther', a: a};
+};
+var $author$project$Core$Generated$Types$CoreLitString = function (a) {
+	return {$: 'CoreLitString', a: a};
+};
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $author$project$Core$Generated$Decoder$decodeCoreLiteral = function () {
+	var decide = function (x) {
+		switch (x) {
+			case 'CoreLitNumber':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$CoreLitNumber, $elm$json$Json$Decode$string));
+			case 'CoreLitString':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$CoreLitString, $elm$json$Json$Decode$string));
+			case 'CoreLitOther':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$CoreLitOther, $elm$json$Json$Decode$string));
+			default:
+				var c = x;
+				return $elm$json$Json$Decode$fail('CoreLiteral doesn\'t have such constructor: ' + c);
+		}
+	};
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		decide,
+		A2($elm$json$Json$Decode$field, 'tag', $elm$json$Json$Decode$string));
+}();
+var $author$project$Core$Generated$Decoder$decodeCoreAltCon = function () {
+	var decide = function (x) {
+		switch (x) {
+			case 'DataAlt':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$DataAlt, $elm$json$Json$Decode$string));
+			case 'LitAlt':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$LitAlt, $author$project$Core$Generated$Decoder$decodeCoreLiteral));
+			case 'DEFAULT':
+				return $elm$json$Json$Decode$succeed($author$project$Core$Generated$Types$DEFAULT);
+			default:
+				var c = x;
+				return $elm$json$Json$Decode$fail('CoreAltCon doesn\'t have such constructor: ' + c);
+		}
+	};
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		decide,
+		A2($elm$json$Json$Decode$field, 'tag', $elm$json$Json$Decode$string));
+}();
+var $author$project$Core$Generated$Types$CoreId = F5(
+	function (name, uniquetag, unique, vartype, istyvar) {
+		return {istyvar: istyvar, name: name, unique: unique, uniquetag: uniquetag, vartype: vartype};
+	});
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $author$project$Core$Generated$Decoder$decodeCoreId = A3(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'istyvar',
+	$elm$json$Json$Decode$bool,
+	A3(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'vartype',
+		$elm$json$Json$Decode$string,
+		A3(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'unique',
+			$elm$json$Json$Decode$int,
+			A3(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'uniquetag',
+				$elm$json$Json$Decode$string,
+				A3(
+					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+					'name',
+					$elm$json$Json$Decode$string,
+					$elm$json$Json$Decode$succeed($author$project$Core$Generated$Types$CoreId))))));
+var $elm$json$Json$Decode$index = _Json_decodeIndex;
+var $elm$json$Json$Decode$map3 = _Json_map3;
+function $author$project$Core$Generated$Decoder$cyclic$decodeCoreAlt() {
+	var decide = function (x) {
+		if (x === 'Alt') {
+			return A2(
+				$elm$json$Json$Decode$field,
+				'contents',
+				A4(
+					$elm$json$Json$Decode$map3,
+					$author$project$Core$Generated$Types$Alt,
+					A2($elm$json$Json$Decode$index, 0, $author$project$Core$Generated$Decoder$decodeCoreAltCon),
+					A2(
+						$elm$json$Json$Decode$index,
+						1,
+						$elm$json$Json$Decode$list($author$project$Core$Generated$Decoder$decodeCoreId)),
+					A2(
+						$elm$json$Json$Decode$index,
+						2,
+						$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm())));
+		} else {
+			var c = x;
+			return $elm$json$Json$Decode$fail('CoreAlt doesn\'t have such constructor: ' + c);
+		}
+	};
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		decide,
+		A2($elm$json$Json$Decode$field, 'tag', $elm$json$Json$Decode$string));
+}
+function $author$project$Core$Generated$Decoder$cyclic$decodeCoreBind() {
+	var decide = function (x) {
+		if (x === 'NonRec') {
+			return A2(
+				$elm$json$Json$Decode$field,
+				'contents',
+				A3(
+					$elm$json$Json$Decode$map2,
+					$author$project$Core$Generated$Types$NonRec,
+					A2($elm$json$Json$Decode$index, 0, $author$project$Core$Generated$Decoder$decodeCoreId),
+					A2(
+						$elm$json$Json$Decode$index,
+						1,
+						$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm())));
+		} else {
+			var c = x;
+			return $elm$json$Json$Decode$fail('CoreBind doesn\'t have such constructor: ' + c);
+		}
+	};
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		decide,
+		A2($elm$json$Json$Decode$field, 'tag', $elm$json$Json$Decode$string));
+}
+function $author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm() {
+	var decide = function (x) {
+		switch (x) {
+			case 'Var':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$Var, $author$project$Core$Generated$Decoder$decodeCoreId));
+			case 'Lit':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$Lit, $author$project$Core$Generated$Decoder$decodeCoreLiteral));
+			case 'App':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A3(
+						$elm$json$Json$Decode$map2,
+						$author$project$Core$Generated$Types$App,
+						A2(
+							$elm$json$Json$Decode$index,
+							0,
+							$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm()),
+						A2(
+							$elm$json$Json$Decode$index,
+							1,
+							$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm())));
+			case 'Lam':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A3(
+						$elm$json$Json$Decode$map2,
+						$author$project$Core$Generated$Types$Lam,
+						A2($elm$json$Json$Decode$index, 0, $author$project$Core$Generated$Decoder$decodeCoreId),
+						A2(
+							$elm$json$Json$Decode$index,
+							1,
+							$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm())));
+			case 'Let':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A3(
+						$elm$json$Json$Decode$map2,
+						$author$project$Core$Generated$Types$Let,
+						A2(
+							$elm$json$Json$Decode$index,
+							0,
+							$author$project$Core$Generated$Decoder$cyclic$decodeCoreBind()),
+						A2(
+							$elm$json$Json$Decode$index,
+							1,
+							$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm())));
+			case 'Case':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A3(
+						$elm$json$Json$Decode$map2,
+						$author$project$Core$Generated$Types$Case,
+						A2(
+							$elm$json$Json$Decode$index,
+							0,
+							$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm()),
+						A2(
+							$elm$json$Json$Decode$index,
+							1,
+							$elm$json$Json$Decode$list(
+								$author$project$Core$Generated$Decoder$cyclic$decodeCoreAlt()))));
+			case 'Type':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$Type, $elm$json$Json$Decode$string));
+			case 'Undef':
+				return A2(
+					$elm$json$Json$Decode$field,
+					'contents',
+					A2($elm$json$Json$Decode$map, $author$project$Core$Generated$Types$Undef, $elm$json$Json$Decode$string));
+			default:
+				var c = x;
+				return $elm$json$Json$Decode$fail('CoreTerm doesn\'t have such constructor: ' + c);
+		}
+	};
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		decide,
+		A2($elm$json$Json$Decode$field, 'tag', $elm$json$Json$Decode$string));
+}
+try {
+	var $author$project$Core$Generated$Decoder$decodeCoreAlt = $author$project$Core$Generated$Decoder$cyclic$decodeCoreAlt();
+	$author$project$Core$Generated$Decoder$cyclic$decodeCoreAlt = function () {
+		return $author$project$Core$Generated$Decoder$decodeCoreAlt;
+	};
+	var $author$project$Core$Generated$Decoder$decodeCoreBind = $author$project$Core$Generated$Decoder$cyclic$decodeCoreBind();
+	$author$project$Core$Generated$Decoder$cyclic$decodeCoreBind = function () {
+		return $author$project$Core$Generated$Decoder$decodeCoreBind;
+	};
+	var $author$project$Core$Generated$Decoder$decodeCoreTerm = $author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm();
+	$author$project$Core$Generated$Decoder$cyclic$decodeCoreTerm = function () {
+		return $author$project$Core$Generated$Decoder$decodeCoreTerm;
+	};
+} catch ($) {
+	throw 'Some top-level definitions from `Core.Generated.Decoder` are causing infinite recursion:\n\n  ┌─────┐\n  │    decodeCoreAlt\n  │     ↓\n  │    decodeCoreBind\n  │     ↓\n  │    decodeCoreTerm\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.1/bad-recursion to learn how to fix it!';}
+var $author$project$Core$Generated$Decoder$decodePassInfo = A3(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'modname',
+	$elm$json$Json$Decode$string,
+	A3(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'totalpasses',
+		$elm$json$Json$Decode$int,
+		A3(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'binds',
+			$elm$json$Json$Decode$list($author$project$Core$Generated$Decoder$decodeCoreBind),
+			A3(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'title',
+				$elm$json$Json$Decode$string,
+				A3(
+					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+					'idx',
+					$elm$json$Json$Decode$int,
+					$elm$json$Json$Decode$succeed($author$project$Core$Generated$Types$PassInfo))))));
+var $author$project$Main$fetchPass = F2(
+	function (mod, idx) {
+		return $elm$http$Http$get(
+			{
+				expect: A2($elm$http$Http$expectJson, $author$project$MsgTypes$MsgGotPass, $author$project$Core$Generated$Decoder$decodePassInfo),
+				url: 'http://127.0.0.1:8080/core/' + (mod + ('/' + $elm$core$String$fromInt(idx)))
+			});
+	});
 var $author$project$MsgTypes$MsgGotSrc = function (a) {
 	return {$: 'MsgGotSrc', a: a};
 };
@@ -6555,7 +6576,7 @@ var $author$project$Main$fetchSrc = function (mod) {
 	return $elm$http$Http$get(
 		{
 			expect: $elm$http$Http$expectString($author$project$MsgTypes$MsgGotSrc),
-			url: 'http://127.0.0.1:8080/source/Main'
+			url: 'http://127.0.0.1:8080/source/' + mod
 		});
 };
 var $author$project$Main$Loading = function (a) {
@@ -6566,6 +6587,7 @@ var $elm$core$Set$Set_elm_builtin = function (a) {
 };
 var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
 var $author$project$Main$initModel = {
+	metaLoading: $author$project$Main$Loading($elm$core$Maybe$Nothing),
 	passLoading: $author$project$Main$Loading($elm$core$Maybe$Nothing),
 	renames: $elm$core$Dict$empty,
 	selectedTerm: $elm$core$Maybe$Nothing,
@@ -6582,7 +6604,8 @@ var $author$project$Main$init = function (_v0) {
 			_List_fromArray(
 				[
 					$author$project$Main$fetchSrc('Main'),
-					$author$project$Main$fetchPass(1)
+					A2($author$project$Main$fetchPass, 'Main', 1),
+					$author$project$Main$fetchMeta
 				])));
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
@@ -6641,7 +6664,8 @@ var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 'MsgFetchPass':
-				var idx = msg.a;
+				var mod = msg.a;
+				var idx = msg.b;
 				var prevPass = function () {
 					var _v1 = model.passLoading;
 					if (_v1.$ === 'Ready') {
@@ -6657,7 +6681,12 @@ var $author$project$Main$update = F2(
 						{
 							passLoading: $author$project$Main$Loading(prevPass)
 						}),
-					$author$project$Main$fetchPass(idx));
+					$elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								A2($author$project$Main$fetchPass, mod, idx),
+								$author$project$Main$fetchSrc(mod)
+							])));
 			case 'MsgGotPass':
 				var result = msg.a;
 				return _Utils_Tuple2(
@@ -6683,6 +6712,23 @@ var $author$project$Main$update = F2(
 						model,
 						{
 							srcLoading: $author$project$Main$loadFromResult(result)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'MsgFetchMeta':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							metaLoading: $author$project$Main$Loading($elm$core$Maybe$Nothing)
+						}),
+					$author$project$Main$fetchMeta);
+			case 'MsgGotMeta':
+				var result = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							metaLoading: $author$project$Main$loadFromResult(result)
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'MsgToggleHiddenBind':
@@ -6739,9 +6785,10 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$MsgTypes$MsgFetchPass = function (a) {
-	return {$: 'MsgFetchPass', a: a};
-};
+var $author$project$MsgTypes$MsgFetchPass = F2(
+	function (a, b) {
+		return {$: 'MsgFetchPass', a: a, b: b};
+	});
 var $author$project$MsgTypes$MsgToggleShowSource = {$: 'MsgToggleShowSource'};
 var $elm$html$Html$br = _VirtualDom_node('br');
 var $elm$html$Html$button = _VirtualDom_node('button');
@@ -6792,10 +6839,92 @@ var $elm$core$Basics$min = F2(
 	function (x, y) {
 		return (_Utils_cmp(x, y) < 0) ? x : y;
 	});
+var $author$project$Main$getMetaModules = function (model) {
+	var _v0 = model.metaLoading;
+	if (_v0.$ === 'Ready') {
+		var meta = _v0.a;
+		return meta.modules;
+	} else {
+		return _List_Nil;
+	}
+};
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$option = _VirtualDom_node('option');
+var $elm$html$Html$select = _VirtualDom_node('select');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$moduleDropDown = F2(
+	function (model, passInfo) {
+		var makeOption = function (modName) {
+			return A2(
+				$elm$html$Html$option,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$selected(
+						_Utils_eq(modName, passInfo.modname))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(modName)
+					]));
+		};
+		var inputEvent = function (modName) {
+			return A2($author$project$MsgTypes$MsgFetchPass, modName, 1);
+		};
+		return A2(
+			$elm$html$Html$select,
+			_List_fromArray(
+				[
+					$elm$html$Html$Events$onInput(inputEvent)
+				]),
+			A2(
+				$elm$core$List$map,
+				makeOption,
+				$author$project$Main$getMetaModules(model)));
+	});
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
 var $elm$html$Html$Events$on = F2(
 	function (event, decoder) {
 		return A2(
@@ -7003,8 +7132,6 @@ var $author$project$Main$prepareModelView = function (model) {
 				applyRenames(model.passLoading))
 		});
 };
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm_explorations$markdown$Markdown$defaultOptions = {
 	defaultHighlighting: $elm$core$Maybe$Nothing,
 	githubFlavored: $elm$core$Maybe$Just(
@@ -7568,14 +7695,6 @@ var $author$project$PprCoreLang$viewCoreBind = F3(
 	});
 var $author$project$MsgTypes$MsgToggleUniqueName = {$: 'MsgToggleUniqueName'};
 var $author$project$MsgTypes$MsgToggleViewTypes = {$: 'MsgToggleViewTypes'};
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
 var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$label = _VirtualDom_node('label');
@@ -7775,37 +7894,6 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
@@ -7988,7 +8076,9 @@ var $author$project$Main$view = function (rawmodel) {
 							_List_fromArray(
 								[
 									$elm$html$Html$Events$onClick(
-									$author$project$MsgTypes$MsgFetchPass(
+									A2(
+										$author$project$MsgTypes$MsgFetchPass,
+										pass.modname,
 										A2($elm$core$Basics$max, 1, pass.idx - 1)))
 								]),
 							_List_fromArray(
@@ -8000,13 +8090,16 @@ var $author$project$Main$view = function (rawmodel) {
 							_List_fromArray(
 								[
 									$elm$html$Html$Events$onClick(
-									$author$project$MsgTypes$MsgFetchPass(
-										A2($elm$core$Basics$min, pass.passes, pass.idx + 1)))
+									A2(
+										$author$project$MsgTypes$MsgFetchPass,
+										pass.modname,
+										A2($elm$core$Basics$min, pass.totalpasses, pass.idx + 1)))
 								]),
 							_List_fromArray(
 								[
 									$elm$html$Html$text('Next')
 								])),
+							A2($author$project$Main$moduleDropDown, model, pass),
 							A2(
 							$elm$html$Html$div,
 							$author$project$Main$panelStyle(model),

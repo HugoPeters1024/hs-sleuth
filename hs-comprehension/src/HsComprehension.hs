@@ -16,21 +16,24 @@ import Data.IORef
 import Control.Monad
 
 import CoreCollection
+import PlugState
+import Uniqify
+import SinkSpan
+import Server
 
 import GHC
 import GHC.Plugins
 import Data.Data
 
-
+import Data.Text (Text)
 import qualified Data.Text as T
-
-import Uniqify
-import SinkSpan
-import Server
+import Data.Map (Map)
+import qualified Data.Map as M
 
 import qualified CoreLang.Types as CL
 import qualified CoreLang.Cvt as CL
 
+import System.IO.Unsafe
 import Elm (Elm, ElmStreet(..), elmStreetParseJson, elmStreetToJson, generateElm, defaultSettings)
 
 
@@ -40,14 +43,13 @@ plugin = defaultPlugin
   , pluginRecompile = purePlugin
   }
 
-data PlugState = PlugState 
-    { passes :: [CL.PassInfo]
-    }
+ref :: IORef PlugState
+ref = unsafePerformIO $ newIORef $ PlugState M.empty
+
 
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install _ todo = do
-    let plugState = PlugState []
-    ref <- liftIO $ newIORef plugState
+    let plugState = PlugState M.empty
     let mkPass = \idx prevName -> CoreDoPluginPass "Collection Pass" (pass idx prevName ref)
     let firstPass = mkPass 1 "Desugared" 
 
@@ -57,22 +59,21 @@ install _ todo = do
 pass :: Int -> SDoc -> IORef PlugState -> ModGuts -> CoreM ModGuts
 pass idx prevName ref guts = do
     dflags <- getDynFlags
-    liftIO $ putStrLn $ showSDoc dflags (ppr (mg_module guts))
     let title = T.pack $ showSDoc dflags prevName
 
     uniqified <- liftIO $ runUnique $ uniqProgram (mg_binds guts)
 
     cvtBinds <- CL.cvtCoreLang $ getAllTopLevelDefs uniqified
 
+    let moduleName = showSDocUnsafe (ppr (mg_module guts))
     let passInfo = CL.PassInfo { idx = idx
                                , title = title
                                , binds = cvtBinds
-                               , totalPasses = -1
+                               , totalpasses = -1
+                               , modname = T.pack moduleName
                                }
 
-    liftIO $ modifyIORef ref (\s -> 
-        s { passes = passInfo:s.passes
-          })
+    liftIO $ modifyIORef ref (\s -> s { modulePasses = M.insertWith (++) moduleName [passInfo] s.modulePasses })
 
     pure guts { mg_binds = uniqified }
 
@@ -89,17 +90,22 @@ annSucc (x:y:xs) = Just y:annSucc (y:xs)
 
 printInfoPass :: IORef PlugState -> CoreToDo
 printInfoPass ref = CoreDoPluginPass "Print Info" $ \guts -> do
-    passes <- liftIO $ readIORef ref >>= \s -> pure $ reverse s.passes
-    let embellishPass :: CL.PassInfo -> CL.PassInfo
-        embellishPass pass = 
-            let totalPasses = length passes
-            in pass { CL.totalPasses = totalPasses }
 
-    let pages = map embellishPass passes
+    liftIO $ do
+        state <- readIORef ref
+        let embellishPass :: Int -> CL.PassInfo -> CL.PassInfo
+            embellishPass length pass = pass { CL.totalpasses = length }
 
-    liftIO $ generateElm @'[CL.CoreId, CL.PassInfo, CL.CoreLiteral, CL.CoreTerm, CL.CoreBind, CL.CoreAltCon, CL.CoreAlt] $ defaultSettings "." ["Core", "Generated"]
+        passes <- case M.lookup (modName guts) state.modulePasses of
+                       Nothing -> error "Module was not collected.."
+                       Just passes -> pure $ map (embellishPass (length passes)) (reverse passes)
 
-    liftIO (server pages)
+        
+        writeIORef ref $ state { modulePasses = M.insert (modName guts) passes state.modulePasses }
+
+    when (modName guts == "Main") $ do
+        liftIO $ generateElm @'[CL.MetaInfo, CL.CoreId, CL.PassInfo, CL.CoreLiteral, CL.CoreTerm, CL.CoreBind, CL.CoreAltCon, CL.CoreAlt] $ defaultSettings "." ["Core", "Generated"]
+        liftIO $ server =<< readIORef ref
 
     pure guts
 

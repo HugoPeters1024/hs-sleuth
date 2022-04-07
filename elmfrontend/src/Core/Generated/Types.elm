@@ -3,6 +3,10 @@ module Core.Generated.Types exposing (..)
 import Time exposing (Posix)
 
 
+type alias MetaInfo =
+    { modules : List String
+    }
+
 type alias CoreId =
     { name : String
     , uniquetag : String
@@ -15,7 +19,8 @@ type alias PassInfo =
     { idx : Int
     , title : String
     , binds : List CoreBind
-    , passes : Int
+    , totalpasses : Int
+    , modname : String
     }
 
 type CoreLiteral

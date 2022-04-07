@@ -28,6 +28,7 @@ library
                   , Uniqify
                   , SinkSpan
                   , Server
+                  , PlugState
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -40,7 +41,6 @@ library
                     , bytestring
                     , string-interpolate
                     , process
-                    , ihp-hsx
                     , blaze-html
                     , text
                     , filepath

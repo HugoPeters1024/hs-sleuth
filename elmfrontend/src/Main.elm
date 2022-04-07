@@ -19,7 +19,7 @@ import Markdown
 
 
 import Core.Generated.Encoder exposing (encodePassInfo)
-import Core.Generated.Decoder exposing (decodePassInfo)
+import Core.Generated.Decoder exposing (decodePassInfo, decodeMetaInfo)
 import Core.Generated.Types exposing (..)
 import CoreLangUtils exposing (..)
 
@@ -31,6 +31,7 @@ type Loading a = Loading (Maybe a) | Failure Http.Error | Ready a
 
 type alias Model = { passLoading : Loading PassInfo
                    , srcLoading : Loading String
+                   , metaLoading : Loading MetaInfo
                    , shownBindings : Set Int
                    , showTypeApplications : Bool
                    , showUniqueName : Bool
@@ -55,24 +56,35 @@ maybeHtml f mb = case mb of
 jsonToString : Json.Encode.Value -> String
 jsonToString json = Result.withDefault "" (Json.Print.prettyString (Json.Print.Config 4 50) (Json.Encode.encode 0 json))
 
-fetchPass : Int -> Cmd Msg
-fetchPass idx = Http.get { url = "http://127.0.0.1:8080/core/" ++ String.fromInt idx
-                         , expect = Http.expectJson MsgGotPass decodePassInfo
-                         }
+fetchPass : String -> Int -> Cmd Msg
+fetchPass mod idx = Http.get { url = "http://127.0.0.1:8080/core/" ++ mod ++ "/" ++ String.fromInt idx
+                             , expect = Http.expectJson MsgGotPass decodePassInfo
+                             }
 
 fetchSrc : String -> Cmd Msg
-fetchSrc mod = Http.get  { url = "http://127.0.0.1:8080/source/Main"
-                         , expect = Http.expectString MsgGotSrc
-                         }
+fetchSrc mod = Http.get { url = "http://127.0.0.1:8080/source/" ++ mod
+                        , expect = Http.expectString MsgGotSrc
+                        }
+
+fetchMeta : Cmd Msg
+fetchMeta = Http.get { url = "http://127.0.0.1:8080/meta"
+                     , expect = Http.expectJson MsgGotMeta decodeMetaInfo
+                     }
 
 getPass : Model -> Maybe PassInfo
 getPass model = case model.passLoading of
     Ready p -> Just p
     _       -> Nothing
 
+getMetaModules : Model -> List String
+getMetaModules model = case model.metaLoading of
+    Ready meta -> meta.modules
+    _          -> []
+
 initModel : Model
 initModel = { passLoading = Loading Nothing
             , srcLoading = Loading Nothing
+            , metaLoading = Loading Nothing
             , shownBindings = Set.empty
             , showTypeApplications = True
             , showUniqueName = False
@@ -88,24 +100,26 @@ loadFromResult result = case result of
 
 
 init : () -> (Model, Cmd Msg)
-init _ = (initModel, Cmd.batch [fetchSrc "Main", fetchPass 1])
+init _ = (initModel, Cmd.batch [fetchSrc "Main", fetchPass "Main" 1, fetchMeta])
 
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
-    MsgFetchPass idx -> 
+    MsgFetchPass mod idx -> 
         let prevPass = case model.passLoading of
                 Ready pass -> Just pass
                 _          -> Nothing
 
         in ( { model | passLoading = Loading prevPass }
-           , fetchPass idx
+           , Cmd.batch [fetchPass mod idx, fetchSrc mod]
            )
     MsgGotPass result -> ( { model | passLoading = loadFromResult result } , Cmd.none)
     MsgFetchSrc mod -> ({model | srcLoading = Loading Nothing }, fetchSrc mod)
     MsgGotSrc result -> ({model | srcLoading = loadFromResult result }, Cmd.none)
+    MsgFetchMeta -> ({model | metaLoading = Loading Nothing}, fetchMeta)
+    MsgGotMeta result -> ({model | metaLoading = loadFromResult result}, Cmd.none)
     MsgToggleHiddenBind bind -> ( { model | shownBindings = toggleSet bind model.shownBindings} , Cmd.none)
     MsgHideAllBinds -> ( { model | shownBindings = Set.empty } , Cmd.none)
     MsgSelectTerm term -> ( { model | selectedTerm = Just term } , Cmd.none)
@@ -151,7 +165,12 @@ tryViewSrc model = case model.srcLoading of
     Loading _ -> text "Loading"
     Failure _ -> text "Source not available"
 
+moduleDropDown : Model -> PassInfo -> Html Msg
+moduleDropDown model passInfo =
+    let inputEvent modName = MsgFetchPass modName 1
+        makeOption modName = option [selected (modName == passInfo.modname)] [text modName]
 
+    in select [onInput inputEvent] (List.map makeOption (getMetaModules model))
 
 view : Model -> Html Msg
 view rawmodel = 
@@ -175,8 +194,9 @@ view rawmodel =
                 in div []  [ h1 [] [text (String.fromInt pass.idx ++ ": " ++ pass.title)]
                            , br [] []
                            , button [onClick MsgToggleShowSource] [text "Toggle source"]
-                           , button [onClick (MsgFetchPass <| Basics.max 1 (pass.idx - 1))] [text "Previous"]
-                           , button [onClick (MsgFetchPass <| Basics.min pass.passes (pass.idx + 1))] [text "Next"]
+                           , button [onClick (MsgFetchPass pass.modname <| Basics.max 1 (pass.idx - 1))] [text "Previous"]
+                           , button [onClick (MsgFetchPass pass.modname <| Basics.min pass.totalpasses (pass.idx + 1))] [text "Next"]
+                           , moduleDropDown model pass
                            , div (panelStyle model)
                                  [ if model.showSource then tryViewSrc model else text ""
                                  , pre [class "code"] (List.concatMap viewBind binds)
