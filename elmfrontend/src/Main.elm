@@ -34,6 +34,7 @@ type alias Model = { passLoading : Loading PassInfo
                    , metaLoading : Loading MetaInfo
                    , shownBindings : Set Int
                    , showTypeApplications : Bool
+                   , showBndrTypes : Bool
                    , showUniqueName : Bool
                    , selectedTerm : Maybe CoreId
                    , renames : Dict Int String
@@ -87,6 +88,7 @@ initModel = { passLoading = Loading Nothing
             , metaLoading = Loading Nothing
             , shownBindings = Set.empty
             , showTypeApplications = True
+            , showBndrTypes = False
             , showUniqueName = False
             , selectedTerm = Nothing
             , renames = Dict.empty
@@ -97,6 +99,11 @@ loadFromResult : Result Http.Error a -> Loading a
 loadFromResult result = case result of
     Ok el -> Ready el
     Err e -> Failure e
+
+loadToMaybe : Loading a -> Maybe a
+loadToMaybe loading = case loading of
+    Ready x -> Just x
+    _       -> Nothing
 
 
 init : () -> (Model, Cmd Msg)
@@ -121,7 +128,8 @@ update msg model = case msg of
     MsgHideAllBinds -> ( { model | shownBindings = Set.empty } , Cmd.none)
     MsgSelectTerm term -> ( { model | selectedTerm = Just term } , Cmd.none)
     MsgRenameTerm unique name -> ( { model | renames = Dict.insert unique name model.renames } , Cmd.none)
-    MsgToggleViewTypes -> ( { model | showTypeApplications = not model.showTypeApplications } , Cmd.none)
+    MsgToggleShowTypeApps -> ( { model | showTypeApplications = not model.showTypeApplications } , Cmd.none)
+    MsgToggleShowBndrTypes -> ( {model | showBndrTypes = not model.showBndrTypes }, Cmd.none)
     MsgToggleUniqueName -> ( { model | showUniqueName = not model.showUniqueName } , Cmd.none)
     MsgToggleShowSource -> ( {model | showSource = not model.showSource  }, Cmd.none)
 
@@ -187,7 +195,7 @@ view rawmodel =
 
             Ready pass -> 
                 let binds = List.filter (\b -> Set.member (coreBindBndrUnique b) model.shownBindings) pass.binds
-                    viewBind = PprCoreLang.viewCoreBind model.showUniqueName model.selectedTerm
+                    viewBind = PprCoreLang.viewCoreBind model.showUniqueName model.showBndrTypes model.selectedTerm
                 in div []  [ h1 [] [text (String.fromInt pass.idx ++ ": " ++ pass.title)]
                            , br [] []
                            , button [onClick MsgToggleShowSource] [text "Toggle source"]
@@ -219,13 +227,20 @@ panelStyle model =
     ]
 
 isShown : Model -> CoreId -> Bool
-isShown model bind = Set.member bind.unique model.shownBindings
+isShown model var = Set.member var.unique model.shownBindings
+
+-- O(n), use sparingly
+isTopLevelSlow : Model -> CoreId -> Bool
+isTopLevelSlow model bndr = case loadToMaybe model.passLoading of
+    Just pass -> List.member bndr.unique (List.map coreBindBndrUnique pass.binds)
+    Nothing -> False
 
 viewDisplayOptions : Model -> Html Msg
 viewDisplayOptions model = div []
     [ h2 [] [text "Options"]
     , ul [class "no-dot"]
-         [ li [] [checkbox (model.showTypeApplications) MsgToggleViewTypes "Show type applications"]
+         [ li [] [checkbox (model.showTypeApplications) MsgToggleShowTypeApps "Show type applications"]
+         , li [] [checkbox (model.showBndrTypes) MsgToggleShowBndrTypes "Show binder types"]
          , li [] [checkbox (model.showUniqueName) MsgToggleUniqueName "Disambiguate variables"]
          ]
     ]
@@ -280,7 +295,9 @@ viewTermInfo model =
                                 , li [] [ text ("tag: " ++ id.uniquetag)]
                                 , li [] [ text ("udi: " ++ String.fromInt id.unique)]
                                 , li [] [ input [ type_ "text", placeholder id.name, onInput (MsgRenameTerm id.unique)] [] ]
-                                , li [] [ checkbox (isShown model id) (MsgToggleHiddenBind id.unique) "shown" ]
+                                , if isTopLevelSlow model id 
+                                  then li [] [ checkbox (isShown model id) (MsgToggleHiddenBind id.unique) "shown" ]
+                                  else text ""
                                 ]
     in div [ class "term-info" ]
            [ h2 [] [text "Selected term"]

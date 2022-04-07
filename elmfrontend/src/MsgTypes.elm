@@ -13,6 +13,7 @@ type Msg = MsgFetchPass String Int
          | MsgHideAllBinds
          | MsgSelectTerm CoreId
          | MsgRenameTerm Int String
-         | MsgToggleViewTypes
+         | MsgToggleShowTypeApps
+         | MsgToggleShowBndrTypes
          | MsgToggleUniqueName
          | MsgToggleShowSource

@@ -9,6 +9,7 @@ import Html exposing (Html, text, span, a)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
 
+import Trafo
 
 import Char
 import List
@@ -21,26 +22,27 @@ type alias PPState = { indent : Int
                      , toplevel : Bool
                      , selectedTerm : Maybe CoreId
                      , showUniqueName : Bool
+                     , showBndrType : Bool
                      }
 
 type alias PP = State PPState ()
-
 runPP : PP -> PPState -> PPState
 runPP = State.evalState 
 
-defaultState : Bool -> Maybe CoreId -> PPState
-defaultState showUniqueName selectedTerm = 
+defaultState : Bool -> Bool -> Maybe CoreId -> PPState
+defaultState showUniqueName showBndrType selectedTerm = 
     { indent = 0
     , result = []
     , toplevel = True
     , selectedTerm = selectedTerm
     , showUniqueName = showUniqueName
+    , showBndrType = showBndrType
     }
 
 
-viewCoreBind : Bool -> Maybe CoreId -> CoreBind -> List (Html Msg)
-viewCoreBind showTypes selectedTerm bind = 
-    let state = defaultState showTypes selectedTerm
+viewCoreBind : Bool -> Bool -> Maybe CoreId -> CoreBind -> List (Html Msg)
+viewCoreBind showTypes showBndrType selectedTerm bind = 
+    let state = defaultState showTypes showBndrType selectedTerm
     in (runPP (ppCoreBind bind |> State.vndThen newline) state).result
 
 
@@ -99,6 +101,12 @@ concatMaybe xs = case xs of
     (Nothing::tl) -> concatMaybe tl
     []            -> []
 
+ppCoreBndr : CoreId -> PP
+ppCoreBndr var = State.withState <| \s ->
+    if s.showBndrType 
+    then parens (ppSequence [ppCoreVar var, emitText (" :: " ++ var.vartype)])
+    else ppCoreVar var
+
 ppCoreVar : CoreId -> PP
 ppCoreVar id = State.withState <| \state ->
     let selected = case state.selectedTerm of
@@ -122,11 +130,19 @@ ppCoreVar id = State.withState <| \state ->
         node =  span classes [text name]
     in emit <| ppa [node] (MsgSelectTerm id)
 
+ppIntercalate : String -> List PP -> PP
+ppIntercalate sep items = case items of
+    [] -> State.pure ()
+    (x::[]) -> x
+    (x::xs) -> x |> State.vndThen (emitText sep) |> State.vndThen (ppIntercalate sep xs)
+
 ppCoreBind : CoreBind -> PP
-ppCoreBind (NonRec b e) = ppCoreVar b 
-                                  |> State.vndThen (State.stateMap (\s -> { s | toplevel = False }))
-                                  |> State.vndThen (emit (text " = "))
-                                  |> State.vndThen (ppCoreTerm e)
+ppCoreBind (NonRec b e) =
+    let (bs, ne) = Trafo.leadingLambdas e
+    in ppIntercalate " " (List.map ppCoreVar (b::bs))
+      |> State.vndThen (State.stateMap (\s -> { s | toplevel = False }))
+      |> State.vndThen (emit (text " = "))
+      |> State.vndThen (ppCoreTerm ne)
 
 ppCoreAltCon : CoreAltCon -> PP
 ppCoreAltCon alt = case alt of
@@ -138,7 +154,7 @@ ppCoreAlt : CoreAlt -> PP
 ppCoreAlt alt = case alt of
     (Alt con bs e) -> ppSequence [ ppCoreAltCon con
                                  , emitText " "
-                                 , ppSequence (List.map (\var -> ppCoreVar var |> State.vndThen (emitText " ")) bs)
+                                 , ppSequence (List.map (\var -> ppCoreBndr var |> State.vndThen (emitText " ")) bs)
                                  , emitText "-> "
                                  , ppCoreTerm e
                                  ]
@@ -158,7 +174,9 @@ ppCoreTerm term = case term of
                 _      -> ppSequence [ppCoreTerm e, emitText " ", parensTerm a]
 
         in render
-    Lam b e -> ppSequence [emitText "\\", ppCoreVar b, emitText " -> ", indented (ppCoreTerm e)]
+    Lam b e -> 
+        let (bs, ne) = Trafo.leadingLambdas e
+        in ppSequence [emitText "\\", ppIntercalate " " (List.map ppCoreBndr (b::bs)), emitText " -> ", indented (ppCoreTerm ne)]
     Let b e -> ppSequence [ emitKeyword "let "
                           , ppCoreBind b
                           , emitKeyword " in "

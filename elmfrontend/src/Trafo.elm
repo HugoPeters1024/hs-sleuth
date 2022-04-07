@@ -74,6 +74,10 @@ collectAllVarsAlt : CoreAlt -> List CoreId
 collectAllVarsAlt (Alt _ _ e) = collectAllVarTerm e
 
 
+leadingLambdas : CoreTerm -> (List CoreId, CoreTerm)
+leadingLambdas term = case term of
+    Lam b e -> let (bs, ne) = leadingLambdas e in (b::bs, ne)
+    _ -> ([], term)
 
 
         
