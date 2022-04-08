@@ -26,11 +26,17 @@ data MetaInfo = MetaInfo { modules :: [Text]
                          deriving (Show, Generic)
                          deriving (Elm, ToJSON, FromJSON) via ElmStreet MetaInfo
 
+data ModuleInfo = ModuleInfo 
+    { passes :: [PassInfo]
+    , srcbindings :: [Int]
+    }
+    deriving (Show, Generic)
+    deriving (Elm, ToJSON, FromJSON) via ElmStreet ModuleInfo
+
+
 data PassInfo = PassInfo { idx :: Int
                          , title :: Text
                          , binds :: [CoreBind]
-                         , srcbinders :: [Int]
-                         , totalpasses :: Int
                          , modname :: Text
                          }
                  deriving (Show, Generic)

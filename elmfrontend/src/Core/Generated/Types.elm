@@ -7,6 +7,11 @@ type alias MetaInfo =
     { modules : List String
     }
 
+type alias ModuleInfo =
+    { passes : List PassInfo
+    , srcbindings : List Int
+    }
+
 type alias CoreId =
     { name : String
     , uniquetag : String
@@ -19,8 +24,6 @@ type alias PassInfo =
     { idx : Int
     , title : String
     , binds : List CoreBind
-    , srcbinders : List Int
-    , totalpasses : Int
     , modname : String
     }
 

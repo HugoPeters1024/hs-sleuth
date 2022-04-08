@@ -28,14 +28,13 @@ import PlugState
 
 app :: PlugState -> Application
 app state rec respond = do
-    let fetchCore :: Text -> Text -> IO ByteString
-        fetchCore modString idString = 
+    let fetchCore :: Text -> IO ByteString
+        fetchCore modString = 
             let modName = T.unpack modString
-                idx :: Int = fromMaybe 1 $ T.readMaybe $ T.unpack $ idString
                 modInfo = M.lookup modName state
              in case modInfo of
                   Nothing -> pure $ "Module not found"
-                  Just modInfo -> pure $ encodePretty $ modInfo.passes !! (idx-1)
+                  Just modInfo -> pure $ encodePretty $ modInfo
 
 
         fetchSource :: Text -> IO ByteString
@@ -56,7 +55,7 @@ app state rec respond = do
     content <- case pathInfo rec of
           [] -> pure "no index"
           ("dump":_) -> dumpState
-          ("core":modString:idString:_) -> fetchCore modString idString
+          ("core":modString:_) -> fetchCore modString
           ("source":srcName:_) -> fetchSource srcName
           ("meta":_) -> fetchMeta
           p           -> pure "unknown path"

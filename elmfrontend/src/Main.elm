@@ -17,9 +17,13 @@ import Json.Decode
 
 import Markdown
 
+import ViewCore
+import ViewPanel
+
+
 
 import Core.Generated.Encoder exposing (encodePassInfo)
-import Core.Generated.Decoder exposing (decodePassInfo, decodeMetaInfo)
+import Core.Generated.Decoder exposing (decodeModuleInfo, decodeMetaInfo)
 import Core.Generated.Types exposing (..)
 import CoreLangUtils exposing (..)
 
@@ -27,19 +31,6 @@ import List
 import PprCoreLang exposing (..)
 import Trafo
 
-type Loading a = Loading (Maybe a) | Failure Http.Error | Ready a
-
-type alias Model = { passLoading : Loading PassInfo
-                   , srcLoading : Loading String
-                   , metaLoading : Loading MetaInfo
-                   , shownBindings : Set Int
-                   , showTypeApplications : Bool
-                   , showBndrTypes : Bool
-                   , showUniqueName : Bool
-                   , selectedTerm : Maybe CoreId
-                   , renames : Dict Int String
-                   , showSource : Bool
-                   }
 
 main : Program () Model Msg
 main = Browser.element { init = init
@@ -57,10 +48,10 @@ maybeHtml f mb = case mb of
 jsonToString : Json.Encode.Value -> String
 jsonToString json = Result.withDefault "" (Json.Print.prettyString (Json.Print.Config 4 50) (Json.Encode.encode 0 json))
 
-fetchPass : String -> Int -> Cmd Msg
-fetchPass mod idx = Http.get { url = "http://127.0.0.1:8080/core/" ++ mod ++ "/" ++ String.fromInt idx
-                             , expect = Http.expectJson MsgGotPass decodePassInfo
-                             }
+fetchModule : String -> Cmd Msg
+fetchModule mod = Http.get { url = "http://127.0.0.1:8080/core/" ++ mod
+                           , expect = Http.expectJson MsgGotModule decodeModuleInfo
+                           }
 
 fetchSrc : String -> Cmd Msg
 fetchSrc mod = Http.get { url = "http://127.0.0.1:8080/source/" ++ mod
@@ -72,10 +63,10 @@ fetchMeta = Http.get { url = "http://127.0.0.1:8080/meta"
                      , expect = Http.expectJson MsgGotMeta decodeMetaInfo
                      }
 
-getPass : Model -> Maybe PassInfo
-getPass model = case model.passLoading of
-    Ready p -> Just p
-    _       -> Nothing
+
+
+getModule : Model -> Maybe ModuleInfo
+getModule model = loadToMaybe model.moduleLoading
 
 getMetaModules : Model -> List String
 getMetaModules model = case model.metaLoading of
@@ -83,7 +74,7 @@ getMetaModules model = case model.metaLoading of
     _          -> []
 
 initModel : Model
-initModel = { passLoading = Loading Nothing
+initModel = { moduleLoading = Loading Nothing
             , srcLoading = Loading Nothing
             , metaLoading = Loading Nothing
             , shownBindings = Set.empty
@@ -93,37 +84,31 @@ initModel = { passLoading = Loading Nothing
             , selectedTerm = Nothing
             , renames = Dict.empty
             , showSource = True
+            , currentPass = 1
             }
 
-loadFromResult : Result Http.Error a -> Loading a
-loadFromResult result = case result of
-    Ok el -> Ready el
-    Err e -> Failure e
-
-loadToMaybe : Loading a -> Maybe a
-loadToMaybe loading = case loading of
-    Ready x -> Just x
-    _       -> Nothing
 
 
 init : () -> (Model, Cmd Msg)
-init _ = (initModel, Cmd.batch [fetchSrc "Main", fetchPass "Main" 1, fetchMeta])
+init _ = (initModel, Cmd.batch [fetchSrc "Main", fetchModule "Main", fetchMeta])
 
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
-    MsgFetchPass mod idx -> 
-        let prevPass = getPass model
-        in ( { model | passLoading = Loading prevPass }
-           , Cmd.batch [fetchPass mod idx, fetchSrc mod]
+    MsgFetchModule mod -> 
+        let prevModule = getModule model
+        in ( { model | moduleLoading = Loading prevModule }
+           , Cmd.batch [fetchModule mod, fetchSrc mod]
            )
-    MsgGotPass result -> ( { model | passLoading = loadFromResult result } , Cmd.none)
+    MsgGotModule result -> ( { model | moduleLoading = loadFromResult result } , Cmd.none)
     MsgFetchSrc mod -> ({model | srcLoading = Loading Nothing }, fetchSrc mod)
     MsgGotSrc result -> ({model | srcLoading = loadFromResult result }, Cmd.none)
     MsgFetchMeta -> ({model | metaLoading = Loading Nothing}, fetchMeta)
     MsgGotMeta result -> ({model | metaLoading = loadFromResult result}, Cmd.none)
+    MsgNextPass -> ({model | currentPass = model.currentPass + 1}, Cmd.none)
+    MsgPrevPass -> ({model | currentPass = model.currentPass - 1}, Cmd.none)
     MsgToggleHiddenBind bind -> ( { model | shownBindings = toggleSet bind model.shownBindings} , Cmd.none)
     MsgHideAllBinds -> ( { model | shownBindings = Set.empty } , Cmd.none)
     MsgSelectTerm term -> ( { model | selectedTerm = Just term } , Cmd.none)
@@ -133,36 +118,25 @@ update msg model = case msg of
     MsgToggleUniqueName -> ( { model | showUniqueName = not model.showUniqueName } , Cmd.none)
     MsgToggleShowSource -> ( {model | showSource = not model.showSource  }, Cmd.none)
 
+
                          
 
 
-checkbox : Bool -> msg -> String -> Html msg
-checkbox isChecked msg name =
-    label
-        [ ]
-        [ input [ type_ "checkbox", checked isChecked, onClick msg ] []
-        , text name
-        ]
 
 -- Toggles membership of a set
 toggleSet : comparable -> Set comparable -> Set comparable
 toggleSet el set = if Set.member el set then Set.remove el set else Set.insert el set
 
-prepareModelView : Model -> Model
-prepareModelView model =
-    let applyRenames : Loading PassInfo -> Loading PassInfo
-        applyRenames loading = case loading of
-            Ready pass -> Ready {pass | binds = List.map (Trafo.applyRenames model.renames) pass.binds}
-            _ -> loading
+applyRenames : Model -> PassInfo -> PassInfo
+applyRenames model pass = {pass | binds = List.map (Trafo.applyRenames model.renames) pass.binds}
 
-        filterTypes : Loading PassInfo -> Loading PassInfo
-        filterTypes loading = case loading of
-            Ready pass -> if model.showTypeApplications
-                             then Ready pass
-                             else Ready { pass | binds = List.map (Trafo.eraseTypes) pass.binds }
-            _ -> loading
-                             
-    in { model | passLoading = filterTypes (applyRenames model.passLoading) }
+eraseTypes : Model -> PassInfo -> PassInfo
+eraseTypes model pass = if model.showTypeApplications 
+                        then pass
+                        else { pass | binds = List.map (Trafo.eraseTypes) pass.binds }
+
+preparePass : Model -> PassInfo -> PassInfo
+preparePass model = applyRenames model << eraseTypes model
 
 tryViewSrc : Model -> Html Msg
 tryViewSrc model = case model.srcLoading of
@@ -172,50 +146,39 @@ tryViewSrc model = case model.srcLoading of
 
 moduleDropDown : Model -> PassInfo -> Html Msg
 moduleDropDown model passInfo =
-    let inputEvent modName = MsgFetchPass modName 1
+    let inputEvent modName = MsgFetchModule modName
         makeOption modName = option [selected (modName == passInfo.modname)] [text modName]
 
     in select [onInput inputEvent] (List.map makeOption (getMetaModules model))
 
+indexList : List a -> Int -> Maybe a
+indexList l n = case (l, n) of
+    ([], _) -> Nothing
+    (x::_, 0) -> Just x
+    (_::xs, _) -> indexList xs (n - 1)
+
 view : Model -> Html Msg
-view rawmodel = 
-    let model = prepareModelView rawmodel
-        body = case model.passLoading of
-            Loading Nothing -> text "loading pass "
-            -- Pevent screen flashes
-            Loading (Just prevPass) -> view ({model | passLoading = Ready prevPass})
-            Failure err -> case err of
-                Http.BadUrl _ -> text "Bad url"
-                Http.Timeout -> text "timeout"
-                Http.NetworkError -> text "network error"
-                Http.BadStatus _ -> text "bad status"
-                Http.BadBody _ -> text "bad body"
-
-
-
-            Ready pass -> 
-                let binds = List.filter (\b -> Set.member (coreBindBndrUnique b) model.shownBindings) pass.binds
-                    viewBind = PprCoreLang.viewCoreBind model.showUniqueName model.showBndrTypes model.selectedTerm
-                in div []  [ h1 [] [text (String.fromInt pass.idx ++ ": " ++ pass.title)]
-                           , br [] []
-                           , button [onClick MsgToggleShowSource] [text "Toggle source"]
-                           , button [onClick (MsgFetchPass pass.modname <| Basics.max 1 (pass.idx - 1))] [text "Previous"]
-                           , button [onClick (MsgFetchPass pass.modname <| Basics.min pass.totalpasses (pass.idx + 1))] [text "Next"]
-                           , moduleDropDown model pass
-                           , div (panelStyle model)
-                                 [ if model.showSource then tryViewSrc model else text ""
-                                 , pre [class "code"] (List.concatMap viewBind binds)
-                                 , div [class "info-panel"] 
-                                    [ viewDisplayOptions model
-                                    , hr [] []
-                                    , viewTermInfo model
-                                    , hr [] []
-                                    , viewHiddenList model pass
-                                    ]
-                                 ]
---                           , pre [] [text ((jsonToString (encodePassInfo pass)))]
-                           ]
-    in div [] [ body ]
+view model = 
+    let m_mod = loadToMaybe model.moduleLoading
+        m_pass = m_mod |> Maybe.andThen (\m -> indexList m.passes (model.currentPass - 1)) 
+                       |> Maybe.map (preparePass model)
+    in case (m_mod, m_pass) of
+        (Nothing, _) -> text "Module not loaded"
+        (_, Nothing) -> text "Pass not found"
+        (Just mod, Just pass) -> 
+            div [] 
+                [ h1 [] [text (String.fromInt model.currentPass ++ ": " ++ pass.title)]
+                , br [] []
+                , button [onClick MsgToggleShowSource] [text "Toggle source"]
+                , button [onClick MsgPrevPass] [text "Previous"]
+                , button [onClick MsgNextPass] [text "Next"]
+                , moduleDropDown model pass
+                , div (panelStyle model)
+                      [ if model.showSource then tryViewSrc model else text ""
+                      , ViewCore.view model pass
+                      , ViewPanel.view model mod pass
+                      ]
+                ]
 
 panelStyle : Model -> List (Attribute Msg)
 panelStyle model = 
@@ -226,80 +189,8 @@ panelStyle model =
       else style "grid-template-columns" "4fr 1fr"
     ]
 
-isShown : Model -> CoreId -> Bool
-isShown model var = Set.member var.unique model.shownBindings
 
--- O(n), use sparingly
-isTopLevelSlow : Model -> CoreId -> Bool
-isTopLevelSlow model bndr = case loadToMaybe model.passLoading of
-    Just pass -> List.member bndr.unique (List.map coreBindBndrUnique pass.binds)
-    Nothing -> False
 
-viewDisplayOptions : Model -> Html Msg
-viewDisplayOptions model = div []
-    [ h2 [] [text "Options"]
-    , ul [class "no-dot"]
-         [ li [] [checkbox (model.showTypeApplications) MsgToggleShowTypeApps "Show type applications"]
-         , li [] [checkbox (model.showBndrTypes) MsgToggleShowBndrTypes "Show binder types"]
-         , li [] [checkbox (model.showUniqueName) MsgToggleUniqueName "Disambiguate variables"]
-         ]
-    ]
 
-viewShownCheckbox : Model -> CoreId -> Html Msg
-viewShownCheckbox model bndr = checkbox (isShown model bndr) (MsgToggleHiddenBind bndr.unique) (bndr.name ++ "_" ++ bndr.uniquetag)
 
-viewHiddenList : Model -> PassInfo -> Html Msg
-viewHiddenList model pass = 
-    let go : CoreBind -> Html Msg
-        go bind = 
-            let lis = liSet bind
-            in li [] [ if List.length lis == 0
-                       then viewShownCheckbox model (coreBindBndr bind)
-                       else details [] [ summary [] [viewShownCheckbox model (coreBindBndr bind)]
-                                       , ul [class "no-dot"] (liSet bind)
-                                       ]
-                     ]
 
-        liSet : CoreBind -> List (Html Msg)
-        liSet bind = 
-            let childrenIds = List.filter isTopLevel (Trafo.collectAllVarsBind bind)
-            in List.map (\id -> li [] [viewShownCheckbox model id]) childrenIds
-
-        topLevelSet : Set Int
-        topLevelSet = Set.fromList <| List.map coreBindBndrUnique pass.binds
-
-        isTopLevel : CoreId -> Bool
-        isTopLevel var = Set.member var.unique topLevelSet
-
-        srcSet : Set Int
-        srcSet = Set.fromList pass.srcbinders
-
-        isSrc : CoreBind -> Bool
-        isSrc var = Set.member (coreBindBndrUnique var) srcSet
-
-    in div [ class "hidden-fields"] 
-           [ h2 [] [text "Functions to show"]
-           , button [onClick MsgHideAllBinds] [text "hide all" ]
-           , h3 [] [text "Source binds"]
-           , ul [class "no-dot"] (List.map go (List.filter isSrc pass.binds))
-           , h3 [] [text "Others"]
-           , ul [class "no-dot"] (List.map go (List.filter (not << isSrc) pass.binds))
-           ]
-
-viewTermInfo : Model -> Html Msg
-viewTermInfo model =
-    let showMenu : CoreId -> Html Msg
-        showMenu id =
-            ul [class "no-dot"] [ li [] [ text ("name: " ++ id.name) ]
-                                , li [] [ text ("type: "), span [class "kt"] [text id.vartype]]
-                                , li [] [ text ("tag: " ++ id.uniquetag)]
-                                , li [] [ text ("udi: " ++ String.fromInt id.unique)]
-                                , li [] [ input [ type_ "text", placeholder id.name, onInput (MsgRenameTerm id.unique)] [] ]
-                                , if isTopLevelSlow model id 
-                                  then li [] [ checkbox (isShown model id) (MsgToggleHiddenBind id.unique) "shown" ]
-                                  else text ""
-                                ]
-    in div [ class "term-info" ]
-           [ h2 [] [text "Selected term"]
-           , Maybe.withDefault (text "Nothing selected") (Maybe.map showMenu model.selectedTerm)
-           ]

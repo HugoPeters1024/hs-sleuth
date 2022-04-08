@@ -12,6 +12,11 @@ decodeMetaInfo : Decoder T.MetaInfo
 decodeMetaInfo = D.succeed T.MetaInfo
     |> required "modules" (D.list D.string)
 
+decodeModuleInfo : Decoder T.ModuleInfo
+decodeModuleInfo = D.succeed T.ModuleInfo
+    |> required "passes" (D.list decodePassInfo)
+    |> required "srcbindings" (D.list D.int)
+
 decodeCoreId : Decoder T.CoreId
 decodeCoreId = D.succeed T.CoreId
     |> required "name" D.string
@@ -25,8 +30,6 @@ decodePassInfo = D.succeed T.PassInfo
     |> required "idx" D.int
     |> required "title" D.string
     |> required "binds" (D.list decodeCoreBind)
-    |> required "srcbinders" (D.list D.int)
-    |> required "totalpasses" D.int
     |> required "modname" D.string
 
 decodeCoreLiteral : Decoder T.CoreLiteral
