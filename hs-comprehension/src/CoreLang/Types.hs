@@ -6,6 +6,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 module CoreLang.Types where
 
 import GHC.Utils.Outputable (Outputable (..))
@@ -27,8 +28,9 @@ data MetaInfo = MetaInfo { modules :: [Text]
                          deriving (Elm, ToJSON, FromJSON) via ElmStreet MetaInfo
 
 data ModuleInfo = ModuleInfo 
-    { passes :: [PassInfo]
+    { nrpasses :: Int
     , srcbindings :: [Int]
+    , name :: Text
     }
     deriving (Show, Generic)
     deriving (Elm, ToJSON, FromJSON) via ElmStreet ModuleInfo

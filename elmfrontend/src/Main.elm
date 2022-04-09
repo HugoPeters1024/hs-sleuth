@@ -5,7 +5,7 @@ import MsgTypes exposing (..)
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (onClick, onInput, on)
 
 import Http
 import Set exposing (Set)
@@ -23,7 +23,7 @@ import ViewPanel
 
 
 import Core.Generated.Encoder exposing (encodePassInfo)
-import Core.Generated.Decoder exposing (decodeModuleInfo, decodeMetaInfo)
+import Core.Generated.Decoder exposing (decodeModuleInfo, decodeMetaInfo, decodePassInfo)
 import Core.Generated.Types exposing (..)
 import CoreLangUtils exposing (..)
 
@@ -49,7 +49,7 @@ jsonToString : Json.Encode.Value -> String
 jsonToString json = Result.withDefault "" (Json.Print.prettyString (Json.Print.Config 4 50) (Json.Encode.encode 0 json))
 
 fetchModule : String -> Cmd Msg
-fetchModule mod = Http.get { url = "http://127.0.0.1:8080/core/" ++ mod
+fetchModule mod = Http.get { url = "http://127.0.0.1:8080/module/" ++ mod
                            , expect = Http.expectJson MsgGotModule decodeModuleInfo
                            }
 
@@ -57,6 +57,11 @@ fetchSrc : String -> Cmd Msg
 fetchSrc mod = Http.get { url = "http://127.0.0.1:8080/source/" ++ mod
                         , expect = Http.expectString MsgGotSrc
                         }
+
+fetchPass : String -> Int -> Cmd Msg
+fetchPass mod idx = Http.get { url = "http://127.0.0.1:8080/core/" ++ mod ++ "/" ++ String.fromInt idx
+                             , expect = Http.expectJson MsgGotPass decodePassInfo
+                             }
 
 fetchMeta : Cmd Msg
 fetchMeta = Http.get { url = "http://127.0.0.1:8080/meta"
@@ -77,6 +82,7 @@ initModel : Model
 initModel = { moduleLoading = Loading Nothing
             , srcLoading = Loading Nothing
             , metaLoading = Loading Nothing
+            , passLoading = Loading Nothing
             , shownBindings = Set.empty
             , showTypeApplications = True
             , showBndrTypes = False
@@ -84,31 +90,31 @@ initModel = { moduleLoading = Loading Nothing
             , selectedTerm = Nothing
             , renames = Dict.empty
             , showSource = True
-            , currentPass = 1
             }
 
 
-
 init : () -> (Model, Cmd Msg)
-init _ = (initModel, Cmd.batch [fetchSrc "Main", fetchModule "Main", fetchMeta])
+init _ = (initModel, Cmd.batch [fetchSrc "Main", fetchModule "Main", fetchMeta, fetchPass "Main" 1])
 
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
-    MsgFetchModule mod -> 
-        let prevModule = getModule model
-        in ( { model | moduleLoading = Loading prevModule }
-           , Cmd.batch [fetchModule mod, fetchSrc mod]
-           )
+    MsgFetchModule mod -> ( { model | moduleLoading = setLoading model.moduleLoading }, Cmd.batch [fetchModule mod, fetchSrc mod, fetchPass mod 1])
     MsgGotModule result -> ( { model | moduleLoading = loadFromResult result } , Cmd.none)
-    MsgFetchSrc mod -> ({model | srcLoading = Loading Nothing }, fetchSrc mod)
+    MsgFetchSrc mod -> ({model | srcLoading = setLoading model.srcLoading }, fetchSrc mod)
     MsgGotSrc result -> ({model | srcLoading = loadFromResult result }, Cmd.none)
-    MsgFetchMeta -> ({model | metaLoading = Loading Nothing}, fetchMeta)
+    MsgFetchMeta -> ({model | metaLoading = setLoading model.metaLoading}, fetchMeta)
     MsgGotMeta result -> ({model | metaLoading = loadFromResult result}, Cmd.none)
-    MsgNextPass -> ({model | currentPass = model.currentPass + 1}, Cmd.none)
-    MsgPrevPass -> ({model | currentPass = model.currentPass - 1}, Cmd.none)
+    MsgFetchPass mod idx -> ({model | passLoading = setLoading model.passLoading}, fetchPass mod idx)
+    MsgGotPass result -> ({model | passLoading = loadFromResult result}, Cmd.none)
+    MsgNextPass -> case (model.moduleLoading, model.passLoading) of
+        (Ready mod, Ready pass) -> ({model | passLoading = Loading (Just pass)}, fetchPass mod.name (pass.idx + 1))
+        _ -> (model, Cmd.none)
+    MsgPrevPass -> case (model.moduleLoading, model.passLoading) of
+        (Ready mod, Ready pass) -> ({model | passLoading = Loading (Just pass)}, fetchPass mod.name (pass.idx - 1))
+        _ -> (model, Cmd.none)
     MsgToggleHiddenBind bind -> ( { model | shownBindings = toggleSet bind model.shownBindings} , Cmd.none)
     MsgHideAllBinds -> ( { model | shownBindings = Set.empty } , Cmd.none)
     MsgSelectTerm term -> ( { model | selectedTerm = Just term } , Cmd.none)
@@ -117,10 +123,6 @@ update msg model = case msg of
     MsgToggleShowBndrTypes -> ( {model | showBndrTypes = not model.showBndrTypes }, Cmd.none)
     MsgToggleUniqueName -> ( { model | showUniqueName = not model.showUniqueName } , Cmd.none)
     MsgToggleShowSource -> ( {model | showSource = not model.showSource  }, Cmd.none)
-
-
-                         
-
 
 
 -- Toggles membership of a set
@@ -139,10 +141,9 @@ preparePass : Model -> PassInfo -> PassInfo
 preparePass model = applyRenames model << eraseTypes model
 
 tryViewSrc : Model -> Html Msg
-tryViewSrc model = case model.srcLoading of
-    Ready src -> pre [class "code"] [Markdown.toHtml [] ("```haskell\n" ++ src ++ "\n```")]
-    Loading _ -> text "Loading"
-    Failure _ -> text "Source not available"
+tryViewSrc model = case loadToMaybe model.srcLoading of
+    Just src -> pre [class "code"] [Markdown.toHtml [] ("```haskell\n" ++ src ++ "\n```")]
+    Nothing -> text "Loading Source.."
 
 moduleDropDown : Model -> PassInfo -> Html Msg
 moduleDropDown model passInfo =
@@ -160,14 +161,13 @@ indexList l n = case (l, n) of
 view : Model -> Html Msg
 view model = 
     let m_mod = loadToMaybe model.moduleLoading
-        m_pass = m_mod |> Maybe.andThen (\m -> indexList m.passes (model.currentPass - 1)) 
-                       |> Maybe.map (preparePass model)
+        m_pass = loadToMaybe model.passLoading |> Maybe.map (preparePass model)
     in case (m_mod, m_pass) of
         (Nothing, _) -> text "Module not loaded"
-        (_, Nothing) -> text "Pass not found"
+        (_, Nothing) -> text "Pass not loaded"
         (Just mod, Just pass) -> 
             div [] 
-                [ h1 [] [text (String.fromInt model.currentPass ++ ": " ++ pass.title)]
+                [ h1 [] [text (String.fromInt pass.idx ++ ": " ++ pass.title)]
                 , br [] []
                 , button [onClick MsgToggleShowSource] [text "Toggle source"]
                 , button [onClick MsgPrevPass] [text "Previous"]

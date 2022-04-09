@@ -54,10 +54,11 @@ install _ todo = do
     modName <- (showSDocUnsafe . ppr) <$> getModule
     liftIO $ do
         putStrLn $ "Installing plugin for " ++ modName
-        let moduleInfo = CL.ModuleInfo { passes = []
+        let moduleInfo = CL.ModuleInfo { nrpasses = 0
                                        , srcbindings = []
+                                       , name = T.pack modName
                                        }
-        modifyIORef ref $ M.insert modName moduleInfo 
+        modifyIORef ref $ M.insert modName (moduleInfo, [])
 
     let mkPass = \first idx prevName -> CoreDoPluginPass "Collection Pass" (pass first idx prevName ref)
     let firstPass = mkPass True 1 "Desugared" 
@@ -81,7 +82,7 @@ pass first idx prevName ref guts = do
             filterFunc var = not $ T.isPrefixOf "$" var.name
 
             srcbindings = map (\x -> x.unique) $ filter filterFunc (map CL.coreLangBindBndr cvtBinds)
-        modifyIORef ref $ M.update (Just . setSrcBindings srcbindings) (modName guts)
+        modifyIORef ref $ setSrcBindings (modName guts) srcbindings
 
     let moduleName = showSDocUnsafe (ppr (mg_module guts))
     let passInfo = CL.PassInfo { idx = idx
@@ -90,7 +91,7 @@ pass first idx prevName ref guts = do
                                , modname = T.pack moduleName
                                }
 
-    liftIO $ modifyIORef ref $ M.update (Just . addPass passInfo) moduleName
+    liftIO $ modifyIORef ref $ addPass moduleName passInfo
     pure guts { mg_binds = uniqified }
 
 annPred :: [a] -> [Maybe a]

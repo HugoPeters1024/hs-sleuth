@@ -14,8 +14,9 @@ decodeMetaInfo = D.succeed T.MetaInfo
 
 decodeModuleInfo : Decoder T.ModuleInfo
 decodeModuleInfo = D.succeed T.ModuleInfo
-    |> required "passes" (D.list decodePassInfo)
+    |> required "nrpasses" D.int
     |> required "srcbindings" (D.list D.int)
+    |> required "name" D.string
 
 decodeCoreId : Decoder T.CoreId
 decodeCoreId = D.succeed T.CoreId

@@ -8,8 +8,9 @@ type alias MetaInfo =
     }
 
 type alias ModuleInfo =
-    { passes : List PassInfo
+    { nrpasses : Int
     , srcbindings : List Int
+    , name : String
     }
 
 type alias CoreId =

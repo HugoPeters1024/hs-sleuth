@@ -16,8 +16,9 @@ encodeMetaInfo x = E.object
 encodeModuleInfo : T.ModuleInfo -> Value
 encodeModuleInfo x = E.object
     [ ("tag", E.string "ModuleInfo")
-    , ("passes", (E.list encodePassInfo) x.passes)
+    , ("nrpasses", E.int x.nrpasses)
     , ("srcbindings", (E.list E.int) x.srcbindings)
+    , ("name", E.string x.name)
     ]
 
 encodeCoreId : T.CoreId -> Value
