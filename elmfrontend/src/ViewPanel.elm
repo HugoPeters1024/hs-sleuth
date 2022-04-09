@@ -11,6 +11,8 @@ import Core.Generated.Types exposing (..)
 import CoreLangUtils exposing (..)
 import Trafo
 
+import Url.Builder as Url
+
 view : Model -> ModuleInfo -> PassInfo -> Html Msg
 view model mod pass = div [class "info-panel"] 
                       [ viewDisplayOptions model
@@ -30,6 +32,12 @@ checkbox isChecked msg name =
 
 isShown : Model -> CoreId -> Bool
 isShown model var = Set.member var.unique model.shownBindings
+
+hoogleUrl : CoreId -> String
+hoogleUrl var = 
+    -- extra space required for hoogle to function
+    let goodtype = String.replace "." " ." var.vartype
+    in Url.crossOrigin "https://hoogle.haskell.org" [] [Url.string "hoogle" (var.name ++ " :: " ++ goodtype)]
 
 viewShownCheckbox : Model -> CoreId -> Html Msg
 viewShownCheckbox model bndr = checkbox (isShown model bndr) (MsgToggleHiddenBind bndr.unique) (bndr.name ++ "_" ++ bndr.uniquetag)
@@ -95,6 +103,7 @@ viewTermInfo model pass =
                                 , li [] [ text ("tag: " ++ id.uniquetag)]
                                 , li [] [ text ("udi: " ++ String.fromInt id.unique)]
                                 , li [] [ input [ type_ "text", placeholder id.name, onInput (MsgRenameTerm id.unique)] [] ]
+                                , li [] [ text "search on ", a [class "no-style", target "_blank", href (hoogleUrl id)] [text "hoogle"]]
                                 , if isTopLevelSlow model pass id 
                                   then li [] [ checkbox (isShown model id) (MsgToggleHiddenBind id.unique) "shown" ]
                                   else text ""

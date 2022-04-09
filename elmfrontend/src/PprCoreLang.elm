@@ -119,12 +119,13 @@ ppCoreVar id = State.withState <| \state ->
         name = id.name ++ (if state.showUniqueName then "_" ++ id.uniquetag else "")
 
         classes = concatMaybe 
-            [ if selected then Just (class "highlight") else Nothing
-            , if state.toplevel 
-                 then Just (class "nf") 
-                 else if constructor 
-                         then Just (class "kt") 
-                         else Nothing
+            [ if selected 
+              then Just (class "highlight")
+              else if state.toplevel 
+                   then Just (class "nf") 
+                   else if constructor 
+                        then Just (class "kt") 
+                        else Nothing
             ]
 
         node =  span classes [text name]

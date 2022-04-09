@@ -11,7 +11,7 @@ type Msg = MsgFetchModule String
          | MsgGotSrc (Result Http.Error String)
          | MsgFetchMeta
          | MsgGotMeta (Result Http.Error MetaInfo)
-         | MsgFetchPass String Int
+         | MsgFetchPass Int
          | MsgGotPass (Result Http.Error PassInfo)
          | MsgNextPass
          | MsgPrevPass

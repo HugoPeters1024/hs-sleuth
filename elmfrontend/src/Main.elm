@@ -107,13 +107,19 @@ update msg model = case msg of
     MsgGotSrc result -> ({model | srcLoading = loadFromResult result }, Cmd.none)
     MsgFetchMeta -> ({model | metaLoading = setLoading model.metaLoading}, fetchMeta)
     MsgGotMeta result -> ({model | metaLoading = loadFromResult result}, Cmd.none)
-    MsgFetchPass mod idx -> ({model | passLoading = setLoading model.passLoading}, fetchPass mod idx)
+    MsgFetchPass idx -> case loadToMaybe model.moduleLoading of
+        Just mod -> ({model | passLoading = setLoading model.passLoading}, fetchPass mod.name idx)
+        Nothing -> (model, Cmd.none)
     MsgGotPass result -> ({model | passLoading = loadFromResult result}, Cmd.none)
     MsgNextPass -> case (model.moduleLoading, model.passLoading) of
-        (Ready mod, Ready pass) -> ({model | passLoading = Loading (Just pass)}, fetchPass mod.name (pass.idx + 1))
+        (Ready mod, Ready pass) -> if pass.idx + 1 <= mod.nrpasses 
+            then ({model | passLoading = Loading (Just pass)}, fetchPass mod.name (pass.idx + 1))
+            else (model, Cmd.none)
         _ -> (model, Cmd.none)
     MsgPrevPass -> case (model.moduleLoading, model.passLoading) of
-        (Ready mod, Ready pass) -> ({model | passLoading = Loading (Just pass)}, fetchPass mod.name (pass.idx - 1))
+        (Ready mod, Ready pass) -> if pass.idx - 1 >= 1
+            then ({model | passLoading = Loading (Just pass)}, fetchPass mod.name (pass.idx - 1))
+            else (model, Cmd.none)
         _ -> (model, Cmd.none)
     MsgToggleHiddenBind bind -> ( { model | shownBindings = toggleSet bind model.shownBindings} , Cmd.none)
     MsgHideAllBinds -> ( { model | shownBindings = Set.empty } , Cmd.none)

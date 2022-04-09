@@ -2704,7 +2704,7 @@ var _VirtualDom_mapEventTuple = F2(function(func, tuple)
 var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
-		s: func(record.s),
+		t: func(record.t),
 		ac: record.ac,
 		X: record.X
 	}
@@ -2974,7 +2974,7 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 		// 3 = Custom
 
 		var value = result.a;
-		var message = !tag ? value : tag < 3 ? value.a : value.s;
+		var message = !tag ? value : tag < 3 ? value.a : value.t;
 		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.ac;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
@@ -4629,7 +4629,24 @@ function _Markdown_formatOptions(options)
 		smartypants: options.br
 	};
 }
-var $elm$core$Basics$EQ = 1;
+
+
+function _Url_percentEncode(string)
+{
+	return encodeURIComponent(string);
+}
+
+function _Url_percentDecode(string)
+{
+	try
+	{
+		return $elm$core$Maybe$Just(decodeURIComponent(string));
+	}
+	catch (e)
+	{
+		return $elm$core$Maybe$Nothing;
+	}
+}var $elm$core$Basics$EQ = 1;
 var $elm$core$Basics$GT = 2;
 var $elm$core$Basics$LT = 0;
 var $elm$core$List$cons = _List_cons;
@@ -6616,8 +6633,8 @@ var $elm$core$Set$Set_elm_builtin = $elm$core$Basics$identity;
 var $elm$core$Set$empty = $elm$core$Dict$empty;
 var $author$project$Main$initModel = {
 	G: $author$project$MsgTypes$Loading($elm$core$Maybe$Nothing),
-	t: $author$project$MsgTypes$Loading($elm$core$Maybe$Nothing),
 	p: $author$project$MsgTypes$Loading($elm$core$Maybe$Nothing),
+	q: $author$project$MsgTypes$Loading($elm$core$Maybe$Nothing),
 	P: $elm$core$Dict$empty,
 	aO: $elm$core$Maybe$Nothing,
 	_: false,
@@ -6644,6 +6661,7 @@ var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$none;
 };
+var $elm$core$Basics$ge = _Utils_ge;
 var $author$project$MsgTypes$Failure = function (a) {
 	return {$: 1, a: a};
 };
@@ -6657,6 +6675,18 @@ var $author$project$MsgTypes$loadFromResult = function (result) {
 	} else {
 		var e = result.a;
 		return $author$project$MsgTypes$Failure(e);
+	}
+};
+var $author$project$MsgTypes$loadToMaybe = function (loading) {
+	switch (loading.$) {
+		case 2:
+			var x = loading.a;
+			return $elm$core$Maybe$Just(x);
+		case 0:
+			var x = loading.a;
+			return x;
+		default:
+			return $elm$core$Maybe$Nothing;
 	}
 };
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
@@ -6707,7 +6737,7 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{
-							t: $author$project$MsgTypes$setLoading(model.t)
+							p: $author$project$MsgTypes$setLoading(model.p)
 						}),
 					$elm$core$Platform$Cmd$batch(
 						_List_fromArray(
@@ -6722,7 +6752,7 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{
-							t: $author$project$MsgTypes$loadFromResult(result)
+							p: $author$project$MsgTypes$loadFromResult(result)
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 2:
@@ -6761,53 +6791,58 @@ var $author$project$Main$update = F2(
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 6:
-				var mod = msg.a;
-				var idx = msg.b;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							p: $author$project$MsgTypes$setLoading(model.p)
-						}),
-					A2($author$project$Main$fetchPass, mod, idx));
+				var idx = msg.a;
+				var _v1 = $author$project$MsgTypes$loadToMaybe(model.p);
+				if (!_v1.$) {
+					var mod = _v1.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								q: $author$project$MsgTypes$setLoading(model.q)
+							}),
+						A2($author$project$Main$fetchPass, mod.ax, idx));
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
 			case 7:
 				var result = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							p: $author$project$MsgTypes$loadFromResult(result)
+							q: $author$project$MsgTypes$loadFromResult(result)
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 8:
-				var _v1 = _Utils_Tuple2(model.t, model.p);
-				if ((_v1.a.$ === 2) && (_v1.b.$ === 2)) {
-					var mod = _v1.a.a;
-					var pass = _v1.b.a;
-					return _Utils_Tuple2(
+				var _v2 = _Utils_Tuple2(model.p, model.q);
+				if ((_v2.a.$ === 2) && (_v2.b.$ === 2)) {
+					var mod = _v2.a.a;
+					var pass = _v2.b.a;
+					return (_Utils_cmp(pass.bb + 1, mod.bj) < 1) ? _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								p: $author$project$MsgTypes$Loading(
+								q: $author$project$MsgTypes$Loading(
 									$elm$core$Maybe$Just(pass))
 							}),
-						A2($author$project$Main$fetchPass, mod.ax, pass.bb + 1));
+						A2($author$project$Main$fetchPass, mod.ax, pass.bb + 1)) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
 			case 9:
-				var _v2 = _Utils_Tuple2(model.t, model.p);
-				if ((_v2.a.$ === 2) && (_v2.b.$ === 2)) {
-					var mod = _v2.a.a;
-					var pass = _v2.b.a;
-					return _Utils_Tuple2(
+				var _v3 = _Utils_Tuple2(model.p, model.q);
+				if ((_v3.a.$ === 2) && (_v3.b.$ === 2)) {
+					var mod = _v3.a.a;
+					var pass = _v3.b.a;
+					return ((pass.bb - 1) >= 1) ? _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								p: $author$project$MsgTypes$Loading(
+								q: $author$project$MsgTypes$Loading(
 									$elm$core$Maybe$Just(pass))
 							}),
-						A2($author$project$Main$fetchPass, mod.ax, pass.bb - 1));
+						A2($author$project$Main$fetchPass, mod.ax, pass.bb - 1)) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
@@ -6878,18 +6913,6 @@ var $elm$html$Html$br = _VirtualDom_node('br');
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
-var $author$project$MsgTypes$loadToMaybe = function (loading) {
-	switch (loading.$) {
-		case 2:
-			var x = loading.a;
-			return $elm$core$Maybe$Just(x);
-		case 0:
-			var x = loading.a;
-			return x;
-		default:
-			return $elm$core$Maybe$Nothing;
-	}
-};
 var $elm$core$Maybe$map = F2(
 	function (f, maybe) {
 		if (!maybe.$) {
@@ -7608,10 +7631,9 @@ var $author$project$PprCoreLang$ppCoreVar = function (id) {
 				_List_fromArray(
 					[
 						selected ? $elm$core$Maybe$Just(
-						$elm$html$Html$Attributes$class('highlight')) : $elm$core$Maybe$Nothing,
-						state.S ? $elm$core$Maybe$Just(
+						$elm$html$Html$Attributes$class('highlight')) : (state.S ? $elm$core$Maybe$Just(
 						$elm$html$Html$Attributes$class('nf')) : (constructor ? $elm$core$Maybe$Just(
-						$elm$html$Html$Attributes$class('kt')) : $elm$core$Maybe$Nothing)
+						$elm$html$Html$Attributes$class('kt')) : $elm$core$Maybe$Nothing))
 					]));
 			var node = A2(
 				$elm$html$Html$span,
@@ -8174,6 +8196,61 @@ var $author$project$MsgTypes$MsgRenameTerm = F2(
 	function (a, b) {
 		return {$: 13, a: a, b: b};
 	});
+var $elm$url$Url$Builder$toQueryPair = function (_v0) {
+	var key = _v0.a;
+	var value = _v0.b;
+	return key + ('=' + value);
+};
+var $elm$url$Url$Builder$toQuery = function (parameters) {
+	if (!parameters.b) {
+		return '';
+	} else {
+		return '?' + A2(
+			$elm$core$String$join,
+			'&',
+			A2($elm$core$List$map, $elm$url$Url$Builder$toQueryPair, parameters));
+	}
+};
+var $elm$url$Url$Builder$crossOrigin = F3(
+	function (prePath, pathSegments, parameters) {
+		return prePath + ('/' + (A2($elm$core$String$join, '/', pathSegments) + $elm$url$Url$Builder$toQuery(parameters)));
+	});
+var $elm$core$String$replace = F3(
+	function (before, after, string) {
+		return A2(
+			$elm$core$String$join,
+			after,
+			A2($elm$core$String$split, before, string));
+	});
+var $elm$url$Url$Builder$QueryParameter = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var $elm$url$Url$percentEncode = _Url_percentEncode;
+var $elm$url$Url$Builder$string = F2(
+	function (key, value) {
+		return A2(
+			$elm$url$Url$Builder$QueryParameter,
+			$elm$url$Url$percentEncode(key),
+			$elm$url$Url$percentEncode(value));
+	});
+var $author$project$ViewPanel$hoogleUrl = function (_var) {
+	var goodtype = A3($elm$core$String$replace, '.', ' .', _var.bC);
+	return A3(
+		$elm$url$Url$Builder$crossOrigin,
+		'https://hoogle.haskell.org',
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2($elm$url$Url$Builder$string, 'hoogle', _var.ax + (' :: ' + goodtype))
+			]));
+};
+var $elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -8212,6 +8289,7 @@ var $author$project$ViewPanel$isTopLevelSlow = F3(
 			A2($elm$core$List$map, $author$project$CoreLangUtils$coreBindBndrUnique, pass.a1));
 	});
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
 		if (!maybe.$) {
@@ -8287,6 +8365,26 @@ var $author$project$ViewPanel$viewTermInfo = F2(
 									]),
 								_List_Nil)
 							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('search on '),
+								A2(
+								$elm$html$Html$a,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('no-style'),
+										$elm$html$Html$Attributes$target('_blank'),
+										$elm$html$Html$Attributes$href(
+										$author$project$ViewPanel$hoogleUrl(id))
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('hoogle')
+									]))
+							])),
 						A3($author$project$ViewPanel$isTopLevelSlow, model, pass, id) ? A2(
 						$elm$html$Html$li,
 						_List_Nil,
@@ -8342,8 +8440,8 @@ var $author$project$Main$view = function (model) {
 	var m_pass = A2(
 		$elm$core$Maybe$map,
 		$author$project$Main$preparePass(model),
-		$author$project$MsgTypes$loadToMaybe(model.p));
-	var m_mod = $author$project$MsgTypes$loadToMaybe(model.t);
+		$author$project$MsgTypes$loadToMaybe(model.q));
+	var m_mod = $author$project$MsgTypes$loadToMaybe(model.p);
 	var _v0 = _Utils_Tuple2(m_mod, m_pass);
 	if (_v0.a.$ === 1) {
 		var _v1 = _v0.a;

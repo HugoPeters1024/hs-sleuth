@@ -4,6 +4,7 @@ module Main where
 
 import TreeMap
 import Palin
+import Records
 
 import Data.Char
 
