@@ -62,7 +62,7 @@ app state rec respond = do
             in pure $ encodePretty meta
 
     content <- case pathInfo rec of
-          [] -> pure "no index"
+          [] -> pure "no index, please open the frontend instead"
           ("dump":_) -> dumpState
           ("core":modString:idstring:_) -> fetchCore modString idstring
           ("module":modString:_) -> fetchModuleInfo modString

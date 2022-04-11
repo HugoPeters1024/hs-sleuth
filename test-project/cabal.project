@@ -1,4 +1,3 @@
 packages: .
         , ../hs-comprehension
-        , ../../ihp/ihp-hsx
 allow-newer: all

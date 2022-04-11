@@ -197,6 +197,3 @@ panelStyle model =
 
 
 
-
-
-
