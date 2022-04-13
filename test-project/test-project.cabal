@@ -28,6 +28,7 @@ executable hs-plugin-test
     other-modules:    TreeMap
                     , Palin
                     , Records
+                    , Factorial
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -35,4 +36,4 @@ executable hs-plugin-test
                     , hs-comprehension
     hs-source-dirs:   app
     default-language: Haskell2010
-    ghc-options: -fplugin HsComprehension -ddump-rule-firings
+    ghc-options: -fplugin HsComprehension

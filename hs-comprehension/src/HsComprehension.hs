@@ -70,7 +70,7 @@ pass :: Bool -> Int -> SDoc -> IORef PlugState -> ModGuts -> CoreM ModGuts
 pass first idx prevName ref guts = do
     let title = T.pack $ showSDocUnsafe prevName
 
-    uniqified <- liftIO $ pure (mg_binds guts) -- runUnique $ uniqProgram (mg_binds guts)
+    uniqified <- liftIO $ runUnique $ uniqProgram (mg_binds guts)
     cvtBinds <- CL.cvtCoreLang $ getAllTopLevelDefs uniqified
 
     -- The first pass is the desugar pass, any binding that is not prefixed with a dollar

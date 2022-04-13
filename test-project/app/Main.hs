@@ -5,6 +5,7 @@ module Main where
 import TreeMap
 import Palin
 import Records
+import Factorial
 
 import Data.Char
 
