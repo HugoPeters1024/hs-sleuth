@@ -1,6 +1,0 @@
-16d15
-< import GHC
-46c45
-<     let passInfo = PassInfo { idx = idx
----
->     let passInfo = PassInfo { idx = idx + 1
