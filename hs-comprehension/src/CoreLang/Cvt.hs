@@ -23,7 +23,7 @@ import Data.Text (Text)
 import qualified System.IO as C
 
 cvtCoreLang :: [C.CoreBind] -> C.CoreM [CoreBind]
-cvtCoreLang bs = mapM coreLangBind bs
+cvtCoreLang bs = mapM coreLangBind $ concatMap coreLangBindDesugar bs
 
 pprText :: Outputable a => a -> C.CoreM Text
 pprText el = do
@@ -39,6 +39,11 @@ coreLangId var = do
     let istyvar = C.isTyVar var
     pure $ CoreId {..}
 
+coreLangBindDesugar :: C.CoreBind -> [C.CoreBind]
+coreLangBindDesugar (C.NonRec b e) = [C.NonRec b e]
+coreLangBindDesugar (C.Rec bs) = map (uncurry C.NonRec) bs
+
+
 coreLangBndr :: C.CoreBndr -> C.CoreM CoreId
 coreLangBndr bndr = coreLangId bndr
 
@@ -49,7 +54,7 @@ coreLangLiteral l = CoreLitOther <$> pprText l
 
 coreLangBind :: C.CoreBind -> C.CoreM CoreBind
 coreLangBind (C.NonRec b e) = NonRec <$> coreLangBndr b <*> coreLangExpr e
-coreLangBind (C.Rec [(b, e)]) = NonRec <$> coreLangBndr b <*> coreLangExpr e
+coreLangBind (C.Rec _) = error "Recursive bind groups were expected to be desugared to non recursive ones"
 
 coreLangAltCon :: C.AltCon -> C.CoreM CoreAltCon
 coreLangAltCon con@(C.DataAlt _) = DataAlt <$> pprText con
@@ -65,7 +70,9 @@ coreLangExpr (C.Var i) = do
 coreLangExpr (C.Lit l) = Lit <$> coreLangLiteral l
 coreLangExpr (C.App e a) = App <$> coreLangExpr e <*> coreLangExpr a
 coreLangExpr (C.Lam b e) = Lam <$> coreLangBndr b <*> coreLangExpr e
-coreLangExpr (C.Let b e) = Let <$> coreLangBind b <*> coreLangExpr e
+coreLangExpr (C.Let b@(C.NonRec _ _) e) = Let <$> coreLangBind b <*> coreLangExpr e
+coreLangExpr (C.Let b@(C.Rec [(b', e')]) e) = coreLangExpr (C.Let (C.NonRec b' e') e)
+coreLangExpr (C.Let b@(C.Rec ((b', e'):_)) e) = coreLangExpr (C.Let (C.NonRec b' e') e)
 coreLangExpr (C.Case e _ _ alts) = Case <$> coreLangExpr e <*> mapM coreLangAlt (reverse alts)
 coreLangExpr (C.Cast e c) = Cast <$> coreLangExpr e <*> pprText c
 coreLangExpr (C.Coercion c) = Coercion <$> pprText c

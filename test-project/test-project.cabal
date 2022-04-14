@@ -29,11 +29,15 @@ executable hs-plugin-test
                     , Palin
                     , Records
                     , Factorial
+                    , Text
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:    base ^>=4.16.0.0
                     , hs-comprehension
+                    , text
+                    , ghc-dump-core
+                    , ghc-dump-util
     hs-source-dirs:   app
     default-language: Haskell2010
-    ghc-options: -fplugin HsComprehension
+    ghc-options: -fplugin GhcDump.Plugin

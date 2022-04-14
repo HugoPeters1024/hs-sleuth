@@ -6,6 +6,7 @@ import TreeMap
 import Palin
 import Records
 import Factorial
+import Text
 
 import Data.Char
 
@@ -14,11 +15,8 @@ data Step s c = Done | Yield c s | Skip s
 data Stream c = forall s. Stream (s -> Step s c) s String
 
 {-# Rules
-   "writeUp/readUp erasion" readUp . writeUp = id
-#-}
-
-{-# Rules
-   "writeUp/readUp erasion2" forall xs. readUp (writeUp xs) = xs
+   "writeUp/readUp erasion"                     readUp . writeUp    = id  ;
+   "writeUp/readUp erasion2"         forall xs. readUp (writeUp xs) = xs  ;
 #-}
 
 
@@ -51,7 +49,7 @@ mapS f (Stream next s n) = Stream next' s n
                       Skip s' -> Skip s'
 
 bigOp :: [Int] -> [Int]
-bigOp = map (+1) . map (+1) . map (+1)
+bigOp = myMap (+1) . myMap (+1) . myMap (+1)
 
 
 
