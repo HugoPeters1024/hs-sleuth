@@ -1,2 +1,3 @@
 packages: .
         , ../ghc-dump/ghc-dump-core
+allow-newer: all
