@@ -1,0 +1,43 @@
+body {
+    padding: 3em;
+    font-family: Ubuntu, sans-serif;
+}
+
+a.no-style, a.no-style:hover, a.no-style:visited, a.no-style:focus, a.no-style:active  {
+  text-decoration: none;
+  color: inherit;
+  outline: 0;
+  cursor: pointer;
+}
+
+pre.code { 
+    color: #FFFFFF;
+    background-color: #122a34;
+    padding: 2em;
+    font-size: 12pt; 
+    box-sizing: border-box;
+    margin: 0;
+    overflow: scroll;
+}
+
+.info-panel {
+    padding: 1em;
+    box-sizing: border-box;
+    color: #dddddd;
+    background-color: #212128;
+}
+
+ul.no-dot {
+  list-style-type: none;
+}
+
+.highlight {
+    background-color: yellow;
+    color: black;
+}
+
+.panel-4-1 {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr;
+    width: 100%;
+}

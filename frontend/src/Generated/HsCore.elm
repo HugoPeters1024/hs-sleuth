@@ -91,7 +91,11 @@ uniqueDecoder =
     Json.Decode.Pipeline.custom (Json.Decode.index 1 Json.Decode.int)
 
 
-type ExternalName = ExternalName { externalModuleName : String , externalName : String , externalUnique : Unique } | ForeignCall 
+type ExternalName 
+    = ExternalName { externalModuleName : String
+    , externalName : String
+    , externalUnique : Unique }
+    | ForeignCall 
 
 
 externalNameEncoder : ExternalName -> Json.Encode.Value
