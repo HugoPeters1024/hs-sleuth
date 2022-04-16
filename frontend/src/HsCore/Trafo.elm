@@ -14,6 +14,9 @@ eraseTypesTopBinding b = case b of
 eraseTypesTopBinder : TopBinder -> TopBinder
 eraseTypesTopBinder (TopBinder b s e) = TopBinder b s (eraseTypesExpr e)
 
+eraseTypesBinding : (Binder, Expr) -> (Binder, Expr)
+eraseTypesBinding (b, e) = (b, eraseTypesExpr e)
+
 eraseTypesExpr : Expr -> Expr
 eraseTypesExpr expr = case expr of
     EVar b -> EVar b
@@ -24,7 +27,7 @@ eraseTypesExpr expr = case expr of
         _ -> EApp (eraseTypesExpr e) (eraseTypesExpr a)
     ETyLam _ e -> eraseTypesExpr e
     ELam b e -> ELam b (eraseTypesExpr e)
-    ELet bs e -> ELet bs (eraseTypesExpr e)
+    ELet bs e -> ELet (List.map eraseTypesBinding bs) (eraseTypesExpr e)
     ECase e b alts -> ECase (eraseTypesExpr e) b (List.map eraseTypesAlt alts)
     ETick t e -> ETick t (eraseTypesExpr e)
     EType t -> EType t

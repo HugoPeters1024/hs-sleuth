@@ -14,6 +14,13 @@ isTyBinder b = case b of
     Binder _ -> False
     TyBinder _ -> True
 
+showType : Type -> String
+showType type_ = case type_ of
+    VarTy b -> binderName b
+    AppTy e a -> showType e ++ " " ++ showType a
+    ForAllTy b t -> "forall " ++ binderName b ++ ". " ++ showType t
+    _ -> "[TODO Type]"
+
 isConstr : Binder -> Bool
 isConstr b = 
     if isTyBinder b

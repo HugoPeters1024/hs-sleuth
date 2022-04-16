@@ -7,14 +7,13 @@ import State exposing (State)
 import State as S
 
 import Char
+import Either exposing (Either(..))
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 
-type alias PPState =
-    { output: List (Html Msg)
-    , indent : Int
-    }
+type alias PPState = List (List (Html Msg))
 
 type alias PP = State PPState ()
 
@@ -25,10 +24,13 @@ withState : (s -> State s a) -> State s a
 withState f = State.get |> State.andThen f
 
 defaultState : PPState
-defaultState = { output = [], indent = 0 }
+defaultState = []
 
-runPP : PPState -> PP -> List (Html Msg)
-runPP initial pp = let (_, final) = State.run initial pp in final.output
+prettyPrint : PP -> List (Html Msg)
+prettyPrint = List.concat << List.intersperse [text "\n"] << List.reverse << runPP []
+
+runPP : PPState -> PP -> List (List (Html Msg))
+runPP initial pp = State.finalState initial pp
 
 ppSepped : String -> List PP -> PP
 ppSepped s = ppIntercalate (emitText s)
@@ -39,15 +41,16 @@ ppIntercalate sep pps = case pps of
     (x :: xs) -> ppSeq [x, sep, ppIntercalate sep xs]
     [] -> State.modify identity
 
+
+
 indented : PP -> PP
-indented pp = ppSeq [ State.modify (\s -> { s | indent = s.indent + 4})
-                    , newline
-                    , pp
-                    , State.modify (\s -> {s | indent = s.indent - 4})
-                    ]
+indented pp =
+    let whitespace = String.fromList (List.repeat 4 ' ')
+        block = runPP [] pp
+    in State.modify <| \acc -> List.map (\xs -> (text whitespace)::xs) block ++ acc
 
 newline : PP
-newline = withState <| \s -> emitText ("\n" ++ String.fromList (List.repeat s.indent ' '))
+newline = State.modify <| \acc -> []::acc
 
 ppLines : List PP -> PP
 ppLines = ppIntercalate newline
@@ -58,7 +61,9 @@ ppSeq pps = case pps of
     _ -> State.modify identity
 
 emit : Html Msg -> PP
-emit node = State.modify <| \s -> {s | output = s.output ++ [node]}
+emit node = State.modify <| \output -> case output of
+        x::xs -> (x++[node])::xs
+        []   -> [[node]] 
 
 emitText : String -> PP
 emitText msg = emit (text msg)
@@ -75,6 +80,7 @@ parens pp = ppSeq [emitText "(", pp, emitText ")"]
 parensExpr : H.Expr -> PP
 parensExpr expr = case expr of
     H.EVar b -> ppExpr (H.EVar b)
+    H.EVarGlobal b -> ppExpr (H.EVarGlobal b)
     H.ELit l -> ppExpr (H.ELit l)
     H.EType t -> ppExpr (H.EType t)
     _        -> parens (ppExpr expr)
@@ -87,10 +93,11 @@ ppLit lit  = case lit of
     _            -> emitText (Debug.toString lit)
 
 ppBinder : H.Binder -> PP
-ppBinder b = 
-    if H.isConstr b
-    then emitKeyword (H.binderName b)
-    else emitText (H.binderName b)
+ppBinder b = emit <| a [class "no-style", onClick (MsgSelectTerm (Either.Left b))]
+                   [ if H.isConstr b
+                     then span [class "k"] [text (H.binderName b)]
+                     else text (H.binderName b)
+                   ]
 
 ppTopBinding : H.TopBinding -> PP
 ppTopBinding b = case b of
@@ -118,7 +125,7 @@ ppExpr expr = case expr of
                          , newline
                          , emitKeyword " in ", ppExpr e]
     H.ECase e b alts -> ppCase e b alts
-    H.EType _ -> emitText "[TODO Type]"
+    H.EType t -> emitText (H.showType t)
     _ -> emitText "[Expr TODO]"
 
 ppCase : H.Expr -> H.Binder -> List H.Alt -> PP
@@ -126,11 +133,13 @@ ppCase e b alts = ppSeq [emitKeyword "case ", ppExpr e, emitKeyword " of"]
 
 ppExternalName : H.ExternalName -> PP
 ppExternalName name = case name of
-    H.ExternalName e -> case String.toList (e.externalName) of
-        (c::_) -> if Char.isUpper c
-                  then emitKeyword e.externalName
-                  else emitText e.externalName
-        _ -> emitText e.externalName
+    H.ExternalName e -> 
+        let classes = case String.toList (e.externalName) of
+                (c::_) -> if Char.isUpper c
+                          then [class "k"]
+                          else []
+                _ -> []
+        in emit <| a [class "no-style", onClick (MsgSelectTerm (Right name))] [span classes [text e.externalName]]
     H.ForeignCall -> emitText "[ForeignCall]"
 
 
