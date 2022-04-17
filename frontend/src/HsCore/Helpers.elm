@@ -9,6 +9,29 @@ binderName binder = case binder of
     Binder b -> b.binderName
     TyBinder b -> b.binderName
 
+externalName : ExternalName -> String
+externalName en = case en of
+    ExternalName n -> n.externalName
+    ForeignCall -> "ForeignCall"
+
+binderToInt : Binder -> Int
+binderToInt binder = case binder of
+    Binder b -> uniqueToInt b.binderId
+    TyBinder b -> uniqueToInt b.binderId
+
+uniqueToInt : Unique -> Int
+uniqueToInt (Unique _ i) = i
+
+externalNameToInt : ExternalName -> Int
+externalNameToInt en = case en of
+    ExternalName n -> uniqueToInt n.externalUnique
+    ForeignCall -> -1
+
+isConstructorName : String -> Bool
+isConstructorName name = case String.toList name of
+    x::_ -> Char.isUpper x
+    _    -> False
+
 isTyBinder : Binder -> Bool
 isTyBinder b = case b of
     Binder _ -> False
@@ -20,14 +43,6 @@ showType type_ = case type_ of
     AppTy e a -> showType e ++ " " ++ showType a
     ForAllTy b t -> "forall " ++ binderName b ++ ". " ++ showType t
     _ -> "[TODO Type]"
-
-isConstr : Binder -> Bool
-isConstr b = 
-    if isTyBinder b
-    then False
-    else case String.toList (binderName b) of
-        (c::_) -> Char.isUpper c
-        _      -> False
 
 -- Checks wether a list of alts contains  only the default case
 -- This indicates a `seq` like usage and requires alternative printing

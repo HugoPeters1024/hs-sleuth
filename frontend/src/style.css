@@ -33,7 +33,7 @@ ul.no-dot {
 
 .highlight {
     background-color: yellow;
-    color: black;
+    color: black !important;
 }
 
 .panel-4-1 {

@@ -13,55 +13,66 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
-type alias PPState = List (List (Html Msg))
+import Reader exposing (Reader(..))
 
-type alias PP = State PPState ()
+type alias PPInfo = { selectId : Maybe Int
+                    }
 
-void : State s a -> State s ()
-void s = State.map (\_ -> ()) s
+type alias PP = Reader PPInfo ((List (List (Html Msg))) -> (List (List (Html Msg))))
 
-withState : (s -> State s a) -> State s a
-withState f = State.get |> State.andThen f
+prettyPrint : PPInfo -> PP -> List (Html Msg)
+prettyPrint info pp = Reader.runReader info pp []
+                    |> List.reverse
+                    |> List.intersperse [text "\n"]
+                    |> List.concat
 
-defaultState : PPState
-defaultState = []
+defaultInfo : Maybe Int -> PPInfo
+defaultInfo selectId = 
+    { selectId = selectId
+    }
 
-prettyPrint : PP -> List (Html Msg)
-prettyPrint = List.concat << List.intersperse [text "\n"] << List.reverse << runPP []
+binderIsSelected : H.Binder -> Reader PPInfo Bool
+binderIsSelected b = Reader.askFor .selectId
+            |> Reader.map (Maybe.withDefault False << (Maybe.map (\id -> id == H.binderToInt b)))
 
-runPP : PPState -> PP -> List (List (Html Msg))
-runPP initial pp = State.finalState initial pp
+externalIsSelected : H.ExternalName -> Reader PPInfo Bool
+externalIsSelected en = Reader.askFor .selectId
+            |> Reader.map (Maybe.withDefault False << (Maybe.map (\id -> id == H.externalNameToInt en)))
+        
 
 ppSepped : String -> List PP -> PP
 ppSepped s = ppIntercalate (emitText s)
+
+ppIdentity : PP
+ppIdentity = Reader.pure identity
 
 ppIntercalate : PP -> List PP -> PP
 ppIntercalate sep pps = case pps of
     (x :: []) -> x
     (x :: xs) -> ppSeq [x, sep, ppIntercalate sep xs]
-    [] -> State.modify identity
+    [] -> ppIdentity
 
+runPP : PPInfo -> PP -> List (List (Html Msg))
+runPP info pp = Reader.runReader info pp []
 
 
 indented : PP -> PP
-indented pp =
+indented pp = Reader <| \info -> 
     let whitespace = String.fromList (List.repeat 4 ' ')
-        block = runPP [] pp
-    in State.modify <| \acc -> List.map (\xs -> (text whitespace)::xs) block ++ acc
+        block = List.map (\x -> text whitespace::x) (runPP info pp)
+    in \acc -> block ++ acc
 
 newline : PP
-newline = State.modify <| \acc -> []::acc
+newline = Reader.pure <| \acc -> []::acc
 
 ppLines : List PP -> PP
 ppLines = ppIntercalate newline
 
 ppSeq : List PP -> PP
-ppSeq pps = case pps of
-    (x :: xs) -> x |> State.andThen (\_ -> ppSeq xs)
-    _ -> State.modify identity
+ppSeq pps = Reader.foldM (<<) identity pps
 
 emit : Html Msg -> PP
-emit node = State.modify <| \output -> case output of
+emit node = Reader.pure <| \acc -> case acc of
         x::xs -> (x++[node])::xs
         []   -> [[node]] 
 
@@ -92,12 +103,20 @@ ppLit lit  = case lit of
     H.MachInt i  -> emitSpan "m" i
     _            -> emitText (Debug.toString lit)
 
+ppBinderClass : String -> H.Binder -> PP
+ppBinderClass c b = binderIsSelected b
+    |> (Reader.andThen <| \selected ->
+            emit <| a [ class "no-style"
+                      , onClick (MsgSelectTerm (Either.Left b)) 
+                      ]
+                      [ span [ class c
+                             , class (if selected then "highlight" else "")
+                             ] 
+                             [text (H.binderName b)] 
+                      ])
+
 ppBinder : H.Binder -> PP
-ppBinder b = emit <| a [class "no-style", onClick (MsgSelectTerm (Either.Left b))]
-                   [ if H.isConstr b
-                     then span [class "k"] [text (H.binderName b)]
-                     else text (H.binderName b)
-                   ]
+ppBinder b = ppBinderClass (if H.isConstructorName (H.binderName b) then "k" else "") b
 
 ppTopBinding : H.TopBinding -> PP
 ppTopBinding b = case b of
@@ -106,11 +125,16 @@ ppTopBinding b = case b of
 
 
 ppTopBinder : H.TopBinder -> PP
-ppTopBinder (H.TopBinder b _ e) = ppBinding (b,e)
+ppTopBinder (H.TopBinder b _ e) = ppBinding True (b,e)
 
-ppBinding : (H.Binder, H.Expr) -> PP
-ppBinding (b, e) = 
-    let (fe, bs) = H.leadingLambdas e in ppSeq [ppSepped " " (List.map ppBinder (b::bs)), emitText " = ", ppExpr fe]
+ppBinding : Bool -> (H.Binder, H.Expr) -> PP
+ppBinding toplevel (b, e) = 
+    let (fe, bs) = H.leadingLambdas e
+        in ppSeq [ ppBinderClass (if toplevel then "nf" else "") b
+                 , emitText " "
+                 , ppSepped " " (List.map ppBinder bs)
+                 , emitText (if List.isEmpty bs then "" else " ")
+                 , emitText "= ", ppExpr fe]
 
 ppExpr : H.Expr -> PP
 ppExpr expr = case expr of
@@ -121,7 +145,7 @@ ppExpr expr = case expr of
     H.EApp f a -> ppSeq [ppExpr f, emitText " ", parensExpr a]
     H.ELam b e -> ppSeq [emitText "\\", ppBinder b, emitText " -> ", indented (ppExpr e)]
     H.ELet bs e -> ppSeq [ emitKeyword "let "
-                         , indented <| ppLines (List.map ppBinding bs)
+                         , indented <| ppLines (List.map (ppBinding False) bs)
                          , newline
                          , emitKeyword " in ", ppExpr e]
     H.ECase e b alts -> ppCase e b alts
@@ -132,15 +156,12 @@ ppCase : H.Expr -> H.Binder -> List H.Alt -> PP
 ppCase e b alts = ppSeq [emitKeyword "case ", ppExpr e, emitKeyword " of"]
 
 ppExternalName : H.ExternalName -> PP
-ppExternalName name = case name of
-    H.ExternalName e -> 
-        let classes = case String.toList (e.externalName) of
-                (c::_) -> if Char.isUpper c
-                          then [class "k"]
-                          else []
-                _ -> []
-        in emit <| a [class "no-style", onClick (MsgSelectTerm (Right name))] [span classes [text e.externalName]]
-    H.ForeignCall -> emitText "[ForeignCall]"
+ppExternalName e = externalIsSelected e
+    |> (Reader.andThen <| \selected ->
+        let classes = [ class (if H.isConstructorName (H.externalName e) then "k" else "")
+                      , class (if selected then "highlight" else "") 
+                      ] 
+        in emit <| a [class "no-style", onClick (MsgSelectTerm (Right e))] [span classes [text (H.externalName e)]])
 
 
 

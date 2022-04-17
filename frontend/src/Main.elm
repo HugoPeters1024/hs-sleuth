@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 
-import Either exposing (Either)
+import Either exposing (Either(..))
 import Types exposing (..)
 import Http
 import Generated.HsCore as H
@@ -39,7 +39,7 @@ view : Model -> Html Msg
 view model =
   div [] [ node "link" [rel "stylesheet", href "style.css", type_ "text/css"] []
          , node "link" [rel "stylesheet", href "pygments.css", type_ "text/css"] []
-         , panel [ liftLoading viewCode model.moduleLoading 
+         , panel [ liftLoading (viewCode model) model.moduleLoading 
                  , viewInfo model
                  ]
          ]
@@ -50,10 +50,25 @@ panel = div [ style "display" "grid"
             , style "grid-template-columns" "4fr 1fr"
             ]
 
+selectedTermId : Model -> Maybe Int
+selectedTermId model =
+    let go t = case t of
+            Left binder -> H.binderToInt binder
+            Right en -> H.externalNameToInt en
+    in Maybe.map go model.selectedTerm
 
-viewCode : H.Module -> Html Msg
-viewCode mod = pre [class "code"]
-                   (PP.prettyPrint (PP.ppSepped "\n\n" (List.map PP.ppTopBinding (Trafo.eraseTypesModule mod).moduleTopBindings)))
+
+
+
+
+viewCode : Model -> H.Module -> Html Msg
+viewCode model mod = pre [class "code"]
+                     ( Trafo.eraseTypesModule mod
+                     |> .moduleTopBindings
+                     |> List.map PP.ppTopBinding
+                     |> PP.ppSepped "\n\n"
+                     |> PP.prettyPrint (PP.defaultInfo (selectedTermId model))
+                     )
 
 fromMaybe : a -> Maybe a -> a
 fromMaybe def m = case m of
