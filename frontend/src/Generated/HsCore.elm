@@ -94,7 +94,8 @@ uniqueDecoder =
 type ExternalName 
     = ExternalName { externalModuleName : String
     , externalName : String
-    , externalUnique : Unique }
+    , externalUnique : Unique
+    , externalType : Type }
     | ForeignCall 
 
 
@@ -105,7 +106,8 @@ externalNameEncoder a =
             Json.Encode.object [ ("tag" , Json.Encode.string "ExternalName")
             , ("externalModuleName" , Json.Encode.string b.externalModuleName)
             , ("externalName" , Json.Encode.string b.externalName)
-            , ("externalUnique" , uniqueEncoder b.externalUnique) ]
+            , ("externalUnique" , uniqueEncoder b.externalUnique)
+            , ("externalType" , typeEncoder b.externalType) ]
 
         ForeignCall ->
             Json.Encode.object [("tag" , Json.Encode.string "ForeignCall")]
@@ -116,12 +118,14 @@ externalNameDecoder =
     Json.Decode.field "tag" Json.Decode.string |>
     Json.Decode.andThen (\a -> case a of
         "ExternalName" ->
-            Json.Decode.map ExternalName (Json.Decode.succeed (\b c d -> { externalModuleName = b
+            Json.Decode.map ExternalName (Json.Decode.succeed (\b c d e -> { externalModuleName = b
             , externalName = c
-            , externalUnique = d }) |>
+            , externalUnique = d
+            , externalType = e }) |>
             Json.Decode.Pipeline.required "externalModuleName" Json.Decode.string |>
             Json.Decode.Pipeline.required "externalName" Json.Decode.string |>
-            Json.Decode.Pipeline.required "externalUnique" uniqueDecoder)
+            Json.Decode.Pipeline.required "externalUnique" uniqueDecoder |>
+            Json.Decode.Pipeline.required "externalType" typeDecoder)
 
         "ForeignCall" ->
             Json.Decode.succeed ForeignCall
@@ -576,7 +580,7 @@ tyConDecoder =
 
 
 type Type 
-    = VarTy Binder
+    = VarTy Unique
     | FunTy Type Type
     | TyConApp TyCon (List Type)
     | AppTy Type Type
@@ -590,7 +594,7 @@ typeEncoder a =
     case a of
         VarTy b ->
             Json.Encode.object [ ("tag" , Json.Encode.string "VarTy")
-            , ("contents" , binderEncoder b) ]
+            , ("contents" , uniqueEncoder b) ]
 
         FunTy b c ->
             Json.Encode.object [ ("tag" , Json.Encode.string "FunTy")
@@ -625,7 +629,7 @@ typeDecoder =
     Json.Decode.andThen (\a -> case a of
         "VarTy" ->
             Json.Decode.succeed VarTy |>
-            Json.Decode.Pipeline.required "contents" binderDecoder
+            Json.Decode.Pipeline.required "contents" uniqueDecoder
 
         "FunTy" ->
             Json.Decode.field "contents" (Json.Decode.succeed FunTy |>
@@ -660,6 +664,7 @@ typeDecoder =
 type alias Module  =
     { moduleName : String
     , modulePhase : String
+    , modulePhaseId : Int
     , moduleTopBindings : List TopBinding }
 
 
@@ -667,6 +672,7 @@ moduleEncoder : Module -> Json.Encode.Value
 moduleEncoder a =
     Json.Encode.object [ ("moduleName" , Json.Encode.string a.moduleName)
     , ("modulePhase" , Json.Encode.string a.modulePhase)
+    , ("modulePhaseId" , Json.Encode.int a.modulePhaseId)
     , ("moduleTopBindings" , Json.Encode.list topBindingEncoder a.moduleTopBindings) ]
 
 
@@ -675,11 +681,12 @@ moduleDecoder =
     Json.Decode.succeed Module |>
     Json.Decode.Pipeline.required "moduleName" Json.Decode.string |>
     Json.Decode.Pipeline.required "modulePhase" Json.Decode.string |>
+    Json.Decode.Pipeline.required "modulePhaseId" Json.Decode.int |>
     Json.Decode.Pipeline.required "moduleTopBindings" (Json.Decode.list topBindingDecoder)
 
 
 type Expr 
-    = EVar Binder
+    = EVar Unique
     | EVarGlobal ExternalName
     | ELit Lit
     | EApp Expr Expr
@@ -697,7 +704,7 @@ exprEncoder a =
     case a of
         EVar b ->
             Json.Encode.object [ ("tag" , Json.Encode.string "EVar")
-            , ("contents" , binderEncoder b) ]
+            , ("contents" , uniqueEncoder b) ]
 
         EVarGlobal b ->
             Json.Encode.object [ ("tag" , Json.Encode.string "EVarGlobal")
@@ -755,7 +762,7 @@ exprDecoder =
     Json.Decode.andThen (\a -> case a of
         "EVar" ->
             Json.Decode.succeed EVar |>
-            Json.Decode.Pipeline.required "contents" binderDecoder
+            Json.Decode.Pipeline.required "contents" uniqueDecoder
 
         "EVarGlobal" ->
             Json.Decode.succeed EVarGlobal |>

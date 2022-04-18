@@ -6,6 +6,7 @@ import HsCore.Helpers as H
 import State exposing (State)
 import State as S
 
+import Dict exposing (Dict)
 import Char
 import Either exposing (Either(..))
 
@@ -15,30 +16,55 @@ import Html.Events exposing (..)
 
 import Reader exposing (Reader(..))
 
-type alias PPInfo = { selectId : Maybe Int
-                    }
+type alias PPEnv = { selectId : Maybe Int
+                   , lookup : Dict Int H.Binder
+                   }
 
-type alias PP = Reader PPInfo ((List (List (Html Msg))) -> (List (List (Html Msg))))
+type alias PPM a = Reader PPEnv a
 
-prettyPrint : PPInfo -> PP -> List (Html Msg)
+type alias PP = PPM ((List (List (Html Msg))) -> (List (List (Html Msg))))
+
+prettyPrint : PPEnv -> PP -> List (Html Msg)
 prettyPrint info pp = Reader.runReader info pp []
                     |> List.reverse
                     |> List.intersperse [text "\n"]
                     |> List.concat
 
-defaultInfo : Maybe Int -> PPInfo
-defaultInfo selectId = 
+defaultInfo : H.Module -> Maybe Int -> PPEnv
+defaultInfo mod selectId = 
     { selectId = selectId
+    , lookup = Dict.fromList <| List.map (\b -> (H.binderToInt b, b)) (H.getTopLevelBinders mod)
     }
 
-binderIsSelected : H.Binder -> Reader PPInfo Bool
+
+
+withUpdatedInfo : (PPEnv -> PPEnv) -> PPM a -> PPM a
+withUpdatedInfo f pp = Reader <| \info -> Reader.runReader (f info) pp
+
+withBinding : H.Binder -> PPM a -> PPM a
+withBinding binder = withUpdatedInfo <| \env -> {env | lookup = Dict.insert (H.binderToInt binder) binder env.lookup }
+
+withBindingN : List H.Binder -> PPM a -> PPM a
+withBindingN bs pp = case bs of
+    [] -> pp
+    (x::xs) -> withBinding x (withBindingN xs pp)
+
+lookupBinder : H.Unique -> PPM (Maybe H.Binder)
+lookupBinder = lookupBinderInt << H.uniqueToInt
+
+lookupBinderInt : Int -> PPM (Maybe H.Binder)
+lookupBinderInt id = Reader.askFor <| \env -> Dict.get id env.lookup
+
+binderIsSelected : H.Binder -> Reader PPEnv Bool
 binderIsSelected b = Reader.askFor .selectId
             |> Reader.map (Maybe.withDefault False << (Maybe.map (\id -> id == H.binderToInt b)))
 
-externalIsSelected : H.ExternalName -> Reader PPInfo Bool
+externalIsSelected : H.ExternalName -> Reader PPEnv Bool
 externalIsSelected en = Reader.askFor .selectId
             |> Reader.map (Maybe.withDefault False << (Maybe.map (\id -> id == H.externalNameToInt en)))
         
+ppWhen : Bool -> PP -> PP
+ppWhen b pp = if b then pp else Reader.pure identity
 
 ppSepped : String -> List PP -> PP
 ppSepped s = ppIntercalate (emitText s)
@@ -52,7 +78,7 @@ ppIntercalate sep pps = case pps of
     (x :: xs) -> ppSeq [x, sep, ppIntercalate sep xs]
     [] -> ppIdentity
 
-runPP : PPInfo -> PP -> List (List (Html Msg))
+runPP : PPEnv -> PP -> List (List (Html Msg))
 runPP info pp = Reader.runReader info pp []
 
 
@@ -101,6 +127,7 @@ ppLit lit  = case lit of
     H.MachChar c -> emitSpan "s" (String.fromList ['\'', c, '\''])
     H.MachStr s  -> emitSpan "s" ("\"" ++ s ++ "\"")
     H.MachInt i  -> emitSpan "m" i
+    H.LitInteger i  -> emitSpan "m" i
     _            -> emitText (Debug.toString lit)
 
 ppBinderClass : String -> H.Binder -> PP
@@ -118,6 +145,11 @@ ppBinderClass c b = binderIsSelected b
 ppBinder : H.Binder -> PP
 ppBinder b = ppBinderClass (if H.isConstructorName (H.binderName b) then "k" else "") b
 
+ppBinderM : Maybe H.Binder -> PP
+ppBinderM mb = case mb of
+    Just b -> ppBinder b
+    Nothing -> emitText "[!UKNOWN VARIABLE!]"
+
 ppTopBinding : H.TopBinding -> PP
 ppTopBinding b = case b of
     H.NonRecTopBinding bndr -> ppTopBinder bndr
@@ -130,33 +162,67 @@ ppTopBinder (H.TopBinder b _ e) = ppBinding True (b,e)
 ppBinding : Bool -> (H.Binder, H.Expr) -> PP
 ppBinding toplevel (b, e) = 
     let (fe, bs) = H.leadingLambdas e
-        in ppSeq [ ppBinderClass (if toplevel then "nf" else "") b
+        in withBindingN bs <|
+            ppSeq [ ppBinderClass (if toplevel then "nf" else "") b
                  , emitText " "
                  , ppSepped " " (List.map ppBinder bs)
                  , emitText (if List.isEmpty bs then "" else " ")
                  , emitText "= ", ppExpr fe]
 
+ppUnique : H.Unique -> PP
+ppUnique (H.Unique _ i) = emitText (String.fromInt i)
+
 ppExpr : H.Expr -> PP
 ppExpr expr = case expr of
-    H.EVar b -> ppBinder b
+    H.EVar b -> lookupBinder b |> Reader.andThen ppBinderM
     H.EVarGlobal name -> ppExternalName name
     H.ELit lit -> ppLit lit
     H.ETyLam b e -> ppExpr (H.ELam b e)
     H.EApp f a -> ppSeq [ppExpr f, emitText " ", parensExpr a]
-    H.ELam b e -> ppSeq [emitText "\\", ppBinder b, emitText " -> ", indented (ppExpr e)]
-    H.ELet bs e -> ppSeq [ emitKeyword "let "
-                         , indented <| ppLines (List.map (ppBinding False) bs)
-                         , newline
-                         , emitKeyword " in ", ppExpr e]
+    H.ELam b e -> withBinding b <| ppSeq [emitText "\\", ppBinder b, emitText " -> ", indented (ppExpr e)]
+    H.ELet bs e -> withBindingN (List.map Tuple.first bs) <| 
+        ppSeq [ emitKeyword "let "
+              , indented <| ppLines (List.map (ppBinding False) bs)
+              , newline
+              , emitKeyword " in ", ppExpr e
+              ]
     H.ECase e b alts -> ppCase e b alts
-    H.EType t -> emitText (H.showType t)
+    H.EType t -> emitText "[Type]"
     _ -> emitText "[Expr TODO]"
 
 ppCase : H.Expr -> H.Binder -> List H.Alt -> PP
-ppCase e b alts = ppSeq [emitKeyword "case ", ppExpr e, emitKeyword " of"]
+ppCase e b alts = ppSeq [ emitKeyword "case "
+                        , withBinding b (ppExpr e)
+                        , emitKeyword " of"
+                        , indented <| 
+                            ppSeq (List.map (\alt -> ppSeq [withBinding b (ppAlt alt), newline]) alts)
+                        , newline
+                        ]
 
+ppAlt : H.Alt -> PP
+ppAlt alt =
+   ppSeq [ ppAltCon alt.altCon
+         , ppWhen (not (List.isEmpty alt.altBinders)) (emitText " ")
+         , ppSepped " " (List.map ppBinder alt.altBinders)
+         , emitText " -> "
+         , withBindingN alt.altBinders (ppExpr alt.altRHS)]
+
+ppAltCon : H.AltCon -> PP
+ppAltCon con = case con of
+    H.AltDataCon s -> if H.isConstructorName s then emitKeyword s else emitText s
+    H.AltLit l -> ppLit l
+    H.AltDefault -> emitText "_"
+
+-- Occurences of toplevel functions from the same model are consided external names,
+-- we try to look them up anyway
 ppExternalName : H.ExternalName -> PP
-ppExternalName e = externalIsSelected e
+ppExternalName name = lookupBinderInt (H.externalNameToInt name)
+    |> Reader.andThen (\mb -> case mb of
+        Just b -> ppBinder b
+        Nothing -> ppActualExternalName name)
+
+ppActualExternalName : H.ExternalName -> PP
+ppActualExternalName e = externalIsSelected e
     |> (Reader.andThen <| \selected ->
         let classes = [ class (if H.isConstructorName (H.externalName e) then "k" else "")
                       , class (if selected then "highlight" else "") 

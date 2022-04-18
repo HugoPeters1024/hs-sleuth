@@ -16,9 +16,6 @@ import qualified Data.ByteString as BS
 import qualified Generics.SOP as SOP
 import Language.Haskell.To.Elm
 
-import qualified GhcDump.Ast as GD
-import qualified GhcDump.Convert as GD
-
 import Data.Text (Text)
 import HsComprehension.ElmDeriving
 
@@ -35,6 +32,7 @@ type ModuleName = Text
 data ExternalName = ExternalName { externalModuleName :: !ModuleName
                                  , externalName :: !Text
                                  , externalUnique :: Unique
+                                 , externalType :: Type
                                  } 
                                  | ForeignCall
     deriving (Generic, SOP.Generic, SOP.HasDatatypeInfo)
@@ -156,7 +154,7 @@ data TyCon = TyCon !Text !Unique
              , HasElmEncoder Aeson.Value) via ElmType "Generated.HsCore.TyCon" TyCon
 
 data Type
-    = VarTy Binder
+    = VarTy BinderId
     | FunTy Type Type
     | TyConApp TyCon [Type]
     | AppTy Type Type
@@ -173,6 +171,7 @@ data Type
 data Module
     = Module { moduleName        :: ModuleName
              , modulePhase       :: Text
+             , modulePhaseId     :: Int
              , moduleTopBindings :: [TopBinding]
              }
     deriving (Generic, SOP.Generic, SOP.HasDatatypeInfo)
@@ -183,7 +182,7 @@ data Module
              , HasElmEncoder Aeson.Value) via ElmType "Generated.HsCore.Module" Module
 
 data Expr
-    = EVar Binder
+    = EVar BinderId
     | EVarGlobal ExternalName
     | ELit Lit
     | EApp Expr Expr

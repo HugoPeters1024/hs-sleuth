@@ -22,28 +22,29 @@ cvtUnique (O.Unique c i) = Unique c i
 cvtModuleName :: O.ModuleName -> ModuleName
 cvtModuleName (O.ModuleName x) = x
 
-cvtExternalName :: O.ExternalName -> ExternalName
+cvtExternalName :: O.SExternalName -> ExternalName
 cvtExternalName o = ExternalName { externalModuleName = cvtModuleName o.externalModuleName
                                  , externalName = o.externalName
                                  , externalUnique = cvtUnique o.externalUnique
+                                 , externalType = cvtType o.externalType
                                  }
 
 cvtBinderId :: O.BinderId -> BinderId
 cvtBinderId (O.BinderId u) = cvtUnique u
 
-cvtBinder :: O.Binder -> Binder
-cvtBinder (O.Bndr o@(O.Binder {})) = Binder { binderName = o.binderName
-                                            , binderId = cvtBinderId o.binderId
-                                            , binderIdInfo = cvtIdInfo o.binderIdInfo
-                                            , binderIdDetails = cvtIdDetails o.binderIdDetails
-                                            , binderType = cvtType o.binderType
-                                            }
-cvtBinder (O.Bndr o@(O.TyBinder {})) = TyBinder { binderName = o.binderName
-                                                , binderId = cvtBinderId o.binderId
-                                                , binderKind = cvtType o.binderKind
-                                                }
+cvtBinder :: O.SBinder -> Binder
+cvtBinder (O.SBndr o@(O.Binder {})) = Binder { binderName = o.binderName
+                                             , binderId = cvtBinderId o.binderId
+                                             , binderIdInfo = cvtIdInfo o.binderIdInfo
+                                             , binderIdDetails = cvtIdDetails o.binderIdDetails
+                                             , binderType = cvtType o.binderType
+                                             }
+cvtBinder (O.SBndr o@(O.TyBinder {})) = TyBinder { binderName = o.binderName
+                                                 , binderId = cvtBinderId o.binderId
+                                                 , binderKind = cvtType o.binderKind
+                                                 }
 
-cvtIdInfo :: O.IdInfo O.Binder O.Binder -> IdInfo
+cvtIdInfo :: O.IdInfo O.SBinder O.BinderId -> IdInfo
 cvtIdInfo o = IdInfo { idiArity = o.idiArity
                      , idiIsOneShot = o.idiIsOneShot
                      , idiUnfolding = cvtUnfolding o.idiUnfolding
@@ -54,7 +55,7 @@ cvtIdInfo o = IdInfo { idiArity = o.idiArity
                      , idiCallArity = o.idiCallArity
                      }
 
-cvtUnfolding :: O.Unfolding O.Binder O.Binder -> Unfolding
+cvtUnfolding :: O.Unfolding O.SBinder O.BinderId -> Unfolding
 cvtUnfolding O.NoUnfolding = NoUnfolding
 cvtUnfolding O.BootUnfolding = BootUnfolding
 cvtUnfolding (O.OtherCon cons) = OtherCon (map cvtAltCon cons)
@@ -103,8 +104,8 @@ cvtLit O.LitRubbish = LitRubbish
 cvtTyCon :: O.TyCon -> TyCon
 cvtTyCon (O.TyCon t u) = TyCon t (cvtUnique u)
 
-cvtType :: O.Type -> Type
-cvtType (O.VarTy b) = VarTy (cvtBinder b)
+cvtType :: O.SType -> Type
+cvtType (O.VarTy b) = VarTy (cvtBinderId b)
 cvtType (O.FunTy t1 t2) = FunTy (cvtType t1) (cvtType t2)
 cvtType (O.TyConApp con ts) = TyConApp (cvtTyCon con) (map cvtType ts)
 cvtType (O.AppTy t1 t2) = AppTy (cvtType t1) (cvtType t2)
@@ -112,14 +113,15 @@ cvtType (O.ForAllTy b t) = ForAllTy (cvtBinder b) (cvtType t)
 cvtType O.LitTy = LitTy
 cvtType O.CoercionTy = CoercionTy
 
-cvtModule :: O.Module -> Module
-cvtModule o = Module { moduleName = cvtModuleName o.moduleName
-                     , modulePhase = o.modulePhase
-                     , moduleTopBindings = map cvtTopBinding o.moduleTopBindings
-                     }
+cvtModule :: Int -> O.SModule -> Module
+cvtModule id o = Module { moduleName = cvtModuleName o.moduleName
+                        , modulePhase = o.modulePhase
+                        , modulePhaseId = id
+                        , moduleTopBindings = map cvtTopBinding o.moduleTopBindings
+                        }
 
-cvtExpr :: O.Expr -> Expr
-cvtExpr (O.EVar b) = EVar (cvtBinder b)
+cvtExpr :: O.SExpr -> Expr
+cvtExpr (O.EVar b) = EVar (cvtBinderId b)
 cvtExpr (O.EVarGlobal en) = EVarGlobal (cvtExternalName en)
 cvtExpr (O.ELit l) = ELit (cvtLit l)
 cvtExpr (O.EApp e1 e2) = EApp (cvtExpr e1) (cvtExpr e2)
@@ -132,7 +134,7 @@ cvtExpr (O.ETick t e) = ETick (cvtTick t) (cvtExpr e)
 cvtExpr (O.EType t) = EType (cvtType t)
 cvtExpr (O.ECoercion) = ECoercion
 
-cvtAlt :: O.Alt -> Alt
+cvtAlt :: O.SAlt -> Alt
 cvtAlt o = Alt { altCon = cvtAltCon o.altCon
                , altBinders = map cvtBinder o.altBinders
                , altRHS = cvtExpr o.altRHS
@@ -160,10 +162,10 @@ cvtTick (O.SourceNote x) = SourceNote (cvtSrcSpan x)
 cvtCoreStats :: O.CoreStats -> CoreStats
 cvtCoreStats O.CoreStats {..} = CoreStats {..}
 
-cvtTopBinder :: O.Binder -> O.CoreStats -> O.Expr -> TopBinder
+cvtTopBinder :: O.SBinder -> O.CoreStats -> O.SExpr -> TopBinder
 cvtTopBinder b s e = TopBinder (cvtBinder b) (cvtCoreStats s) (cvtExpr e)
 
-cvtTopBinding :: O.TopBinding -> TopBinding
+cvtTopBinding :: O.STopBinding -> TopBinding
 cvtTopBinding (O.NonRecTopBinding b s e) = NonRecTopBinding (cvtTopBinder b s e)
 cvtTopBinding (O.RecTopBinding xs) = RecTopBinding (map (uncurry3 cvtTopBinder) xs)
 

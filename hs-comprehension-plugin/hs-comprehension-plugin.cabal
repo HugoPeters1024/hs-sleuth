@@ -19,7 +19,7 @@ maintainer:         hpeters1024@gmail.com
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules:  HsComprehension
+    exposed-modules:  HsComprehension.Plugin
                     , HsComprehension.Ast
                     , HsComprehension.Cvt
 
@@ -40,5 +40,25 @@ library
                     , haskell-to-elm
                     , elm-syntax
                     , bound
+                    , filepath
+                    , directory
+                    , serialise
     hs-source-dirs:   src
+    default-language: Haskell2010
+
+executable hs-comprehension-server
+    main-is:          Main.hs
+
+    build-depends:    base ^>=4.16.0.0
+                    , hs-comprehension-plugin
+                    , wai
+                    , warp
+                    , http-types
+                    , text
+                    , bytestring
+                    , ghc-dump-util
+                    , serialise
+                    , aeson-pretty
+
+    hs-source-dirs:   src/Server
     default-language: Haskell2010

@@ -23,25 +23,30 @@ subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
 
 initModel : Model
-initModel = { moduleLoading = Loading
+initModel = { moduleLoading = Loading Nothing
             , selectedTerm = Nothing
             }
 
 init : () -> (Model, Cmd Msg)
-init _ = (initModel, fetchTest)
+init _ = (initModel, fetchPass "Main" 0)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
     MsgGotModule res -> ({ model | moduleLoading = loadFromResult res}, Cmd.none)
     MsgSelectTerm term -> ({model | selectedTerm = Just term}, Cmd.none)
+    MsgLoadModule mod id -> ({model | moduleLoading = setLoading model.moduleLoading}, fetchPass mod id)
 
 view : Model -> Html Msg
 view model =
   div [] [ node "link" [rel "stylesheet", href "style.css", type_ "text/css"] []
          , node "link" [rel "stylesheet", href "pygments.css", type_ "text/css"] []
-         , panel [ liftLoading (viewCode model) model.moduleLoading 
-                 , viewInfo model
-                 ]
+         , liftLoading model.moduleLoading <| \mod -> 
+             div []
+             [ viewHeader model mod
+             , panel [ viewCode model mod
+                     , viewInfo model
+                     ]
+             ]
          ]
 
 panel : List (Html Msg) -> Html Msg
@@ -58,6 +63,13 @@ selectedTermId model =
     in Maybe.map go model.selectedTerm
 
 
+viewHeader : Model -> H.Module -> Html Msg
+viewHeader _ mod = 
+    div []
+        [ h1 [] [ text (String.fromInt mod.modulePhaseId ++ ". " ++ mod.moduleName ++ " -- " ++ mod.modulePhase) ]
+        , button [onClick (MsgLoadModule mod.moduleName (mod.modulePhaseId - 1))] [text "Previous"]
+        , button [onClick (MsgLoadModule mod.moduleName (mod.modulePhaseId + 1))] [text "Next"]
+        ]
 
 
 
@@ -67,7 +79,7 @@ viewCode model mod = pre [class "code"]
                      |> .moduleTopBindings
                      |> List.map PP.ppTopBinding
                      |> PP.ppSepped "\n\n"
-                     |> PP.prettyPrint (PP.defaultInfo (selectedTermId model))
+                     |> PP.prettyPrint (PP.defaultInfo mod (selectedTermId model))
                      )
 
 fromMaybe : a -> Maybe a -> a
@@ -89,7 +101,7 @@ viewTermInfo binder = div []
                           ]
 
 
-fetchTest : Cmd Msg
-fetchTest = Http.get { url = "http://localhost:8080/output.json"
-                     , expect = Http.expectJson MsgGotModule H.moduleDecoder
-                     }
+fetchPass : String -> Int -> Cmd Msg
+fetchPass mod id = Http.get { url = "http://localhost:8080/" ++ mod ++ "/" ++ String.fromInt id
+                            , expect = Http.expectJson MsgGotModule H.moduleDecoder
+                            }

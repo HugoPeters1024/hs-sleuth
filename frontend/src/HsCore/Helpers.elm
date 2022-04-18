@@ -37,13 +37,6 @@ isTyBinder b = case b of
     Binder _ -> False
     TyBinder _ -> True
 
-showType : Type -> String
-showType type_ = case type_ of
-    VarTy b -> binderName b
-    AppTy e a -> showType e ++ " " ++ showType a
-    ForAllTy b t -> "forall " ++ binderName b ++ ". " ++ showType t
-    _ -> "[TODO Type]"
-
 -- Checks wether a list of alts contains  only the default case
 -- This indicates a `seq` like usage and requires alternative printing
 isOnlyDefaultAlt : List Alt -> Bool
@@ -59,3 +52,15 @@ leadingLambdas expr = case expr of
     ELam b e -> let (fe, bs) = leadingLambdas e in (fe, b::bs)
     ETyLam b e -> let (fe, bs) = leadingLambdas e in (fe, b::bs)
     _ -> (expr, [])
+
+getTopLevelBinders : Module -> List Binder
+getTopLevelBinders mod = List.concatMap getTopLevelBinder mod.moduleTopBindings
+
+getTopLevelBinder : TopBinding -> List Binder
+getTopLevelBinder tp =
+    let go : TopBinder -> Binder
+        go (TopBinder b _ _) = b
+    in case tp of
+        NonRecTopBinding b -> [go b]
+        RecTopBinding bs -> List.map go bs
+
