@@ -33,7 +33,7 @@ prettyPrint info pp = Reader.runReader info pp []
 defaultInfo : H.Module -> Maybe Int -> PPEnv
 defaultInfo mod selectId = 
     { selectId = selectId
-    , lookup = Dict.fromList <| List.map (\b -> (H.binderToInt b, b)) (H.getTopLevelBinders mod)
+    , lookup = Dict.fromList <| List.map (\b -> (H.binderToInt b, b)) (H.getModuleBinders mod)
     }
 
 
@@ -49,8 +49,8 @@ withBindingN bs pp = case bs of
     [] -> pp
     (x::xs) -> withBinding x (withBindingN xs pp)
 
-lookupBinder : H.Unique -> PPM (Maybe H.Binder)
-lookupBinder = lookupBinderInt << H.uniqueToInt
+lookupBinder : H.BinderId -> PPM (Maybe H.Binder)
+lookupBinder = lookupBinderInt << H.binderIdToInt
 
 lookupBinderInt : Int -> PPM (Maybe H.Binder)
 lookupBinderInt id = Reader.askFor <| \env -> Dict.get id env.lookup
@@ -150,12 +150,9 @@ ppBinderM mb = case mb of
 
 ppTopBinding : H.TopBinding -> PP
 ppTopBinding b = case b of
-    H.NonRecTopBinding bndr -> ppTopBinder bndr
+    H.NonRecTopBinding bndr _ e -> ppBinding True (bndr, e)
     H.RecTopBinding xs -> Debug.todo "Recursive bindings not implemented"
 
-
-ppTopBinder : H.TopBinder -> PP
-ppTopBinder (H.TopBinder b _ e) = ppBinding True (b,e)
 
 ppBinding : Bool -> (H.Binder, H.Expr) -> PP
 ppBinding toplevel (b, e) = 
@@ -185,7 +182,7 @@ ppExpr expr = case expr of
               , emitKeyword " in ", ppExpr e
               ]
     H.ECase e b alts -> ppCase e b alts
-    H.EType t -> Reader.map (\env -> typeToString env.lookup t) Reader.ask |> Reader.andThen emitText 
+    H.EType t -> Reader.map (\env -> typeToString env.lookup t) Reader.ask |> Reader.andThen (\ty -> emitText ("@("++ty ++ ")"))
     _ -> emitText "[Expr TODO]"
 
 ppCase : H.Expr -> H.Binder -> List H.Alt -> PP
@@ -234,7 +231,7 @@ ppActualExternalName e =
 typeToString : Dict Int H.Binder -> H.Type -> String
 typeToString = 
     let go tm type_ = case type_ of
-            H.VarTy u -> case Dict.get (H.uniqueToInt u) tm of
+            H.VarTy u -> case Dict.get (H.binderIdToInt u) tm of
                 Just x -> H.binderName x
                 Nothing -> "[UKNOWN TYPEVAR]"
             H.FunTy x y -> go tm x ++ " -> " ++ go tm y

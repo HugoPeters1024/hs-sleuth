@@ -10,7 +10,6 @@ import Types exposing (..)
 import Http
 import Generated.Types as H
 import Generated.Decoders as HE
-import HsCore.Trafo as Trafo
 import HsCore.Helpers as H
 import PrettyPrint as PP
 
@@ -63,9 +62,9 @@ selectedTermId model = Maybe.map selectedTermToInt model.selectedTerm
 viewHeader : Model -> H.Module -> Html Msg
 viewHeader _ mod = 
     div []
-        [ h1 [] [ text (String.fromInt mod.modulePhaseId ++ ". " ++ mod.moduleName ++ " -- " ++ mod.modulePhase) ]
-        , button [onClick (MsgLoadModule mod.moduleName (mod.modulePhaseId - 1))] [text "Previous"]
-        , button [onClick (MsgLoadModule mod.moduleName (mod.modulePhaseId + 1))] [text "Next"]
+        [ h1 [] [ text (mod.moduleName.getModuleName ++ " -- " ++ mod.modulePhase) ]
+        , button [onClick (MsgLoadModule mod.moduleName.getModuleName 0)] [text "Previous"]
+        , button [onClick (MsgLoadModule mod.moduleName.getModuleName 0)] [text "Next"]
         ]
 
 

@@ -3,12 +3,13 @@
 module Main where
 
 import HsComprehension.Plugin (coreDumpFile)
-import HsComprehension.Cvt (cvtModule)
+import HsComprehension.Ast
 
-import qualified Codec.Serialise as Ser
+
 
 import Data.Maybe
 
+import Data.Aeson as JSON
 import Data.Aeson.Encode.Pretty (encodePretty)
 
 import Network.Wai
@@ -28,9 +29,8 @@ fetchCore :: Text -> Text -> IO (Maybe ByteString)
 fetchCore modString idString = do
     let id :: Int = read (T.unpack idString)
     let fname = coreDumpFile (T.unpack modString) id
-    content <- BSL.readFile fname
-    let mod = cvtModule id $ Ser.deserialise content
-    pure (Just (encodePretty mod))
+    mod <- readSModule fname
+    pure (Just (JSON.encode mod))
 
 
 app :: Application

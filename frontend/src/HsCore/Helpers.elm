@@ -21,8 +21,11 @@ externalName en = case en of
 
 binderToInt : Binder -> Int
 binderToInt binder = case binder of
-    Binder b -> uniqueToInt b.binderId
-    TyBinder b -> uniqueToInt b.binderId
+    Binder b -> binderIdToInt b.binderId
+    TyBinder b -> binderIdToInt b.binderId
+
+binderIdToInt : BinderId -> Int
+binderIdToInt (BinderId u) = uniqueToInt u
 
 uniqueToInt : Unique -> Int
 uniqueToInt (Unique _ i) = i
@@ -58,15 +61,17 @@ leadingLambdas expr = case expr of
     ETyLam b e -> let (fe, bs) = leadingLambdas e in (fe, b::bs)
     _ -> (expr, [])
 
-getTopLevelBinders : Module -> List Binder
-getTopLevelBinders mod = List.concatMap getTopLevelBinder mod.moduleTopBindings
+getModuleBinders : Module -> List Binder
+getModuleBinders mod = List.concatMap getTopLevelBinders mod.moduleTopBindings
 
-getTopLevelBinder : TopBinding -> List Binder
-getTopLevelBinder tp =
-    let go : TopBinder -> Binder
-        go (TopBinder b _ _) = b
-    in case tp of
-        NonRecTopBinding b -> [go b]
-        RecTopBinding bs -> List.map go bs
+unzip3 : List (a,b,c) -> (List a, List b, List c)
+unzip3 xs = case xs of
+    [] -> ([],[],[])
+    ((a,b,c)::ys) -> let (ass, bs, cs) = unzip3 ys in (a::ass, b::bs, c::cs)
+
+getTopLevelBinders : TopBinding -> List Binder
+getTopLevelBinders tp = case tp of
+    NonRecTopBinding b _ _ -> [b]
+    RecTopBinding xs -> let (bs, _, _) = unzip3 xs in bs
 
 

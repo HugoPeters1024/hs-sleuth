@@ -1,6 +1,7 @@
 module Generated.Types exposing
     ( Unique(..)
     , ExternalName(..)
+    , BinderId(..)
     , Binder(..)
     , IdInfo
     , Unfolding(..)
@@ -9,6 +10,7 @@ module Generated.Types exposing
     , Lit(..)
     , TyCon(..)
     , Type(..)
+    , ModuleName
     , Module
     , Expr(..)
     , Alt
@@ -16,9 +18,8 @@ module Generated.Types exposing
     , LineCol
     , SrcSpan
     , Tick
-    , CoreStats
-    , TopBinder(..)
     , TopBinding(..)
+    , CoreStats
     )
 
 
@@ -28,20 +29,24 @@ type Unique
 
 
 type ExternalName 
-    = ExternalName { externalModuleName : String
+    = ExternalName { externalModuleName : ModuleName
     , externalName : String
     , externalUnique : Unique
     , externalType : Type }
     | ForeignCall 
 
 
+type BinderId 
+    = BinderId Unique
+
+
 type Binder 
     = Binder { binderName : String
-    , binderId : Unique
+    , binderId : BinderId
     , binderIdInfo : IdInfo
     , binderIdDetails : IdDetails
     , binderType : Type }
-    | TyBinder { binderName : String, binderId : Unique, binderKind : Type }
+    | TyBinder { binderName : String, binderId : BinderId, binderKind : Type }
 
 
 type alias IdInfo  =
@@ -108,7 +113,7 @@ type TyCon
 
 
 type Type 
-    = VarTy Unique
+    = VarTy BinderId
     | FunTy Type Type
     | TyConApp TyCon (List Type)
     | AppTy Type Type
@@ -117,15 +122,18 @@ type Type
     | CoercionTy 
 
 
+type alias ModuleName  =
+    { getModuleName : String }
+
+
 type alias Module  =
-    { moduleName : String
+    { moduleName : ModuleName
     , modulePhase : String
-    , modulePhaseId : Int
     , moduleTopBindings : List TopBinding }
 
 
 type Expr 
-    = EVar Unique
+    = EVar BinderId
     | EVarGlobal ExternalName
     | ELit Lit
     | EApp Expr Expr
@@ -160,18 +168,14 @@ type alias Tick  =
     { sourceTickSpan : SrcSpan }
 
 
+type TopBinding 
+    = NonRecTopBinding Binder CoreStats Expr
+    | RecTopBinding (List (Binder, CoreStats, Expr))
+
+
 type alias CoreStats  =
     { csTerms : Int
     , csTypes : Int
     , csCoercions : Int
     , csValBinds : Int
     , csJoinBinds : Int }
-
-
-type TopBinder 
-    = TopBinder Binder CoreStats Expr
-
-
-type TopBinding 
-    = NonRecTopBinding TopBinder
-    | RecTopBinding (List TopBinder)

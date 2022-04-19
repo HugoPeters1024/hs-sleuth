@@ -21,7 +21,6 @@ extra-source-files: CHANGELOG.md
 library
     exposed-modules:  HsComprehension.Plugin
                     , HsComprehension.Ast
-                    , HsComprehension.Cvt
 
     -- Modules included in this library but not exported.
     other-modules:    HsComprehension.ElmDeriving
@@ -30,6 +29,7 @@ library
     -- other-extensions:
     build-depends:    base ^>=4.16.0.0
                     , ghc
+                    , ghc-prim
                     , ghc-dump-core
                     , ghc-dump-util
                     , text
@@ -56,8 +56,8 @@ executable hs-comprehension-server
                     , http-types
                     , text
                     , bytestring
-                    , ghc-dump-util
                     , serialise
+                    , aeson
                     , aeson-pretty
 
     hs-source-dirs:   src/Server

@@ -18,9 +18,7 @@ import Data.Aeson.Encode.Pretty (encodePretty)
 import qualified GhcDump.Ast as Ast
 import GhcDump.ToHtml (topBindingsToHtml)
 import qualified GhcDump.Convert as Ast (cvtModule)
-import qualified GhcDump.Reconstruct as Ast (reconModule)
 import GhcDump.Reconstruct (reconModule)
-import HsComprehension.Cvt (cvtModule)
 
 plugin :: Plugin
 plugin = defaultPlugin { installCoreToDos = install }
@@ -44,7 +42,7 @@ coreDumpDir :: FilePath
 coreDumpDir = "./dist-newstyle/coredump/"
 
 coreDumpFile :: String -> Int -> FilePath
-coreDumpFile mod id = coreDumpDir ++ mod ++ "-coredump-pass" ++ show id ++ ".cbor"
+coreDumpFile mod id = coreDumpDir ++ mod ++ "-coredump-pass" ++ show id ++ ".zstd"
 
 dumpPass :: Int -> String -> CoreToDo
 dumpPass n phase = CoreDoPluginPass phase $ \guts -> do
@@ -54,5 +52,5 @@ dumpPass n phase = CoreDoPluginPass phase $ \guts -> do
     liftIO $ do
         putStrLn fname
         let smodule :: Ast.SModule = Ast.cvtModule dflags phase guts
-        BSL.writeFile (fname) $ Ser.serialise smodule
+        Ast.writeSModule fname smodule
     pure guts
