@@ -8,6 +8,9 @@ ask = askFor identity
 askFor : (env -> a) -> Reader env a
 askFor = Reader
 
+exec : (env -> Reader env a) -> Reader env a
+exec rr = ask |> andThen rr
+
 runReader : env -> Reader env a -> a
 runReader env (Reader f) = f env
 

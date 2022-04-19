@@ -30,6 +30,8 @@ This plugin is ongoing development for my thesis project:
 
 - Thesis on call arity but with a great introduction to ghc, rewrite rules etc: https://www.joachim-breitner.de/thesis/Diss-Breitner-Published.pdf
 
+- !! Thesis on core diffing, very relevant: https://pp.ipd.kit.edu/uploads/publikationen/brinkmeier20bachelorarbeit.pdf
+
 ### What is the plan?
 
 - An output that describes precisely what optimisation are done.

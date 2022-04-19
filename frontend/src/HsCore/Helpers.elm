@@ -1,6 +1,7 @@
 module HsCore.Helpers exposing (..)
 
 import Char
+import Dict exposing (Dict)
 
 import Generated.HsCore exposing (..)
 
@@ -8,6 +9,11 @@ binderName : Binder -> String
 binderName binder = case binder of
     Binder b -> b.binderName
     TyBinder b -> b.binderName
+
+binderType : Binder -> Type
+binderType binder = case binder of
+    Binder b -> b.binderType
+    TyBinder b -> b.binderKind
 
 externalName : ExternalName -> String
 externalName en = case en of
@@ -63,4 +69,5 @@ getTopLevelBinder tp =
     in case tp of
         NonRecTopBinding b -> [go b]
         RecTopBinding bs -> List.map go bs
+
 

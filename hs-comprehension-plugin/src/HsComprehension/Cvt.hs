@@ -10,6 +10,8 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
+
+
 showText :: Show a => a -> Text
 showText = T.pack . show
 

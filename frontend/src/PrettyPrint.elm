@@ -55,13 +55,11 @@ lookupBinder = lookupBinderInt << H.uniqueToInt
 lookupBinderInt : Int -> PPM (Maybe H.Binder)
 lookupBinderInt id = Reader.askFor <| \env -> Dict.get id env.lookup
 
-binderIsSelected : H.Binder -> Reader PPEnv Bool
-binderIsSelected b = Reader.askFor .selectId
-            |> Reader.map (Maybe.withDefault False << (Maybe.map (\id -> id == H.binderToInt b)))
+binderIsSelected : PPEnv -> H.Binder -> Bool
+binderIsSelected env b = Maybe.withDefault False <| (Maybe.map (\id -> id == H.binderToInt b) (env.selectId))
 
-externalIsSelected : H.ExternalName -> Reader PPEnv Bool
-externalIsSelected en = Reader.askFor .selectId
-            |> Reader.map (Maybe.withDefault False << (Maybe.map (\id -> id == H.externalNameToInt en)))
+externalIsSelected : PPEnv -> H.ExternalName -> Bool
+externalIsSelected env e = Maybe.withDefault False <| (Maybe.map (\id -> id == H.externalNameToInt e) (env.selectId))
         
 ppWhen : Bool -> PP -> PP
 ppWhen b pp = if b then pp else Reader.pure identity
@@ -131,16 +129,16 @@ ppLit lit  = case lit of
     _            -> emitText (Debug.toString lit)
 
 ppBinderClass : String -> H.Binder -> PP
-ppBinderClass c b = binderIsSelected b
-    |> (Reader.andThen <| \selected ->
-            emit <| a [ class "no-style"
-                      , onClick (MsgSelectTerm (Either.Left b)) 
-                      ]
-                      [ span [ class c
-                             , class (if selected then "highlight" else "")
-                             ] 
-                             [text (H.binderName b)] 
-                      ])
+ppBinderClass c b = Reader.ask 
+    |> Reader.andThen (\env ->
+        emit <| a [ class "no-style"
+                  , onClick (MsgSelectTerm (SelectedBinder {binder = b, typeStr = typeToString env.lookup (H.binderType b)})) 
+                  ]
+                  [ span [ class c
+                         , class (if binderIsSelected env b then "highlight" else "")
+                         ] 
+                         [text (H.binderName b)] 
+                  ])
 
 ppBinder : H.Binder -> PP
 ppBinder b = ppBinderClass (if H.isConstructorName (H.binderName b) then "k" else "") b
@@ -187,7 +185,7 @@ ppExpr expr = case expr of
               , emitKeyword " in ", ppExpr e
               ]
     H.ECase e b alts -> ppCase e b alts
-    H.EType t -> emitText "[Type]"
+    H.EType t -> Reader.map (\env -> typeToString env.lookup t) Reader.ask |> Reader.andThen emitText 
     _ -> emitText "[Expr TODO]"
 
 ppCase : H.Expr -> H.Binder -> List H.Alt -> PP
@@ -200,12 +198,12 @@ ppCase e b alts = ppSeq [ emitKeyword "case "
                         ]
 
 ppAlt : H.Alt -> PP
-ppAlt alt =
+ppAlt alt = withBindingN alt.altBinders <|
    ppSeq [ ppAltCon alt.altCon
          , ppWhen (not (List.isEmpty alt.altBinders)) (emitText " ")
          , ppSepped " " (List.map ppBinder alt.altBinders)
          , emitText " -> "
-         , withBindingN alt.altBinders (ppExpr alt.altRHS)]
+         , ppExpr alt.altRHS]
 
 ppAltCon : H.AltCon -> PP
 ppAltCon con = case con of
@@ -222,12 +220,28 @@ ppExternalName name = lookupBinderInt (H.externalNameToInt name)
         Nothing -> ppActualExternalName name)
 
 ppActualExternalName : H.ExternalName -> PP
-ppActualExternalName e = externalIsSelected e
-    |> (Reader.andThen <| \selected ->
-        let classes = [ class (if H.isConstructorName (H.externalName e) then "k" else "")
-                      , class (if selected then "highlight" else "") 
-                      ] 
-        in emit <| a [class "no-style", onClick (MsgSelectTerm (Right e))] [span classes [text (H.externalName e)]])
+ppActualExternalName e = 
+    let go env = let classes = [ class (if H.isConstructorName (H.externalName e) then "k" else "")
+                               , class (if externalIsSelected env e then "highlight" else "") 
+                               ] 
+                 in emit (a [ class "no-style"
+                            , onClick (MsgSelectTerm (SelectedExternal { external = e, typeStr = "TODO"}))
+                            ] 
+                            [span classes [text (H.externalName e)]])
+    in Reader.exec go
 
 
+typeToString : Dict Int H.Binder -> H.Type -> String
+typeToString = 
+    let go tm type_ = case type_ of
+            H.VarTy u -> case Dict.get (H.uniqueToInt u) tm of
+                Just x -> H.binderName x
+                Nothing -> "[UKNOWN TYPEVAR]"
+            H.FunTy x y -> go tm x ++ " -> " ++ go tm y
+            H.TyConApp (H.TyCon con _) ts -> con ++ " " ++ List.foldl (\x y -> x ++ " " ++ y) "" (List.map (go tm) ts)
+            H.AppTy x y -> go tm x ++ " " ++ go tm y
+            H.ForAllTy b t -> go (Dict.insert (H.binderToInt b) b tm) t
+            H.LitTy -> "[LitTy]"
+            H.CoercionTy -> "[CoercionTy]"
+    in go
 

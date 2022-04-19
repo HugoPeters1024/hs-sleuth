@@ -56,11 +56,7 @@ panel = div [ style "display" "grid"
             ]
 
 selectedTermId : Model -> Maybe Int
-selectedTermId model =
-    let go t = case t of
-            Left binder -> H.binderToInt binder
-            Right en -> H.externalNameToInt en
-    in Maybe.map go model.selectedTerm
+selectedTermId model = Maybe.map selectedTermToInt model.selectedTerm
 
 
 viewHeader : Model -> H.Module -> Html Msg
@@ -75,8 +71,7 @@ viewHeader _ mod =
 
 viewCode : Model -> H.Module -> Html Msg
 viewCode model mod = pre [class "code"]
-                     ( Trafo.eraseTypesModule mod
-                     |> .moduleTopBindings
+                     ( mod.moduleTopBindings
                      |> List.map PP.ppTopBinding
                      |> PP.ppSepped "\n\n"
                      |> PP.prettyPrint (PP.defaultInfo mod (selectedTermId model))
@@ -93,11 +88,14 @@ viewInfo mod = div [class "info-panel"]
                     , fromMaybe (h3 [] [text "No term selected"]) (Maybe.map viewTermInfo mod.selectedTerm)
                     ]
 
-viewTermInfo : Either H.Binder H.ExternalName -> Html Msg
-viewTermInfo binder = div []
+viewTermInfo : SelectedTerm -> Html Msg
+viewTermInfo term = div []
                           [ h3 [] [text "Selected term"]
                           , p [] [text "details:"]
-                          , p [] [text (Debug.toString binder)]
+                          , p [] [text (Debug.toString term)]
+                          , case term of
+                              SelectedBinder b -> p [] [text b.typeStr]
+                              SelectedExternal _ -> p [] []
                           ]
 
 

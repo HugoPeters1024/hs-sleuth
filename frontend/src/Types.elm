@@ -6,6 +6,7 @@ import Html exposing (Html, text)
 import Either exposing (Either)
 
 import Generated.HsCore as H
+import HsCore.Helpers as H
 
 type Loading a = NotRequested
                | Loading (Maybe a)
@@ -28,10 +29,22 @@ setLoading load = case load of
     Ready x -> Loading (Just x)
     _       -> Loading Nothing
 
+type SelectedTerm = SelectedBinder { binder : H.Binder
+                                   , typeStr : String
+                                   }
+                  | SelectedExternal { external : H.ExternalName
+                                     , typeStr : String
+                                     }
+
+selectedTermToInt : SelectedTerm -> Int
+selectedTermToInt term = case term of
+    SelectedBinder b -> H.binderToInt b.binder
+    SelectedExternal e -> H.externalNameToInt e.external
+
 type alias Model = 
     { moduleLoading : Loading H.Module
-    , selectedTerm : Maybe (Either H.Binder H.ExternalName)
+    , selectedTerm : Maybe SelectedTerm
     }
 type Msg = MsgGotModule (Result Http.Error H.Module)
-         | MsgSelectTerm (Either H.Binder H.ExternalName)
+         | MsgSelectTerm SelectedTerm
          | MsgLoadModule String Int
