@@ -85,3 +85,15 @@ getTopLevelBinders tp = case tp of
     RecTopBinding xs -> let (bs, _, _) = unzip3 xs in bs
 
 
+typeToString : Type -> String
+typeToString type_ = case type_ of
+    VarTy (BinderId _ getBinder) -> case getBinder () of
+        Found x -> binderName x
+        NotFound -> "[UKNOWN TYPEVAR]"
+        Untouched -> "[TYPEVAR NEVER TRAVERSED]"
+    FunTy x y -> typeToString x ++ " -> " ++ typeToString y
+    TyConApp (TyCon con _) ts -> con ++ " " ++ List.foldl (\x y -> x ++ " " ++ y) "" (List.map typeToString ts)
+    AppTy x y -> typeToString x ++ " " ++ typeToString y
+    ForAllTy b t -> "forall " ++ binderName b ++ ". " ++ typeToString t
+    LitTy -> "[LitTy]"
+    CoercionTy -> "[CoercionTy]"

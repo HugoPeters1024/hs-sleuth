@@ -96,8 +96,9 @@ viewTermInfo term = div []
                           , p [] [text "details:"]
                           , p [] [text (Debug.toString term)]
                           , case term of
-                              SelectedBinder b -> p [] [text b.typeStr]
-                              SelectedExternal _ -> p [] []
+                              SelectedBinder b -> p [] [text (H.typeToString (H.binderType b))]
+                              SelectedExternal (H.ExternalName e) -> p [] [text (H.typeToString e.externalType)]
+                              SelectedExternal H.ForeignCall -> p [] [text "ForeignCall"]
                           ]
 
 

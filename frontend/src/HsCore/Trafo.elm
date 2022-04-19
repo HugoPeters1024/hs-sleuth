@@ -68,11 +68,13 @@ trafoExpr env expr = case expr of
     ECoercion -> ECoercion
 
 trafoAlt : Env -> Alt -> Alt
-trafoAlt env alt = 
-    let nenv = withBindingN alt.altBinders env
-        nbs = List.map (trafoBinder nenv) alt.altBinders
-        ne = trafoExpr nenv alt.altRHS
-    in { alt | altBinders = nbs, altRHS = ne}
+trafoAlt env alt = case alt.altBinders of 
+    [] -> { alt | altRHS = trafoExpr env alt.altRHS}
+    x::xs -> 
+        let nx = trafoBinder env x
+            nenv = withBinding nx env
+            falt = trafoAlt nenv {alt | altBinders = xs }
+        in { falt | altBinders = nx :: falt.altBinders }
 
 trafoType : Env -> Type -> Type
 trafoType env type_ = case type_ of
@@ -80,7 +82,7 @@ trafoType env type_ = case type_ of
     FunTy a b -> FunTy (trafoType env a) (trafoType env b)
     TyConApp con ts -> TyConApp con (List.map (trafoType env) ts)
     AppTy f a -> AppTy (trafoType env f) (trafoType env a)
-    ForAllTy b t -> ForAllTy b (trafoType (withBinding b env) t)
+    ForAllTy b t -> ForAllTy (trafoBinder env b) (trafoType (withBinding b env) t)
     LitTy -> LitTy
     CoercionTy -> CoercionTy
 

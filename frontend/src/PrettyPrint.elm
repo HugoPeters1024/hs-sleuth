@@ -111,7 +111,7 @@ ppBinderClass : String -> H.Binder -> PP
 ppBinderClass c b = Reader.ask 
     |> Reader.andThen (\env ->
         emit <| a [ class "no-style"
-                  , onClick (MsgSelectTerm (SelectedBinder {binder = b, typeStr = typeToString (H.binderType b)})) 
+                  , onClick (MsgSelectTerm (SelectedBinder b)) 
                   ]
                   [ span [ class c
                          , class (if binderIsSelected env b then "highlight" else "")
@@ -165,7 +165,7 @@ ppExpr expr = case expr of
                           , emitKeyword " in ", ppExpr e
                           ]
     H.ECase e b alts -> ppCase e b alts
-    H.EType t -> emitText ("@("++ typeToString t ++ ")")
+    H.EType t -> emitText ("@("++ H.typeToString t ++ ")")
     _ -> emitText "[Expr TODO]"
 
 ppCase : H.Expr -> H.Binder -> List H.Alt -> PP
@@ -202,22 +202,10 @@ ppActualExternalName e =
                                , class (if externalIsSelected env e then "highlight" else "") 
                                ] 
                  in emit (a [ class "no-style"
-                            , onClick (MsgSelectTerm (SelectedExternal { external = e, typeStr = "TODO"}))
+                            , onClick (MsgSelectTerm (SelectedExternal e))
                             ] 
                             [span classes [text (H.externalName e)]])
     in Reader.exec go
 
 
-typeToString : H.Type -> String
-typeToString type_ = case type_ of
-    H.VarTy (H.BinderId _ getBinder) -> case getBinder () of
-        H.Found x -> H.binderName x
-        H.NotFound -> "[UKNOWN TYPEVAR]"
-        H.Untouched -> "[TYPEVAR NEVER TRAVERSED]"
-    H.FunTy x y -> typeToString x ++ " -> " ++ typeToString y
-    H.TyConApp (H.TyCon con _) ts -> con ++ " " ++ List.foldl (\x y -> x ++ " " ++ y) "" (List.map typeToString ts)
-    H.AppTy x y -> typeToString x ++ " " ++ typeToString y
-    H.ForAllTy b t -> "forall " ++ H.binderName b ++ ". " ++ typeToString t
-    H.LitTy -> "[LitTy]"
-    H.CoercionTy -> "[CoercionTy]"
 

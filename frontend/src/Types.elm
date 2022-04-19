@@ -11,17 +11,13 @@ import HsCore.Helpers as H
 
 
 
-type SelectedTerm = SelectedBinder { binder : H.Binder
-                                   , typeStr : String
-                                   }
-                  | SelectedExternal { external : H.ExternalName
-                                     , typeStr : String
-                                     }
+type SelectedTerm = SelectedBinder H.Binder
+                  | SelectedExternal H.ExternalName
 
 selectedTermToInt : SelectedTerm -> Int
 selectedTermToInt term = case term of
-    SelectedBinder b -> H.binderToInt b.binder
-    SelectedExternal e -> H.externalNameToInt e.external
+    SelectedBinder b -> H.binderToInt b
+    SelectedExternal e -> H.externalNameToInt e
 
 type alias Model = 
     { moduleLoading : Loading H.Module
