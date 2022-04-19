@@ -1,7 +1,7 @@
 module PrettyPrint exposing (..)
 
 import Types exposing (..)
-import Generated.HsCore as H
+import Generated.Types as H
 import HsCore.Helpers as H
 import State exposing (State)
 import State as S

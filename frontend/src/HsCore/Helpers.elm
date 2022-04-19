@@ -1,9 +1,8 @@
 module HsCore.Helpers exposing (..)
 
 import Char
-import Dict exposing (Dict)
 
-import Generated.HsCore exposing (..)
+import Generated.Types exposing (..)
 
 binderName : Binder -> String
 binderName binder = case binder of

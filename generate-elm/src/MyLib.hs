@@ -17,37 +17,50 @@ import qualified HsComprehension.Ast as Ast
 import Control.Monad
 import qualified Data.HashMap.Lazy as HashMap
 
+import Data.Maybe
+
 import Language.Haskell.To.Elm
 import Language.Elm.Definition (Definition)
 import qualified Language.Elm.Pretty as Pretty
 import qualified Language.Elm.Simplification as Simplification
 
-elmDefFor :: forall a. (HasElmDecoder Aeson.Value a, HasElmEncoder Aeson.Value a) => [Definition]
-elmDefFor = jsonDefinitions @a
+elmDefsFor :: forall a. (HasElmDecoder Aeson.Value a, HasElmEncoder Aeson.Value a) => Maybe (Definition, Definition, Definition)
+elmDefsFor = (,,) <$> elmDefinition @a <*> elmEncoderDefinition @Aeson.Value @a <*> elmDecoderDefinition @Aeson.Value @a
+
+(elmDefs, elmEncoders, elmDecoders) = unzip3 $ catMaybes 
+    [ elmDefsFor @Ast.Unique
+    , elmDefsFor @Ast.ExternalName
+    , elmDefsFor @Ast.Binder
+    , elmDefsFor @Ast.IdInfo
+    , elmDefsFor @Ast.Unfolding
+    , elmDefsFor @Ast.OccInfo
+    , elmDefsFor @Ast.IdDetails
+    , elmDefsFor @Ast.Lit
+    , elmDefsFor @Ast.TyCon
+    , elmDefsFor @Ast.Type
+    , elmDefsFor @Ast.Module
+    , elmDefsFor @Ast.Expr
+    , elmDefsFor @Ast.Alt
+    , elmDefsFor @Ast.AltCon
+    , elmDefsFor @Ast.LineCol
+    , elmDefsFor @Ast.SrcSpan
+    , elmDefsFor @Ast.Tick
+    , elmDefsFor @Ast.CoreStats
+    , elmDefsFor @Ast.TopBinder
+    , elmDefsFor @Ast.TopBinding
+    ]
 
 someFunc :: IO ()
 someFunc = do
-    let definitions = elmDefFor @Ast.Unique
-                   ++ elmDefFor @Ast.ExternalName
-                   ++ elmDefFor @Ast.Binder
-                   ++ elmDefFor @Ast.IdInfo
-                   ++ elmDefFor @Ast.Unfolding
-                   ++ elmDefFor @Ast.OccInfo
-                   ++ elmDefFor @Ast.IdDetails
-                   ++ elmDefFor @Ast.Lit
-                   ++ elmDefFor @Ast.TyCon
-                   ++ elmDefFor @Ast.Type
-                   ++ elmDefFor @Ast.Module
-                   ++ elmDefFor @Ast.Expr
-                   ++ elmDefFor @Ast.Alt
-                   ++ elmDefFor @Ast.AltCon
-                   ++ elmDefFor @Ast.LineCol
-                   ++ elmDefFor @Ast.SrcSpan
-                   ++ elmDefFor @Ast.Tick
-                   ++ elmDefFor @Ast.CoreStats
-                   ++ elmDefFor @Ast.TopBinder
-                   ++ elmDefFor @Ast.TopBinding
-        modules = Pretty.modules (map Simplification.simplifyDefinition definitions)
-    forM_ (HashMap.toList modules) $ \(moduleName, contents) -> print contents
+    let defs = Pretty.modules (map Simplification.simplifyDefinition elmDefs)
+    forM_ (HashMap.toList defs) $ \(moduleName, contents) ->
+        writeFile "Types.elm" (show contents)
+    let encoders = Pretty.modules (map Simplification.simplifyDefinition elmEncoders)
+    forM_ (HashMap.toList encoders) $ \(moduleName, contents) ->
+        writeFile "Encoders.elm" (show contents)
+    let decoders = Pretty.modules (map Simplification.simplifyDefinition elmDecoders)
+    forM_ (HashMap.toList decoders) $ \(moduleName, contents) ->
+        writeFile "Decoders.elm" (show contents)
+    putStrLn "All done!"
 
     

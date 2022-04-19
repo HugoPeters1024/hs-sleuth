@@ -5,7 +5,7 @@ import Html exposing (Html, text)
 
 import Either exposing (Either)
 
-import Generated.HsCore as H
+import Generated.Types as H
 import HsCore.Helpers as H
 
 type Loading a = NotRequested

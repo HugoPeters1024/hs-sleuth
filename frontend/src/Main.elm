@@ -8,7 +8,8 @@ import Html.Events exposing (onClick)
 import Either exposing (Either(..))
 import Types exposing (..)
 import Http
-import Generated.HsCore as H
+import Generated.Types as H
+import Generated.Decoders as HE
 import HsCore.Trafo as Trafo
 import HsCore.Helpers as H
 import PrettyPrint as PP
@@ -101,5 +102,5 @@ viewTermInfo term = div []
 
 fetchPass : String -> Int -> Cmd Msg
 fetchPass mod id = Http.get { url = "http://localhost:8080/" ++ mod ++ "/" ++ String.fromInt id
-                            , expect = Http.expectJson MsgGotModule H.moduleDecoder
+                            , expect = Http.expectJson MsgGotModule HE.moduleDecoder
                             }
