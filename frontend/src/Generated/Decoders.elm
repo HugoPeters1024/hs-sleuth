@@ -63,7 +63,7 @@ externalNameDecoder =
 
 binderIdDecoder : Json.Decode.Decoder BinderId
 binderIdDecoder =
-    Json.Decode.map BinderId uniqueDecoder
+    Json.Decode.map (\id -> BinderId id (\_ -> Untouched)) uniqueDecoder
 
 
 binderDecoder : Json.Decode.Decoder Binder

@@ -17,7 +17,6 @@ import Html.Events exposing (..)
 import Reader exposing (Reader(..))
 
 type alias PPEnv = { selectId : Maybe Int
-                   , lookup : Dict Int H.Binder
                    }
 
 type alias PPM a = Reader PPEnv a
@@ -30,30 +29,10 @@ prettyPrint info pp = Reader.runReader info pp []
                     |> List.intersperse [text "\n"]
                     |> List.concat
 
-defaultInfo : H.Module -> Maybe Int -> PPEnv
-defaultInfo mod selectId = 
+defaultInfo : Maybe Int -> PPEnv
+defaultInfo selectId = 
     { selectId = selectId
-    , lookup = Dict.fromList <| List.map (\b -> (H.binderToInt b, b)) (H.getModuleBinders mod)
     }
-
-
-
-withUpdatedInfo : (PPEnv -> PPEnv) -> PPM a -> PPM a
-withUpdatedInfo f pp = Reader <| \info -> Reader.runReader (f info) pp
-
-withBinding : H.Binder -> PPM a -> PPM a
-withBinding binder = withUpdatedInfo <| \env -> {env | lookup = Dict.insert (H.binderToInt binder) binder env.lookup }
-
-withBindingN : List H.Binder -> PPM a -> PPM a
-withBindingN bs pp = case bs of
-    [] -> pp
-    (x::xs) -> withBinding x (withBindingN xs pp)
-
-lookupBinder : H.BinderId -> PPM (Maybe H.Binder)
-lookupBinder = lookupBinderInt << H.binderIdToInt
-
-lookupBinderInt : Int -> PPM (Maybe H.Binder)
-lookupBinderInt id = Reader.askFor <| \env -> Dict.get id env.lookup
 
 binderIsSelected : PPEnv -> H.Binder -> Bool
 binderIsSelected env b = Maybe.withDefault False <| (Maybe.map (\id -> id == H.binderToInt b) (env.selectId))
@@ -132,7 +111,7 @@ ppBinderClass : String -> H.Binder -> PP
 ppBinderClass c b = Reader.ask 
     |> Reader.andThen (\env ->
         emit <| a [ class "no-style"
-                  , onClick (MsgSelectTerm (SelectedBinder {binder = b, typeStr = typeToString env.lookup (H.binderType b)})) 
+                  , onClick (MsgSelectTerm (SelectedBinder {binder = b, typeStr = typeToString (H.binderType b)})) 
                   ]
                   [ span [ class c
                          , class (if binderIsSelected env b then "highlight" else "")
@@ -148,6 +127,12 @@ ppBinderM mb = case mb of
     Just b -> ppBinder b
     Nothing -> emitText "[!UKNOWN VARIABLE!]"
 
+ppBinderT : H.BinderThunk -> PP
+ppBinderT mb = case mb of
+    H.Found b -> ppBinder b
+    H.NotFound -> emitText "[!UKNOWN VARIABLE!]"
+    H.Untouched -> emitText "[!I WAS NEVER TOUCHED!]"
+
 ppTopBinding : H.TopBinding -> PP
 ppTopBinding b = case b of
     H.NonRecTopBinding bndr _ e -> ppBinding True (bndr, e)
@@ -157,8 +142,7 @@ ppTopBinding b = case b of
 ppBinding : Bool -> (H.Binder, H.Expr) -> PP
 ppBinding toplevel (b, e) = 
     let (fe, bs) = H.leadingLambdas e
-        in withBindingN bs <|
-            ppSeq [ ppBinderClass (if toplevel then "nf" else "") b
+        in ppSeq [ ppBinderClass (if toplevel then "nf" else "") b
                  , emitText " "
                  , ppSepped " " (List.map ppBinder bs)
                  , emitText (if List.isEmpty bs then "" else " ")
@@ -169,38 +153,37 @@ ppUnique (H.Unique _ i) = emitText (String.fromInt i)
 
 ppExpr : H.Expr -> PP
 ppExpr expr = case expr of
-    H.EVar b -> lookupBinder b |> Reader.andThen ppBinderM
+    H.EVar (H.BinderId _ getBinder) -> ppBinderT (getBinder ())
     H.EVarGlobal name -> ppExternalName name
     H.ELit lit -> ppLit lit
     H.ETyLam b e -> ppExpr (H.ELam b e)
     H.EApp f a -> ppSeq [ppExpr f, emitText " ", parensExpr a]
-    H.ELam b e -> withBinding b <| ppSeq [emitText "\\", ppBinder b, emitText " -> ", indented (ppExpr e)]
-    H.ELet bs e -> withBindingN (List.map Tuple.first bs) <| 
-        ppSeq [ emitKeyword "let "
-              , indented <| ppLines (List.map (ppBinding False) bs)
-              , newline
-              , emitKeyword " in ", ppExpr e
-              ]
+    H.ELam b e -> ppSeq [emitText "\\", ppBinder b, emitText " -> ", indented (ppExpr e)]
+    H.ELet bs e ->  ppSeq [ emitKeyword "let "
+                          , indented <| ppLines (List.map (ppBinding False) bs)
+                          , newline
+                          , emitKeyword " in ", ppExpr e
+                          ]
     H.ECase e b alts -> ppCase e b alts
-    H.EType t -> Reader.map (\env -> typeToString env.lookup t) Reader.ask |> Reader.andThen (\ty -> emitText ("@("++ty ++ ")"))
+    H.EType t -> emitText ("@("++ typeToString t ++ ")")
     _ -> emitText "[Expr TODO]"
 
 ppCase : H.Expr -> H.Binder -> List H.Alt -> PP
 ppCase e b alts = ppSeq [ emitKeyword "case "
-                        , withBinding b (ppExpr e)
+                        , ppExpr e
                         , emitKeyword " of"
                         , indented <| 
-                            ppSeq (List.map (\alt -> ppSeq [withBinding b (ppAlt alt), newline]) alts)
+                            ppSeq (List.map (\alt -> ppSeq [ppAlt alt, newline]) alts)
                         , newline
                         ]
 
 ppAlt : H.Alt -> PP
-ppAlt alt = withBindingN alt.altBinders <|
-   ppSeq [ ppAltCon alt.altCon
-         , ppWhen (not (List.isEmpty alt.altBinders)) (emitText " ")
-         , ppSepped " " (List.map ppBinder alt.altBinders)
-         , emitText " -> "
-         , ppExpr alt.altRHS]
+ppAlt alt = ppSeq [ ppAltCon alt.altCon
+                  , ppWhen (not (List.isEmpty alt.altBinders)) (emitText " ")
+                  , ppSepped " " (List.map ppBinder alt.altBinders)
+                  , emitText " -> "
+                  , ppExpr alt.altRHS
+                  ]
 
 ppAltCon : H.AltCon -> PP
 ppAltCon con = case con of
@@ -208,13 +191,10 @@ ppAltCon con = case con of
     H.AltLit l -> ppLit l
     H.AltDefault -> emitText "_"
 
--- Occurences of toplevel functions from the same model are consided external names,
+-- TODO: Occurences of toplevel functions from the same model are consided external names,
 -- we try to look them up anyway
 ppExternalName : H.ExternalName -> PP
-ppExternalName name = lookupBinderInt (H.externalNameToInt name)
-    |> Reader.andThen (\mb -> case mb of
-        Just b -> ppBinder b
-        Nothing -> ppActualExternalName name)
+ppExternalName name = ppActualExternalName name
 
 ppActualExternalName : H.ExternalName -> PP
 ppActualExternalName e = 
@@ -228,17 +208,16 @@ ppActualExternalName e =
     in Reader.exec go
 
 
-typeToString : Dict Int H.Binder -> H.Type -> String
-typeToString = 
-    let go tm type_ = case type_ of
-            H.VarTy u -> case Dict.get (H.binderIdToInt u) tm of
-                Just x -> H.binderName x
-                Nothing -> "[UKNOWN TYPEVAR]"
-            H.FunTy x y -> go tm x ++ " -> " ++ go tm y
-            H.TyConApp (H.TyCon con _) ts -> con ++ " " ++ List.foldl (\x y -> x ++ " " ++ y) "" (List.map (go tm) ts)
-            H.AppTy x y -> go tm x ++ " " ++ go tm y
-            H.ForAllTy b t -> go (Dict.insert (H.binderToInt b) b tm) t
-            H.LitTy -> "[LitTy]"
-            H.CoercionTy -> "[CoercionTy]"
-    in go
+typeToString : H.Type -> String
+typeToString type_ = case type_ of
+    H.VarTy (H.BinderId _ getBinder) -> case getBinder () of
+        H.Found x -> H.binderName x
+        H.NotFound -> "[UKNOWN TYPEVAR]"
+        H.Untouched -> "[TYPEVAR NEVER TRAVERSED]"
+    H.FunTy x y -> typeToString x ++ " -> " ++ typeToString y
+    H.TyConApp (H.TyCon con _) ts -> con ++ " " ++ List.foldl (\x y -> x ++ " " ++ y) "" (List.map typeToString ts)
+    H.AppTy x y -> typeToString x ++ " " ++ typeToString y
+    H.ForAllTy b t -> "forall " ++ H.binderName b ++ ". " ++ typeToString t
+    H.LitTy -> "[LitTy]"
+    H.CoercionTy -> "[CoercionTy]"
 

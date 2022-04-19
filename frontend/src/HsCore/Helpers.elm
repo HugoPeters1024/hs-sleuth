@@ -25,7 +25,7 @@ binderToInt binder = case binder of
     TyBinder b -> binderIdToInt b.binderId
 
 binderIdToInt : BinderId -> Int
-binderIdToInt (BinderId u) = uniqueToInt u
+binderIdToInt (BinderId u _) = uniqueToInt u
 
 uniqueToInt : Unique -> Int
 uniqueToInt (Unique _ i) = i
@@ -68,6 +68,16 @@ unzip3 : List (a,b,c) -> (List a, List b, List c)
 unzip3 xs = case xs of
     [] -> ([],[],[])
     ((a,b,c)::ys) -> let (ass, bs, cs) = unzip3 ys in (a::ass, b::bs, c::cs)
+
+zip : List a -> List b -> List (a, b)
+zip xs ys = case (xs, ys) of
+    (x::xxs, y::yys) -> (x,y) :: zip xxs yys
+    _                -> []
+
+zip3 : List a -> List b -> List c -> (List (a, b, c))
+zip3 xs ys zs = case (xs, ys, zs) of
+    (x::xss, y::yss, z::zss) -> (x,y,z) :: zip3 xss yss zss
+    _                        -> []
 
 getTopLevelBinders : TopBinding -> List Binder
 getTopLevelBinders tp = case tp of

@@ -11,7 +11,9 @@ import Http
 import Generated.Types as H
 import Generated.Decoders as HE
 import HsCore.Helpers as H
+import HsCore.Trafo as Trafo
 import PrettyPrint as PP
+import Loading exposing (Loading(..))
 
 main : Program () Model Msg
 main = Browser.element { init = init, update = update, view = view, subscriptions = subscriptions }
@@ -32,15 +34,15 @@ init _ = (initModel, fetchPass "Main" 0)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
-    MsgGotModule res -> ({ model | moduleLoading = loadFromResult res}, Cmd.none)
+    MsgGotModule res -> ({ model | moduleLoading = Loading.loadFromResult (Result.map Trafo.trafoModule res)}, Cmd.none)
     MsgSelectTerm term -> ({model | selectedTerm = Just term}, Cmd.none)
-    MsgLoadModule mod id -> ({model | moduleLoading = setLoading model.moduleLoading}, fetchPass mod id)
+    MsgLoadModule mod id -> ({model | moduleLoading = Loading.setLoading model.moduleLoading}, fetchPass mod id)
 
 view : Model -> Html Msg
 view model =
   div [] [ node "link" [rel "stylesheet", href "style.css", type_ "text/css"] []
          , node "link" [rel "stylesheet", href "pygments.css", type_ "text/css"] []
-         , liftLoading model.moduleLoading <| \mod -> 
+         , Loading.liftLoading model.moduleLoading (text (Debug.toString model.moduleLoading)) <| \mod -> 
              div []
              [ viewHeader model mod
              , panel [ viewCode model mod
@@ -74,7 +76,7 @@ viewCode model mod = pre [class "code"]
                      ( mod.moduleTopBindings
                      |> List.map PP.ppTopBinding
                      |> PP.ppSepped "\n\n"
-                     |> PP.prettyPrint (PP.defaultInfo mod (selectedTermId model))
+                     |> PP.prettyPrint (PP.defaultInfo (selectedTermId model))
                      )
 
 fromMaybe : a -> Maybe a -> a

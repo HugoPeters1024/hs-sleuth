@@ -20,6 +20,7 @@ module Generated.Types exposing
     , Tick
     , TopBinding(..)
     , CoreStats
+    , BinderThunk(..)
     )
 
 
@@ -35,9 +36,10 @@ type ExternalName
     , externalType : Type }
     | ForeignCall 
 
+type BinderThunk = Untouched | NotFound | Found Binder
 
 type BinderId 
-    = BinderId Unique
+    = BinderId Unique (() -> BinderThunk)
 
 
 type Binder 
