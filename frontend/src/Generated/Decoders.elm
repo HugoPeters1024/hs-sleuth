@@ -48,7 +48,8 @@ externalNameDecoder =
             Json.Decode.map ExternalName (Json.Decode.succeed (\b c d e -> { externalModuleName = b
             , externalName = c
             , externalUnique = d
-            , externalType = e }) |>
+            , externalType = e
+            , localBinder = \_ -> Untouched}) |>
             Json.Decode.Pipeline.required "externalModuleName" moduleNameDecoder |>
             Json.Decode.Pipeline.required "externalName" Json.Decode.string |>
             Json.Decode.Pipeline.required "externalUnique" uniqueDecoder |>

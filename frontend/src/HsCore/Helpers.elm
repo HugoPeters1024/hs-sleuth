@@ -4,6 +4,12 @@ import Char
 
 import Generated.Types exposing (..)
 
+concatWith : String -> List String -> String
+concatWith sep = String.concat << List.intersperse sep
+
+concatSpaced : List String -> String
+concatSpaced = concatWith " "
+
 binderName : Binder -> String
 binderName binder = case binder of
     Binder b -> b.binderName
@@ -61,6 +67,12 @@ leadingLambdas expr = case expr of
     ETyLam b e -> let (fe, bs) = leadingLambdas e in (fe, b::bs)
     _ -> (expr, [])
 
+leadingForalls : Type -> (Type, List Binder)
+leadingForalls type_ = case type_ of
+    ForAllTy b t -> let (ft, bs) = leadingForalls t in (ft, b::bs)
+    _            -> (type_, [])
+
+
 getModuleBinders : Module -> List Binder
 getModuleBinders mod = List.concatMap getTopLevelBinders mod.moduleTopBindings
 
@@ -84,6 +96,13 @@ getTopLevelBinders tp = case tp of
     NonRecTopBinding b _ _ -> [b]
     RecTopBinding xs -> let (bs, _, _) = unzip3 xs in bs
 
+typeToStringParens : Type -> String
+typeToStringParens type_ = case type_ of
+    VarTy v -> typeToString (VarTy v)
+    TyConApp con ts -> typeToString (TyConApp con ts)
+    _ -> "(" ++ typeToString type_ ++ ")"
+
+
 
 typeToString : Type -> String
 typeToString type_ = case type_ of
@@ -91,9 +110,18 @@ typeToString type_ = case type_ of
         Found x -> binderName x
         NotFound -> "[UKNOWN TYPEVAR]"
         Untouched -> "[TYPEVAR NEVER TRAVERSED]"
-    FunTy x y -> typeToString x ++ " -> " ++ typeToString y
-    TyConApp (TyCon con _) ts -> con ++ " " ++ List.foldl (\x y -> x ++ " " ++ y) "" (List.map typeToString ts)
-    AppTy x y -> typeToString x ++ " " ++ typeToString y
-    ForAllTy b t -> "forall " ++ binderName b ++ ". " ++ typeToString t
+    FunTy x y -> typeToStringParens x ++ " -> " ++ typeToString y
+    TyConApp (TyCon con _) ts -> 
+        case ts of
+            [] -> con
+            _ -> let tsStr = concatSpaced (List.map typeToString ts)
+                 in case con of
+                    "[]" -> "[" ++ tsStr ++ "]"
+                    _    -> con ++ " " ++ tsStr
+    AppTy x y -> typeToString x ++ " " ++ typeToStringParens y
+    ForAllTy b t -> 
+        let (ft, bs) = leadingForalls t
+            bndrsStr = String.concat <| List.intersperse " " (List.map binderName (b::bs))
+        in "forall " ++ bndrsStr ++ ". " ++ typeToString ft
     LitTy -> "[LitTy]"
     CoercionTy -> "[CoercionTy]"

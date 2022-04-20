@@ -103,9 +103,17 @@ ppLit : H.Lit -> PP
 ppLit lit  = case lit of
     H.MachChar c -> emitSpan "s" (String.fromList ['\'', c, '\''])
     H.MachStr s  -> emitSpan "s" ("\"" ++ s ++ "\"")
+    H.MachNullAddr -> emitKeyword "NullAddr#"
     H.MachInt i  -> emitSpan "m" i
+    H.MachInt64 i -> emitSpan "m" i
+    H.MachWord i -> emitSpan "m" i
+    H.MachWord64 i -> emitSpan "m" i
+    H.MachFloat f -> emitSpan "m" f
+    H.MachDouble d -> emitSpan "m" d
+    H.MachLabel l -> emitText l
     H.LitInteger i  -> emitSpan "m" i
-    _            -> emitText (Debug.toString lit)
+    H.LitNatural n -> emitSpan "m" n
+    H.LitRubbish -> emitText "[LitRubbish]"
 
 ppBinderClass : String -> H.Binder -> PP
 ppBinderClass c b = Reader.ask 
@@ -191,10 +199,12 @@ ppAltCon con = case con of
     H.AltLit l -> ppLit l
     H.AltDefault -> emitText "_"
 
--- TODO: Occurences of toplevel functions from the same model are consided external names,
--- we try to look them up anyway
 ppExternalName : H.ExternalName -> PP
-ppExternalName name = ppActualExternalName name
+ppExternalName name = case name of 
+    H.ExternalName e -> case e.localBinder () of
+        H.Found b -> ppBinder b
+        _         -> ppActualExternalName name
+    H.ForeignCall -> ppActualExternalName name
 
 ppActualExternalName : H.ExternalName -> PP
 ppActualExternalName e = 

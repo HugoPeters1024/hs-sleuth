@@ -20,14 +20,21 @@ lookupBinder env u = \_ -> case Dict.get (H.uniqueToInt u) env of
 
 trafoModule : Module -> Module
 trafoModule mod = 
-    let env = withBindingN (H.getModuleBinders mod) Dict.empty
+    let initialenv = withBindingN (H.getModuleBinders mod) Dict.empty
+        newbinders = List.map (trafoTopBinding initialenv) mod.moduleTopBindings
+        env = withBindingN (List.concatMap H.getTopLevelBinders newbinders) initialenv
     in { mod | moduleTopBindings = List.map (trafoTopBinding env) mod.moduleTopBindings }
+
+trafoExternalName : Env -> ExternalName -> ExternalName
+trafoExternalName env ename = case ename of
+    ExternalName e -> ExternalName {e | externalType = trafoType env e.externalType, localBinder = lookupBinder env e.externalUnique}
+    ForeignCall -> ForeignCall
+
 
 trafoTopBinding : Env -> TopBinding -> TopBinding
 trafoTopBinding env tb = case tb of
     -- TODO: also trafo the binding again for the unfolding
-    NonRecTopBinding b stats expr -> 
-        NonRecTopBinding (trafoBinder env b) stats (trafoExpr env expr)
+    NonRecTopBinding b stats expr -> NonRecTopBinding (trafoBinder env b) stats (trafoExpr env expr)
     RecTopBinding xs ->
         let (bs, stats, exprs) = H.unzip3 xs 
         in RecTopBinding <| H.zip3 (List.map (trafoBinder env) bs) stats (List.map (trafoExpr env) exprs)
@@ -40,7 +47,7 @@ trafoBinder env binder = case binder of
 trafoExpr : Env -> Expr -> Expr
 trafoExpr env expr = case expr of
     EVar (BinderId u _) -> EVar (BinderId u (lookupBinder env u))
-    EVarGlobal n -> EVarGlobal n
+    EVarGlobal n -> EVarGlobal (trafoExternalName env n)
     ELit l -> ELit l
     EApp f a -> EApp (trafoExpr env f) (trafoExpr env a)
     ETyLam b e -> 

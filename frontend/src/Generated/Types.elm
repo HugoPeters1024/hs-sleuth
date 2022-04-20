@@ -33,7 +33,9 @@ type ExternalName
     = ExternalName { externalModuleName : ModuleName
     , externalName : String
     , externalUnique : Unique
-    , externalType : Type }
+    , externalType : Type 
+    , localBinder : () -> BinderThunk
+    }
     | ForeignCall 
 
 type BinderThunk = Untouched | NotFound | Found Binder

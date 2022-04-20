@@ -6,7 +6,7 @@ import Data.Char
 
 data Step s c = Done | Yield c s | Skip s
 
-data Stream c = forall s. Stream (s -> Step s c) s String
+data Stream c = forall s. Stream (s -> Step s c) s [*]
 
 {-# Rules
    "writeUp/readUp erasion"                     readUp . writeUp    = id  ;
