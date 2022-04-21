@@ -2,11 +2,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import TreeMap
+
 import Data.Char
 
 data Step s c = Done | Yield c s | Skip s
 
-data Stream c = forall s. Stream (s -> Step s c) s [*]
+data Stream c = forall s. Stream (s -> Step s c) s String
 
 {-# Rules
    "writeUp/readUp erasion"                     readUp . writeUp    = id  ;

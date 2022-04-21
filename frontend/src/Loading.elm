@@ -1,11 +1,18 @@
 module Loading exposing (..)
 
 import Http
+import Html exposing (Html, text)
 
 type Loading a = NotRequested
                | Loading (Maybe a)
                | Error Http.Error
                | Ready a
+
+loadOrDebug : Loading a -> (a -> Html msg) -> Html msg
+loadOrDebug load f = case load of
+    Ready x -> f x
+    Loading (Just x) -> f x
+    _ -> text (Debug.toString load)
 
 loadFromResult : Result Http.Error a -> Loading a
 loadFromResult res = case res of

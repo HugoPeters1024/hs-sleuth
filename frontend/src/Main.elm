@@ -4,44 +4,51 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import HtmlHelpers exposing (..)
 
-import Either exposing (Either(..))
+import Generated.Types exposing (..)
+
 import Types exposing (..)
-import Http
-import Generated.Types as H
-import Generated.Decoders as HE
 import HsCore.Helpers as H
-import HsCore.Trafo as Trafo
+
+import HsCore.Trafo.Reconstruct as TR
+import HsCore.Trafo.EraseTypes exposing (eraseTypesModule)
+
 import PrettyPrint as PP
 import Loading exposing (Loading(..))
+import Commands as C
 
 main : Program () Model Msg
 main = Browser.element { init = init, update = update, view = view, subscriptions = subscriptions }
-
-
-
 
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
 
 initModel : Model
-initModel = { moduleLoading = Loading Nothing
+initModel = { projectMetaLoading = Loading Nothing
+            , moduleLoading = Loading Nothing
             , selectedTerm = Nothing
+            , hideTypes = False
             }
 
 init : () -> (Model, Cmd Msg)
-init _ = (initModel, fetchPass "Main" 0)
+init _ = (initModel, Cmd.batch [C.fetchProjectMeta, C.fetchPhase "Main" 0])
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
-    MsgGotModule res -> ({ model | moduleLoading = Loading.loadFromResult (Result.map Trafo.trafoModule res)}, Cmd.none)
+    MsgGotProjectMeta res -> ({model | projectMetaLoading = Loading.loadFromResult res}, Cmd.none)
+    MsgLoadModule mod id -> ({model | moduleLoading = Loading.setLoading model.moduleLoading}, C.fetchPhase mod id)
+    MsgGotModule res -> ({ model | moduleLoading = Loading.loadFromResult (Result.map TR.reconModule res)}, Cmd.none)
     MsgSelectTerm term -> ({model | selectedTerm = Just term}, Cmd.none)
-    MsgLoadModule mod id -> ({model | moduleLoading = Loading.setLoading model.moduleLoading}, fetchPass mod id)
+    MsgNextPhase mod -> (model, C.fetchModifyPhase (\x->x + 1) mod)
+    MsgPrevPhase mod -> (model, C.fetchModifyPhase (\x->x - 1) mod)
+    MsgViewSettingsToggleHideTypes -> ({ model | hideTypes = not model.hideTypes }, Cmd.none)
 
 view : Model -> Html Msg
 view model =
   div [] [ node "link" [rel "stylesheet", href "style.css", type_ "text/css"] []
          , node "link" [rel "stylesheet", href "pygments.css", type_ "text/css"] []
+         , Loading.loadOrDebug model.projectMetaLoading (text << Debug.toString)
          , Loading.liftLoading model.moduleLoading (text (Debug.toString model.moduleLoading)) <| \mod -> 
              div []
              [ viewHeader model mod
@@ -61,19 +68,20 @@ selectedTermId : Model -> Maybe Int
 selectedTermId model = Maybe.map selectedTermToInt model.selectedTerm
 
 
-viewHeader : Model -> H.Module -> Html Msg
+viewHeader : Model -> Module -> Html Msg
 viewHeader _ mod = 
     div []
-        [ h1 [] [ text (mod.moduleName.getModuleName ++ " -- " ++ mod.modulePhase) ]
-        , button [onClick (MsgLoadModule mod.moduleName.getModuleName 0)] [text "Previous"]
-        , button [onClick (MsgLoadModule mod.moduleName.getModuleName 0)] [text "Next"]
+        [ h1 [] [ text (String.fromInt mod.modulePhaseId ++ ". " ++ mod.moduleName.getModuleName ++ " -- " ++ mod.modulePhase) ]
+        , button [onClick (MsgPrevPhase mod)] [text "Previous"]
+        , button [onClick (MsgNextPhase mod)] [text "Next"]
         ]
 
 
 
-viewCode : Model -> H.Module -> Html Msg
-viewCode model mod = pre [class "code"]
-                     ( mod.moduleTopBindings
+viewCode : Model -> Module -> Html Msg
+viewCode model mod = pre [class "code"] (
+                     (if model.hideTypes then eraseTypesModule mod else mod)
+                     |> .moduleTopBindings
                      |> List.map PP.ppTopBinding
                      |> PP.ppSepped "\n\n"
                      |> PP.prettyPrint (PP.defaultInfo (selectedTermId model))
@@ -85,9 +93,13 @@ fromMaybe def m = case m of
     Nothing -> def
 
 viewInfo : Model -> Html Msg
-viewInfo mod = div [class "info-panel"]
+viewInfo model = div [class "info-panel"]
                     [ h1 [] [text "Menu"]
-                    , fromMaybe (h3 [] [text "No term selected"]) (Maybe.map viewTermInfo mod.selectedTerm)
+                    , hr [] []
+                    , h2 [] [text "ViewSettings"]
+                    , checkbox model.hideTypes MsgViewSettingsToggleHideTypes "Hide Types"
+                    , hr [] []
+                    , fromMaybe (h3 [] [text "No term selected"]) (Maybe.map viewTermInfo model.selectedTerm)
                     ]
 
 viewTermInfo : SelectedTerm -> Html Msg
@@ -97,12 +109,7 @@ viewTermInfo term = div []
                           , p [] [text (Debug.toString term)]
                           , case term of
                               SelectedBinder b -> p [] [text (H.typeToString (H.binderType b))]
-                              SelectedExternal (H.ExternalName e) -> p [] [ text (H.typeToString e.externalType) ]
-                              SelectedExternal H.ForeignCall -> p [] [text "ForeignCall"]
+                              SelectedExternal (ExternalName e) -> p [] [ text (H.typeToString e.externalType) ]
+                              SelectedExternal ForeignCall -> p [] [text "ForeignCall"]
                           ]
 
-
-fetchPass : String -> Int -> Cmd Msg
-fetchPass mod id = Http.get { url = "http://localhost:8080/" ++ mod ++ "/" ++ String.fromInt id
-                            , expect = Http.expectJson MsgGotModule HE.moduleDecoder
-                            }

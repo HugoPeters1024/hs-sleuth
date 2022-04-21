@@ -6,13 +6,13 @@ import Html exposing (Html, text)
 import Either exposing (Either)
 import Loading exposing (Loading(..))
 
-import Generated.Types as H
+import Generated.Types exposing (..)
 import HsCore.Helpers as H
 
 
 
-type SelectedTerm = SelectedBinder H.Binder
-                  | SelectedExternal H.ExternalName
+type SelectedTerm = SelectedBinder Binder
+                  | SelectedExternal ExternalName
 
 selectedTermToInt : SelectedTerm -> Int
 selectedTermToInt term = case term of
@@ -20,9 +20,16 @@ selectedTermToInt term = case term of
     SelectedExternal e -> H.externalNameToInt e
 
 type alias Model = 
-    { moduleLoading : Loading H.Module
+    { projectMetaLoading : Loading ProjectMeta
+    , moduleLoading : Loading Module
     , selectedTerm : Maybe SelectedTerm
+    , hideTypes : Bool
     }
-type Msg = MsgGotModule (Result Http.Error H.Module)
-         | MsgSelectTerm SelectedTerm
+
+type Msg = MsgGotProjectMeta (Result Http.Error ProjectMeta)
          | MsgLoadModule String Int
+         | MsgGotModule (Result Http.Error Module)
+         | MsgSelectTerm SelectedTerm
+         | MsgNextPhase Module
+         | MsgPrevPhase Module
+         | MsgViewSettingsToggleHideTypes

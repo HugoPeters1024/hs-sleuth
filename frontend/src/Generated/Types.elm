@@ -20,7 +20,9 @@ module Generated.Types exposing
     , Tick
     , TopBinding(..)
     , CoreStats
-    , BinderThunk(..)
+    , ModuleMeta
+    , ProjectMeta
+    , BinderThunk (..)
     )
 
 
@@ -34,11 +36,9 @@ type ExternalName
     , externalName : String
     , externalUnique : Unique
     , externalType : Type 
-    , localBinder : () -> BinderThunk
-    }
+    , localBinder : () -> BinderThunk}
     | ForeignCall 
 
-type BinderThunk = Untouched | NotFound | Found Binder
 
 type BinderId 
     = BinderId Unique (() -> BinderThunk)
@@ -133,6 +133,7 @@ type alias ModuleName  =
 type alias Module  =
     { moduleName : ModuleName
     , modulePhase : String
+    , modulePhaseId : Int
     , moduleTopBindings : List TopBinding }
 
 
@@ -183,3 +184,12 @@ type alias CoreStats  =
     , csCoercions : Int
     , csValBinds : Int
     , csJoinBinds : Int }
+
+
+type alias ModuleMeta  =
+    { nrPasses : Int, name : String }
+
+
+type alias ProjectMeta  =
+    { modules : List ModuleMeta }
+type BinderThunk = Found Binder | NotFound | Untouched

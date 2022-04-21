@@ -1,16 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 module Main where
 
-import HsComprehension.Plugin (coreDumpFile)
+import HsComprehension.Plugin (coreDumpFile, projectMetaFile, readFromFile)
 import HsComprehension.Ast
-
-
+import HsComprehension.Meta
 
 import Data.Maybe
 
 import Data.Aeson as JSON
 import Data.Aeson.Encode.Pretty (encodePretty)
+import Codec.Serialise (Serialise)
 
 import Network.Wai
 import Network.Wai.Handler.Warp (run)
@@ -32,11 +34,21 @@ fetchCore modString idString = do
     mod <- readSModule fname
     pure (Just (JSON.encode mod))
 
+fetchProjectMeta :: IO (Maybe ByteString)
+fetchProjectMeta = Just <$> resJsonFile @ProjectMeta projectMetaFile
+
+resJsonFile :: forall a. (Serialise a, ToJSON a) => FilePath -> IO ByteString
+resJsonFile fname = do
+    obj <- readFromFile @a fname
+    pure (encodePretty @a obj)
+
+
 
 app :: Application
 app rec respond = do
     content <- case pathInfo rec of
         (modString:idString:[]) -> fetchCore modString idString
+        ("meta":[])             -> fetchProjectMeta
         _                       -> pure Nothing
 
     let headers = [("Content-Type", "text/json"), ("Access-Control-Allow-Origin", "*")]

@@ -13,11 +13,13 @@ module MyLib (someFunc) where
 import GHC.Generics
 import qualified Data.Aeson as Aeson
 import qualified HsComprehension.Ast as Ast
+import qualified HsComprehension.Meta as Meta
 
 import Control.Monad
 import qualified Data.HashMap.Lazy as HashMap
 
 import Data.Maybe
+import Data.List.Utils (replace)
 
 import Language.Haskell.To.Elm
 import Language.Elm.Definition (Definition)
@@ -49,17 +51,32 @@ elmDefsFor = (,) <$> elmDefinition @a <*> elmDecoderDefinition @Aeson.Value @a
     , elmDefsFor @Ast.Tick 
     , elmDefsFor @Ast.STopBinding 
     , elmDefsFor @Ast.CoreStats 
+    , elmDefsFor @Meta.ModuleMeta
+    , elmDefsFor @Meta.ProjectMeta
     ]
+
+
+renderDefs :: String -> [Definition] -> String
+renderDefs name defs =
+    let contents = show $ head $ map snd $ HashMap.toList $ Pretty.modules (map Simplification.simplifyDefinition defs)
+    in replace "TODO" name contents
+
+tripleDef :: String
+tripleDef = unlines [ ""
+                    , "triple : a -> b -> c -> (a,b,c)"
+                    , "triple x y z = (x,y,z)"
+                    ]
+
+binderThunkDef :: String
+binderThunkDef = unlines [ ""
+                         , "type BinderThunk = Found Binder | NotFound | Untouched"
+                         ]
 
 
 someFunc :: IO ()
 someFunc = do
-    let defs = Pretty.modules (map Simplification.simplifyDefinition elmDefs)
-    forM_ (HashMap.toList defs) $ \(moduleName, contents) ->
-        writeFile "Types.elm" (show contents)
-    let decoders = Pretty.modules (map Simplification.simplifyDefinition elmDecoders)
-    forM_ (HashMap.toList decoders) $ \(moduleName, contents) ->
-        writeFile "Decoders.elm" (show contents)
+    writeFile "Types.elm" (renderDefs "Types" elmDefs ++ binderThunkDef)
+    writeFile "Decoders.elm" (renderDefs "Decoders" elmDecoders ++ tripleDef)
     putStrLn "All done!"
 
     

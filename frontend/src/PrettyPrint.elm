@@ -99,10 +99,20 @@ parensExpr expr = case expr of
     H.EType t -> ppExpr (H.EType t)
     _        -> parens (ppExpr expr)
 
+ppType : H.Type -> PP
+ppType t = emitText (H.typeToString t)
+
+parensType : H.Type -> PP
+parensType type_ = case type_ of
+    H.VarTy t -> ppType (H.VarTy t)
+    H.TyConApp con [] -> ppType (H.TyConApp con [])
+    H.TyConApp (H.TyCon "[]" u) ts -> ppType (H.TyConApp (H.TyCon "[]" u) ts)
+    _         -> parens (ppType type_)
+
 ppLit : H.Lit -> PP
 ppLit lit  = case lit of
     H.MachChar c -> emitSpan "s" (String.fromList ['\'', c, '\''])
-    H.MachStr s  -> emitSpan "s" ("\"" ++ s ++ "\"")
+    H.MachStr s  -> emitSpan "s" ("" ++ s ++ "")
     H.MachNullAddr -> emitKeyword "NullAddr#"
     H.MachInt i  -> emitSpan "m" i
     H.MachInt64 i -> emitSpan "m" i
@@ -138,7 +148,7 @@ ppBinderM mb = case mb of
 ppBinderT : H.BinderThunk -> PP
 ppBinderT mb = case mb of
     H.Found b -> ppBinder b
-    H.NotFound -> emitText "[!UKNOWN VARIABLE!]"
+    H.NotFound -> emitText "[!UKNOWN VARIABLE!]" 
     H.Untouched -> emitText "[!I WAS NEVER TOUCHED!]"
 
 ppTopBinding : H.TopBinding -> PP
@@ -150,7 +160,14 @@ ppTopBinding b = case b of
 ppBinding : Bool -> (H.Binder, H.Expr) -> PP
 ppBinding toplevel (b, e) = 
     let (fe, bs) = H.leadingLambdas e
-        in ppSeq [ ppBinderClass (if toplevel then "nf" else "") b
+        in ppSeq [ if toplevel
+                   then ppSeq [ ppBinderClass "nf" b
+                              , emitText " :: "
+                              , ppType (H.binderType b)
+                              , newline
+                              ]
+                   else emitText ""
+                 , ppBinderClass (if toplevel then "nf" else "") b
                  , emitText " "
                  , ppSepped " " (List.map ppBinder bs)
                  , emitText (if List.isEmpty bs then "" else " ")
@@ -173,7 +190,7 @@ ppExpr expr = case expr of
                           , emitKeyword " in ", ppExpr e
                           ]
     H.ECase e b alts -> ppCase e b alts
-    H.EType t -> emitText ("@("++ H.typeToString t ++ ")")
+    H.EType t -> ppSeq [emitText "@", parensType t]
     _ -> emitText "[Expr TODO]"
 
 ppCase : H.Expr -> H.Binder -> List H.Alt -> PP

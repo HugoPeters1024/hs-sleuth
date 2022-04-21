@@ -51,6 +51,11 @@ isTyBinder b = case b of
     Binder _ -> False
     TyBinder _ -> True
 
+isTyBinderId : BinderId -> Bool
+isTyBinderId (BinderId _ getBinder) = case getBinder () of
+    Found b -> isTyBinder b
+    _       -> False
+
 -- Checks wether a list of alts contains  only the default case
 -- This indicates a `seq` like usage and requires alternative printing
 isOnlyDefaultAlt : List Alt -> Bool

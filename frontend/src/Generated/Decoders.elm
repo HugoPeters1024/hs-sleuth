@@ -20,11 +20,13 @@ module Generated.Decoders exposing
     , tickDecoder
     , topBindingDecoder
     , coreStatsDecoder
+    , moduleMetaDecoder
+    , projectMetaDecoder
     )
 
-import Generated.Types exposing (..)
 import Json.Decode
 import Json.Decode.Pipeline
+import Generated.Types exposing (..)
 
 
 uniqueDecoder : Json.Decode.Decoder Unique
@@ -48,7 +50,7 @@ externalNameDecoder =
             Json.Decode.map ExternalName (Json.Decode.succeed (\b c d e -> { externalModuleName = b
             , externalName = c
             , externalUnique = d
-            , externalType = e
+            , externalType = e 
             , localBinder = \_ -> Untouched}) |>
             Json.Decode.Pipeline.required "externalModuleName" moduleNameDecoder |>
             Json.Decode.Pipeline.required "externalName" Json.Decode.string |>
@@ -64,7 +66,7 @@ externalNameDecoder =
 
 binderIdDecoder : Json.Decode.Decoder BinderId
 binderIdDecoder =
-    Json.Decode.map (\id -> BinderId id (\_ -> Untouched)) uniqueDecoder
+    Json.Decode.map (\u -> BinderId u (\_ -> Untouched)) uniqueDecoder
 
 
 binderDecoder : Json.Decode.Decoder Binder
@@ -321,6 +323,7 @@ moduleDecoder =
     Json.Decode.succeed Module |>
     Json.Decode.Pipeline.required "moduleName" moduleNameDecoder |>
     Json.Decode.Pipeline.required "modulePhase" Json.Decode.string |>
+    Json.Decode.Pipeline.required "modulePhaseId" Json.Decode.int |>
     Json.Decode.Pipeline.required "moduleTopBindings" (Json.Decode.list topBindingDecoder)
 
 
@@ -430,10 +433,6 @@ tickDecoder =
     Json.Decode.Pipeline.required "sourceTickSpan" srcSpanDecoder
 
 
-triple : a -> b -> c -> (a,b,c)
-triple x y z = (x, y, z)
-
-
 topBindingDecoder : Json.Decode.Decoder TopBinding
 topBindingDecoder =
     Json.Decode.field "tag" Json.Decode.string |>
@@ -460,3 +459,18 @@ coreStatsDecoder =
     Json.Decode.Pipeline.required "csCoercions" Json.Decode.int |>
     Json.Decode.Pipeline.required "csValBinds" Json.Decode.int |>
     Json.Decode.Pipeline.required "csJoinBinds" Json.Decode.int
+
+
+moduleMetaDecoder : Json.Decode.Decoder ModuleMeta
+moduleMetaDecoder =
+    Json.Decode.succeed ModuleMeta |>
+    Json.Decode.Pipeline.required "nrPasses" Json.Decode.int |>
+    Json.Decode.Pipeline.required "name" Json.Decode.string
+
+
+projectMetaDecoder : Json.Decode.Decoder ProjectMeta
+projectMetaDecoder =
+    Json.Decode.succeed ProjectMeta |>
+    Json.Decode.Pipeline.required "modules" (Json.Decode.list moduleMetaDecoder)
+triple : a -> b -> c -> (a,b,c)
+triple x y z = (x,y,z)
