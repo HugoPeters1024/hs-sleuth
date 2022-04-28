@@ -17,6 +17,7 @@ import Html.Events exposing (..)
 import Reader exposing (Reader(..))
 
 type alias PPEnv = { selectId : Maybe Int
+                   , onClickBinder : SelectedTerm -> Msg
                    }
 
 type alias PPM a = Reader PPEnv a
@@ -29,9 +30,10 @@ prettyPrint info pp = Reader.runReader info pp []
                     |> List.intersperse [text "\n"]
                     |> List.concat
 
-defaultInfo : Maybe Int -> PPEnv
-defaultInfo selectId = 
-    { selectId = selectId
+defaultInfo : PPEnv
+defaultInfo = 
+    { selectId = Nothing
+    , onClickBinder = MsgSelectTerm
     }
 
 binderIsSelected : PPEnv -> H.Binder -> Bool
@@ -99,9 +101,6 @@ parensExpr expr = case expr of
     H.EType t -> ppExpr (H.EType t)
     _        -> parens (ppExpr expr)
 
-ppType : H.Type -> PP
-ppType t = emitText (H.typeToString t)
-
 parensType : H.Type -> PP
 parensType type_ = case type_ of
     H.VarTy t -> ppType (H.VarTy t)
@@ -129,7 +128,7 @@ ppBinderClass : String -> H.Binder -> PP
 ppBinderClass c b = Reader.ask 
     |> Reader.andThen (\env ->
         emit <| a [ class "no-style"
-                  , onClick (MsgSelectTerm (SelectedBinder b)) 
+                  , onClick (env.onClickBinder (SelectedBinder b))
                   ]
                   [ span [ class c
                          , class (if binderIsSelected env b then "highlight" else "")
@@ -151,10 +150,14 @@ ppBinderT mb = case mb of
     H.NotFound -> emitText "[!UKNOWN VARIABLE!]" 
     H.Untouched -> emitText "[!I WAS NEVER TOUCHED!]"
 
+uncurry3 : (a -> b -> c -> d) -> ((a,b,c) -> d)
+uncurry3 f = \(x,y,z) -> f x y z
+
+
 ppTopBinding : H.TopBinding -> PP
 ppTopBinding b = case b of
     H.NonRecTopBinding bndr _ e -> ppBinding True (bndr, e)
-    H.RecTopBinding xs -> Debug.todo "Recursive bindings not implemented"
+    H.RecTopBinding xs -> ppSepped "\n\n" (List.map (ppTopBinding << uncurry3 H.NonRecTopBinding) xs)
 
 
 ppBinding : Bool -> (H.Binder, H.Expr) -> PP
@@ -198,7 +201,7 @@ ppCase e b alts = ppSeq [ emitKeyword "case "
                         , ppExpr e
                         , emitKeyword " of"
                         , indented <| 
-                            ppSeq (List.map (\alt -> ppSeq [ppAlt alt, newline]) alts)
+                            ppSeq (List.map (\alt -> ppSeq [ppAlt alt, newline]) (List.reverse alts))
                         , newline
                         ]
 
@@ -229,10 +232,30 @@ ppActualExternalName e =
                                , class (if externalIsSelected env e then "highlight" else "") 
                                ] 
                  in emit (a [ class "no-style"
-                            , onClick (MsgSelectTerm (SelectedExternal e))
+                            , onClick (env.onClickBinder (SelectedExternal e))
                             ] 
                             [span classes [text (H.externalName e)]])
     in Reader.exec go
 
 
-
+ppType : H.Type -> PP
+ppType type_ = case type_ of
+    H.VarTy (H.BinderId _ getBinder) -> case getBinder () of
+        H.Found x -> ppBinder x
+        H.NotFound -> emitText "[UKNOWN TYPEVAR]"
+        H.Untouched -> emitText "[TYPEVAR NEVER TRAVERSED]"
+    H.FunTy x y -> ppSeq [parensType x, emitText " -> ", ppType y]
+    H.TyConApp (H.TyCon con _) ts -> 
+        case ts of
+            [] -> emitText con
+            _ -> let tsStr = ppSeq (List.intersperse (emitText "") (List.map ppType ts))
+                 in case con of
+                    "[]" -> ppSeq [emitText "[", tsStr, emitText "]"]
+                    _    -> ppSeq [emitText (con ++ " "), tsStr]
+    H.AppTy x y -> ppSeq [ppType x, emitText " ", parensType y]
+    H.ForAllTy b t -> 
+        let (ft, bs) = H.leadingForalls t
+            bndrsStr = ppSepped " " (List.map ppBinder (b::bs))
+        in ppSeq [emitText "forall ", bndrsStr, emitText ". ", ppType ft]
+    H.LitTy -> emitText "[LitTy]"
+    H.CoercionTy -> emitText "[CoercionTy]"

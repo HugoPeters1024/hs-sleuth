@@ -12,11 +12,13 @@ import HsCore.Helpers as H
 
 
 type SelectedTerm = SelectedBinder Binder
+                  | SelectedTopLevel (Binder, CoreStats)
                   | SelectedExternal ExternalName
 
 selectedTermToInt : SelectedTerm -> Int
 selectedTermToInt term = case term of
     SelectedBinder b -> H.binderToInt b
+    SelectedTopLevel (b, _) -> H.binderToInt b
     SelectedExternal e -> H.externalNameToInt e
 
 type alias Model = 
@@ -33,3 +35,4 @@ type Msg = MsgGotProjectMeta (Result Http.Error ProjectMeta)
          | MsgNextPhase Module
          | MsgPrevPhase Module
          | MsgViewSettingsToggleHideTypes
+         | MsgNoop

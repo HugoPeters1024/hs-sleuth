@@ -3,7 +3,7 @@ module Main exposing (..)
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (..)
 import HtmlHelpers exposing (..)
 
 import Generated.Types exposing (..)
@@ -43,13 +43,17 @@ update msg model = case msg of
     MsgNextPhase mod -> (model, C.fetchModifyPhase (\x->x + 1) mod)
     MsgPrevPhase mod -> (model, C.fetchModifyPhase (\x->x - 1) mod)
     MsgViewSettingsToggleHideTypes -> ({ model | hideTypes = not model.hideTypes }, Cmd.none)
+    MsgNoop -> (model, Cmd.none)
 
 view : Model -> Html Msg
 view model =
   div [] [ node "link" [rel "stylesheet", href "style.css", type_ "text/css"] []
          , node "link" [rel "stylesheet", href "pygments.css", type_ "text/css"] []
-         , Loading.loadOrDebug model.projectMetaLoading (text << Debug.toString)
-         , Loading.liftLoading model.moduleLoading (text (Debug.toString model.moduleLoading)) <| \mod -> 
+         , Loading.renderLoading "ProjectMeta" model.projectMetaLoading <| \meta ->
+             select [onInput (\x -> MsgLoadModule x 0)]
+                    (List.map (\m -> option [] [text m.name]) meta.modules)
+
+         , Loading.renderLoading "Module" model.moduleLoading <| \mod -> 
              div []
              [ viewHeader model mod
              , panel [ viewCode model mod
@@ -79,13 +83,15 @@ viewHeader _ mod =
 
 
 viewCode : Model -> Module -> Html Msg
-viewCode model mod = pre [class "code"] (
-                     (if model.hideTypes then eraseTypesModule mod else mod)
-                     |> .moduleTopBindings
-                     |> List.map PP.ppTopBinding
-                     |> PP.ppSepped "\n\n"
-                     |> PP.prettyPrint (PP.defaultInfo (selectedTermId model))
-                     )
+viewCode model mod = 
+    let ppInfo = PP.defaultInfo |> \r -> {r | selectId = Maybe.map selectedTermToInt model.selectedTerm}
+    in pre [class "code"] (
+         (if model.hideTypes then eraseTypesModule mod else mod)
+         |> .moduleTopBindings
+         |> List.map PP.ppTopBinding
+         |> PP.ppSepped "\n\n"
+         |> PP.prettyPrint ppInfo
+         )
 
 fromMaybe : a -> Maybe a -> a
 fromMaybe def m = case m of
@@ -105,11 +111,21 @@ viewInfo model = div [class "info-panel"]
 viewTermInfo : SelectedTerm -> Html Msg
 viewTermInfo term = div []
                           [ h3 [] [text "Selected term"]
-                          , p [] [text "details:"]
-                          , p [] [text (Debug.toString term)]
+                          --, p [] [text "details:"]
+                          --, p [] [text (Debug.toString term)]
                           , case term of
-                              SelectedBinder b -> p [] [text (H.typeToString (H.binderType b))]
+                              SelectedBinder b -> viewTermBinder b
+                              SelectedTopLevel (b,s) -> div [] [viewTermBinder b, br [] [], text (Debug.toString s)]
                               SelectedExternal (ExternalName e) -> p [] [ text (H.typeToString e.externalType) ]
                               SelectedExternal ForeignCall -> p [] [text "ForeignCall"]
                           ]
+
+viewTermBinder : Binder -> Html Msg
+viewTermBinder bndr = HtmlHelpers.list
+            [ text ("name: " ++ H.binderName bndr)
+            , text ("type: " ++ H.typeToString (H.binderType bndr))
+            , text ("span: " ++ Debug.toString (H.binderSpan bndr))
+            ]
+
+
 

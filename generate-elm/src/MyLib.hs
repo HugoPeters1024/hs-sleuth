@@ -72,11 +72,22 @@ binderThunkDef = unlines [ ""
                          , "type BinderThunk = Found Binder | NotFound | Untouched"
                          ]
 
+finalizeTypes :: String -> String
+finalizeTypes = replace ",, Binder CoreStats Expr" "Binder, CoreStats, Expr"
+              . replace "BinderId Unique" "BinderId Unique (() -> BinderThunk)"
+              . replace "externalType : Type }" "externalType : Type\n    , localBinder : () -> BinderThunk }"
+              . (++ binderThunkDef)
+
+finalizeDecoders :: String -> String
+finalizeDecoders = replace "Tuple.triple" "triple"
+                 . replace "import Json.Decode" "import Generated.Types exposing (..)\nimport Json.Decode"
+                 . (++ tripleDef)
+
 
 someFunc :: IO ()
 someFunc = do
-    writeFile "Types.elm" (renderDefs "Types" elmDefs ++ binderThunkDef)
-    writeFile "Decoders.elm" (renderDefs "Decoders" elmDecoders ++ tripleDef)
+    writeFile "Types.elm" (finalizeTypes (renderDefs "Types" elmDefs))
+    writeFile "Decoders.elm" (finalizeDecoders (renderDefs "Decoders" elmDecoders))
     putStrLn "All done!"
 
     

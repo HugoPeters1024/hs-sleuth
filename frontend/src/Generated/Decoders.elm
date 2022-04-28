@@ -24,9 +24,10 @@ module Generated.Decoders exposing
     , projectMetaDecoder
     )
 
-import Json.Decode
-import Json.Decode.Pipeline
 import Generated.Types exposing (..)
+import Json.Decode
+import Generated.Types exposing (..)
+import Json.Decode.Pipeline
 
 
 uniqueDecoder : Json.Decode.Decoder Unique
@@ -74,16 +75,18 @@ binderDecoder =
     Json.Decode.field "tag" Json.Decode.string |>
     Json.Decode.andThen (\a -> case a of
         "Binder" ->
-            Json.Decode.map Binder (Json.Decode.succeed (\b c d e f -> { binderName = b
+            Json.Decode.map Binder (Json.Decode.succeed (\b c d e f g -> { binderName = b
             , binderId = c
             , binderIdInfo = d
             , binderIdDetails = e
-            , binderType = f }) |>
+            , binderType = f
+            , binderSrcSpan = g }) |>
             Json.Decode.Pipeline.required "binderName" Json.Decode.string |>
             Json.Decode.Pipeline.required "binderId" binderIdDecoder |>
             Json.Decode.Pipeline.required "binderIdInfo" idInfoDecoder |>
             Json.Decode.Pipeline.required "binderIdDetails" idDetailsDecoder |>
-            Json.Decode.Pipeline.required "binderType" typeDecoder)
+            Json.Decode.Pipeline.required "binderType" typeDecoder |>
+            Json.Decode.Pipeline.required "binderSrcSpan" srcSpanDecoder)
 
         "TyBinder" ->
             Json.Decode.map TyBinder (Json.Decode.succeed (\b c d -> { binderName = b
@@ -421,10 +424,21 @@ lineColDecoder =
 
 srcSpanDecoder : Json.Decode.Decoder SrcSpan
 srcSpanDecoder =
-    Json.Decode.succeed SrcSpan |>
-    Json.Decode.Pipeline.required "spanFile" Json.Decode.string |>
-    Json.Decode.Pipeline.required "spanStart" lineColDecoder |>
-    Json.Decode.Pipeline.required "spanEnd" lineColDecoder
+    Json.Decode.field "tag" Json.Decode.string |>
+    Json.Decode.andThen (\a -> case a of
+        "SrcSpan" ->
+            Json.Decode.map SrcSpan (Json.Decode.succeed (\b c d -> { spanFile = b
+            , spanStart = c
+            , spanEnd = d }) |>
+            Json.Decode.Pipeline.required "spanFile" Json.Decode.string |>
+            Json.Decode.Pipeline.required "spanStart" lineColDecoder |>
+            Json.Decode.Pipeline.required "spanEnd" lineColDecoder)
+
+        "NoSpan" ->
+            Json.Decode.succeed NoSpan
+
+        _ ->
+            Json.Decode.fail "No matching constructor")
 
 
 tickDecoder : Json.Decode.Decoder Tick

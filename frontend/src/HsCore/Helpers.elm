@@ -20,6 +20,11 @@ binderType binder = case binder of
     Binder b -> b.binderType
     TyBinder b -> b.binderKind
 
+binderSpan : Binder -> SrcSpan
+binderSpan bind = case bind of
+    Binder b -> b.binderSrcSpan
+    _        -> NoSpan
+
 externalName : ExternalName -> String
 externalName en = case en of
     ExternalName n -> n.externalName

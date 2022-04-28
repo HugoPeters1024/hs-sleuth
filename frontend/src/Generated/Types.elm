@@ -16,13 +16,13 @@ module Generated.Types exposing
     , Alt
     , AltCon(..)
     , LineCol
-    , SrcSpan
+    , SrcSpan(..)
     , Tick
     , TopBinding(..)
     , CoreStats
     , ModuleMeta
     , ProjectMeta
-    , BinderThunk (..)
+    , BinderThunk(..)
     )
 
 
@@ -35,8 +35,8 @@ type ExternalName
     = ExternalName { externalModuleName : ModuleName
     , externalName : String
     , externalUnique : Unique
-    , externalType : Type 
-    , localBinder : () -> BinderThunk}
+    , externalType : Type
+    , localBinder : () -> BinderThunk }
     | ForeignCall 
 
 
@@ -49,7 +49,8 @@ type Binder
     , binderId : BinderId
     , binderIdInfo : IdInfo
     , binderIdDetails : IdDetails
-    , binderType : Type }
+    , binderType : Type
+    , binderSrcSpan : SrcSpan }
     | TyBinder { binderName : String, binderId : BinderId, binderKind : Type }
 
 
@@ -165,8 +166,9 @@ type alias LineCol  =
     { row : Int, column : Int }
 
 
-type alias SrcSpan  =
-    { spanFile : String, spanStart : LineCol, spanEnd : LineCol }
+type SrcSpan 
+    = SrcSpan { spanFile : String, spanStart : LineCol, spanEnd : LineCol }
+    | NoSpan 
 
 
 type alias Tick  =
