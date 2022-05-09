@@ -2,6 +2,8 @@ module Types exposing (..)
 
 import Http
 import Html exposing (Html, text)
+import Browser
+import Url exposing (Url)
 
 import Either exposing (Either)
 import Loading exposing (Loading(..))
@@ -38,3 +40,5 @@ type Msg = MsgGotProjectMeta (Result Http.Error ProjectMeta)
          | MsgToggleHideTypes
          | MsgToggleDisambiguateVariables
          | MsgNoop
+         | MsgLinkClicked Browser.UrlRequest
+         | MsgUrlChanged Url

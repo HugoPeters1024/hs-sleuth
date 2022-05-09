@@ -5,6 +5,7 @@ module Main where
 import TreeMap
 import HalfMatch
 import Factorial
+import Extra.Hidden
 
 import Data.Char
 

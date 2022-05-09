@@ -70,7 +70,7 @@ coreDumpDir :: FilePath
 coreDumpDir = "./dist-newstyle/coredump/"
 
 coreDumpFile :: String -> Int -> FilePath
-coreDumpFile mod id = coreDumpDir ++ mod ++ "-coredump-pass" ++ show id ++ ".zstd"
+coreDumpFile mod id = coreDumpDir ++ mod ++ "." ++ show id ++ ".zstd"
 
 projectMetaFile :: FilePath
 projectMetaFile = coreDumpDir ++ "projectmeta.zstd"
