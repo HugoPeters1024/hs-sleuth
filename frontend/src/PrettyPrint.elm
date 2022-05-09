@@ -18,6 +18,7 @@ import Reader exposing (Reader(..))
 
 type alias PPEnv = { selectId : Maybe Int
                    , onClickBinder : SelectedTerm -> Msg
+                   , renderBinderName : H.Binder -> String
                    }
 
 type alias PPM a = Reader PPEnv a
@@ -34,7 +35,11 @@ defaultInfo : PPEnv
 defaultInfo = 
     { selectId = Nothing
     , onClickBinder = MsgSelectTerm
+    , renderBinderName = H.binderName
     }
+
+withFullNameBinder : PPEnv -> PPEnv
+withFullNameBinder env = { env | renderBinderName = \b -> H.binderName b ++ "_" ++ H.binderUniqueStr b }
 
 binderIsSelected : PPEnv -> H.Binder -> Bool
 binderIsSelected env b = Maybe.withDefault False <| (Maybe.map (\id -> id == H.binderToInt b) (env.selectId))
@@ -104,8 +109,7 @@ parensExpr expr = case expr of
 parensType : H.Type -> PP
 parensType type_ = case type_ of
     H.VarTy t -> ppType (H.VarTy t)
-    H.TyConApp con [] -> ppType (H.TyConApp con [])
-    H.TyConApp (H.TyCon "[]" u) ts -> ppType (H.TyConApp (H.TyCon "[]" u) ts)
+    H.TyConApp con xs -> ppType (H.TyConApp con xs)
     _         -> parens (ppType type_)
 
 ppLit : H.Lit -> PP
@@ -133,7 +137,7 @@ ppBinderClass c b = Reader.ask
                   [ span [ class c
                          , class (if binderIsSelected env b then "highlight" else "")
                          ] 
-                         [text (H.binderName b)] 
+                         [text (env.renderBinderName b)] 
                   ])
 
 ppBinder : H.Binder -> PP
@@ -193,22 +197,24 @@ ppExpr expr = case expr of
                           , emitKeyword " in ", ppExpr e
                           ]
     H.ECase e b alts -> ppCase e b alts
-    H.EType t -> ppSeq [emitText "@", parensType t]
+    H.EType t -> ppSeq [emitSpan "o" "@", parensType t]
     _ -> emitText "[Expr TODO]"
 
 ppCase : H.Expr -> H.Binder -> List H.Alt -> PP
 ppCase e b alts = ppSeq [ emitKeyword "case "
                         , ppExpr e
-                        , emitKeyword " of"
+                        , emitKeyword " of {"
                         , indented <| 
-                            ppSeq (List.map (\alt -> ppSeq [ppAlt alt, newline]) (List.reverse alts))
+                            ppSeq (List.map (\alt -> ppSeq [ppAlt b alt, newline]) (List.reverse alts))
+                        , newline
+                        , emitText "}"
                         , newline
                         ]
 
-ppAlt : H.Alt -> PP
-ppAlt alt = ppSeq [ ppAltCon alt.altCon
+ppAlt : H.Binder -> H.Alt -> PP
+ppAlt b alt = ppSeq [ ppAltCon alt.altCon
                   , ppWhen (not (List.isEmpty alt.altBinders)) (emitText " ")
-                  , ppSepped " " (List.map ppBinder alt.altBinders)
+                  , ppSepped " " (List.map ppBinder (if H.isDefaultAlt alt then [b] else alt.altBinders))
                   , emitText " -> "
                   , ppExpr alt.altRHS
                   ]
@@ -217,7 +223,7 @@ ppAltCon : H.AltCon -> PP
 ppAltCon con = case con of
     H.AltDataCon s -> if H.isConstructorName s then emitKeyword s else emitText s
     H.AltLit l -> ppLit l
-    H.AltDefault -> emitText "_"
+    H.AltDefault -> emitText ""
 
 ppExternalName : H.ExternalName -> PP
 ppExternalName name = case name of 
@@ -248,7 +254,7 @@ ppType type_ = case type_ of
     H.TyConApp (H.TyCon con _) ts -> 
         case ts of
             [] -> emitText con
-            _ -> let tsStr = ppSeq (List.intersperse (emitText "") (List.map ppType ts))
+            _ -> let tsStr = ppSeq (List.intersperse (emitText " ") (List.map ppType ts))
                  in case con of
                     "[]" -> ppSeq [emitText "[", tsStr, emitText "]"]
                     _    -> ppSeq [emitText (con ++ " "), tsStr]

@@ -3,8 +3,8 @@
 module Main where
 
 import TreeMap
-import Factorial
 import HalfMatch
+import Factorial
 
 import Data.Char
 

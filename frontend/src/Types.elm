@@ -26,6 +26,7 @@ type alias Model =
     , moduleLoading : Loading Module
     , selectedTerm : Maybe SelectedTerm
     , hideTypes : Bool
+    , disambiguateVariables : Bool
     }
 
 type Msg = MsgGotProjectMeta (Result Http.Error ProjectMeta)
@@ -34,5 +35,6 @@ type Msg = MsgGotProjectMeta (Result Http.Error ProjectMeta)
          | MsgSelectTerm SelectedTerm
          | MsgNextPhase Module
          | MsgPrevPhase Module
-         | MsgViewSettingsToggleHideTypes
+         | MsgToggleHideTypes
+         | MsgToggleDisambiguateVariables
          | MsgNoop

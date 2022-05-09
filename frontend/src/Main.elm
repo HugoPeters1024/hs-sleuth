@@ -29,6 +29,7 @@ initModel = { projectMetaLoading = Loading Nothing
             , moduleLoading = Loading Nothing
             , selectedTerm = Nothing
             , hideTypes = False
+            , disambiguateVariables = False
             }
 
 init : () -> (Model, Cmd Msg)
@@ -42,7 +43,8 @@ update msg model = case msg of
     MsgSelectTerm term -> ({model | selectedTerm = Just term}, Cmd.none)
     MsgNextPhase mod -> (model, C.fetchModifyPhase (\x->x + 1) mod)
     MsgPrevPhase mod -> (model, C.fetchModifyPhase (\x->x - 1) mod)
-    MsgViewSettingsToggleHideTypes -> ({ model | hideTypes = not model.hideTypes }, Cmd.none)
+    MsgToggleHideTypes -> ({ model | hideTypes = not model.hideTypes }, Cmd.none)
+    MsgToggleDisambiguateVariables -> ({ model | disambiguateVariables = not model.disambiguateVariables }, Cmd.none)
     MsgNoop -> (model, Cmd.none)
 
 view : Model -> Html Msg
@@ -84,7 +86,9 @@ viewHeader _ mod =
 
 viewCode : Model -> Module -> Html Msg
 viewCode model mod = 
-    let ppInfo = PP.defaultInfo |> \r -> {r | selectId = Maybe.map selectedTermToInt model.selectedTerm}
+    let ppInfo = PP.defaultInfo 
+            |> \r -> {r | selectId = Maybe.map selectedTermToInt model.selectedTerm}
+            |> if model.disambiguateVariables then PP.withFullNameBinder else identity
     in pre [class "code"] (
          (if model.hideTypes then eraseTypesModule mod else mod)
          |> .moduleTopBindings
@@ -103,7 +107,10 @@ viewInfo model = div [class "info-panel"]
                     [ h1 [] [text "Menu"]
                     , hr [] []
                     , h2 [] [text "ViewSettings"]
-                    , checkbox model.hideTypes MsgViewSettingsToggleHideTypes "Hide Types"
+                    , HtmlHelpers.list 
+                          [ checkbox model.hideTypes MsgToggleHideTypes "Hide Types"
+                          , checkbox model.disambiguateVariables MsgToggleDisambiguateVariables "Disambiguate Variables Names"
+                          ]
                     , hr [] []
                     , fromMaybe (h3 [] [text "No term selected"]) (Maybe.map viewTermInfo model.selectedTerm)
                     ]

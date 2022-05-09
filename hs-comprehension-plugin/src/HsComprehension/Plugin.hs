@@ -6,6 +6,7 @@ import Data.Maybe
 import GHC.Plugins
 
 import HsComprehension.Meta
+import HsComprehension.Uniqify as Uniqify
 
 import Control.Monad.IO.Class
 import qualified Data.ByteString.Lazy as BSL
@@ -24,6 +25,8 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Map (Map)
 import qualified Data.Map as M
+import Data.Set (Set)
+import qualified Data.Set as S
 
 import Data.ByteString.Lazy (hPutStr)
 import Data.Aeson.Encode.Pretty (encodePretty)
@@ -33,10 +36,14 @@ import qualified GhcDump.Convert as Ast (cvtModule)
 import GhcDump.Reconstruct (reconModule)
 
 
-projectMeta :: IORef ProjectMeta
-projectMeta = unsafePerformIO $ newIORef $ ProjectMeta { modules = []
-                                                       }
+type GState = ProjectMeta
 
+projectState :: IORef GState
+projectState = 
+    let projectMeta = ProjectMeta { modules = []
+                                  }
+        uniqEnv = S.empty
+    in unsafePerformIO $ newIORef projectMeta
 
 plugin :: Plugin
 plugin = defaultPlugin { installCoreToDos = install }
@@ -47,11 +54,10 @@ install _ todo = do
     modName <- showPprUnsafe <$> getModule
     liftIO $ do
         let mod = ModuleMeta (length todo) (T.pack modName)
-        modifyIORef projectMeta $ \(ProjectMeta ms) -> ProjectMeta (mod:ms)
+        modifyIORef projectState $ \(ProjectMeta ms) -> ProjectMeta (mod:ms)
     let dumpPasses = zipWith dumpPass [1..] (map getPhase todo)
     let firstPass = dumpPass 0 "Desugared"
     pure $ firstPass : (P.concat $ zipWith (\x y -> [x,y]) todo dumpPasses) ++ [finalPass]
-
 
 
 getPhase :: CoreToDo -> String
@@ -78,7 +84,8 @@ readFromFile fname = do
     Ser.deserialise . Zstd.decompress <$> BSL.readFile fname
 
 dumpPass :: Int -> String -> CoreToDo
-dumpPass n phase = CoreDoPluginPass "Core Snapshot" $ \guts -> do
+dumpPass n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
+    guts <- liftIO $ Uniqify.uniqueModule in_guts
     dflags <- getDynFlags
     let prefix :: String = showSDocUnsafe (ppr (mg_module guts))
     let fname = coreDumpFile prefix n
@@ -90,5 +97,5 @@ dumpPass n phase = CoreDoPluginPass "Core Snapshot" $ \guts -> do
 
 finalPass :: CoreToDo
 finalPass = CoreDoPluginPass "Finalize dump" $ \guts -> do
-    liftIO $ readIORef projectMeta >>= writeToFile projectMetaFile
+    liftIO $ readIORef projectState >>= writeToFile projectMetaFile
     pure guts

@@ -15,6 +15,17 @@ binderName binder = case binder of
     Binder b -> b.binderName
     TyBinder b -> b.binderName
 
+binderId : Binder -> BinderId
+binderId binder = case binder of
+    Binder b -> b.binderId
+    TyBinder b -> b.binderId
+
+binderUnique : Binder -> Unique
+binderUnique b = let (BinderId u _) = binderId b in u
+
+binderUniqueStr : Binder -> String
+binderUniqueStr = uniqueToStr << binderUnique
+
 binderType : Binder -> Type
 binderType binder = case binder of
     Binder b -> b.binderType
@@ -31,15 +42,16 @@ externalName en = case en of
     ForeignCall -> "ForeignCall"
 
 binderToInt : Binder -> Int
-binderToInt binder = case binder of
-    Binder b -> binderIdToInt b.binderId
-    TyBinder b -> binderIdToInt b.binderId
+binderToInt = binderIdToInt << binderId
 
 binderIdToInt : BinderId -> Int
 binderIdToInt (BinderId u _) = uniqueToInt u
 
 uniqueToInt : Unique -> Int
 uniqueToInt (Unique _ i) = i
+
+uniqueToStr : Unique -> String
+uniqueToStr (Unique _ i) = String.fromInt i
 
 externalNameToInt : ExternalName -> Int
 externalNameToInt en = case en of
@@ -135,3 +147,5 @@ typeToString type_ = case type_ of
         in "forall " ++ bndrsStr ++ ". " ++ typeToString ft
     LitTy -> "[LitTy]"
     CoercionTy -> "[CoercionTy]"
+
+
