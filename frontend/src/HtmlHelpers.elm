@@ -4,6 +4,8 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
+import Time
+
 checkbox : Bool -> msg -> String -> Html msg
 checkbox isChecked msg name =
     label
@@ -17,3 +19,30 @@ list xs =
     let mkColumn el = td [] [el]
         mkRow col = tr [] [mkColumn col]
     in table [] (List.map mkRow xs)
+
+renderDateTime : Time.Zone -> Time.Posix -> String
+renderDateTime zone time = 
+  let
+    day   = String.fromInt (Time.toDay   zone time)
+    month = String.fromInt (monthToInt (Time.toMonth zone time))
+    year  = String.fromInt (Time.toYear zone time)
+
+    hour   = String.fromInt (Time.toHour   zone time)
+    minute = String.fromInt (Time.toMinute zone time)
+    second = String.fromInt (Time.toSecond zone time)
+  in day ++ "/" ++ month ++ "/" ++ year ++ " " ++ hour ++ ":" ++ minute ++ ":" ++ second
+
+monthToInt : Time.Month -> Int
+monthToInt month = case month of
+    Time.Jan -> 1
+    Time.Feb -> 2
+    Time.Mar -> 3
+    Time.Apr -> 4
+    Time.May -> 5
+    Time.Jun -> 6
+    Time.Jul -> 7
+    Time.Aug -> 8
+    Time.Sep -> 9
+    Time.Oct -> 10
+    Time.Nov -> 11
+    Time.Dec -> 12

@@ -11,6 +11,7 @@ import qualified Generics.SOP as SOP
 import Data.Text (Text)
 
 
+
 import qualified HsComprehension.Ast as Ast
 import HsComprehension.ElmDeriving
 import Language.Haskell.To.Elm
@@ -26,6 +27,7 @@ data ModuleMeta = ModuleMeta
 
 data ProjectMeta = ProjectMeta 
     { modules :: [ModuleMeta]
+    , capturedAt :: Int
     } deriving (Generic, SOP.Generic, SOP.HasDatatypeInfo, Serialise)
       deriving ( Aeson.ToJSON
                , HasElmType   
@@ -33,8 +35,8 @@ data ProjectMeta = ProjectMeta
 
 
 data SessionMeta = SessionMeta
-    { sessions :: [String]
-    } deriving (Show, Generic, SOP.Generic, SOP.HasDatatypeInfo, Serialise)
+    { sessions :: [(Text, ProjectMeta)]
+    } deriving (Generic, SOP.Generic, SOP.HasDatatypeInfo, Serialise)
       deriving ( Aeson.ToJSON
                , HasElmType
                , HasElmDecoder Aeson.Value) via ElmType "Generated.TODO.SessionMeta" SessionMeta

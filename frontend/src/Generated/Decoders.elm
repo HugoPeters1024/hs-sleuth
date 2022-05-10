@@ -486,12 +486,13 @@ moduleMetaDecoder =
 projectMetaDecoder : Json.Decode.Decoder ProjectMeta
 projectMetaDecoder =
     Json.Decode.succeed ProjectMeta |>
-    Json.Decode.Pipeline.required "modules" (Json.Decode.list moduleMetaDecoder)
+    Json.Decode.Pipeline.required "modules" (Json.Decode.list moduleMetaDecoder) |>
+    Json.Decode.Pipeline.required "capturedAt" Json.Decode.int
 
 
 sessionMetaDecoder : Json.Decode.Decoder SessionMeta
 sessionMetaDecoder =
     Json.Decode.succeed SessionMeta |>
-    Json.Decode.Pipeline.required "sessions" (Json.Decode.list (Json.Decode.string))
+    Json.Decode.Pipeline.required "sessions" (Json.Decode.list (Json.Decode.map2 Tuple.pair (Json.Decode.index 0 Json.Decode.string) (Json.Decode.index 1 projectMetaDecoder)))
 triple : a -> b -> c -> (a,b,c)
 triple x y z = (x,y,z)

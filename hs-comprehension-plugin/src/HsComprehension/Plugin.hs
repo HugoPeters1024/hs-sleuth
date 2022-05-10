@@ -35,14 +35,22 @@ import GhcDump.ToHtml (topBindingsToHtml)
 import qualified GhcDump.Convert as Ast (cvtModule)
 import GhcDump.Reconstruct (reconModule)
 
+import Data.Time
+import Data.Time.Clock.POSIX
 
-type GState = ProjectMeta
+millisSinceEpoch :: POSIXTime -> Int
+millisSinceEpoch =
+    floor . (1e3 *) . nominalDiffTimeToSeconds
 
-projectState :: IORef GState
+currentPosixMillis :: IO Int
+currentPosixMillis = millisSinceEpoch <$> getPOSIXTime
+
+
+projectState :: IORef ProjectMeta
 projectState = 
     let projectMeta = ProjectMeta { modules = []
+                                  , capturedAt = 0
                                   }
-        uniqEnv = S.empty
     in unsafePerformIO $ newIORef projectMeta
 
 plugin :: Plugin
@@ -54,7 +62,8 @@ install _ todo = do
     modName <- showPprUnsafe <$> getModule
     liftIO $ do
         let mod = ModuleMeta (length todo) (T.pack modName)
-        modifyIORef projectState $ \(ProjectMeta ms) -> ProjectMeta (mod:ms)
+
+        modifyIORef projectState $ \(ProjectMeta ms time) -> ProjectMeta (mod:ms) time
     let dumpPasses = zipWith dumpPass [1..] (map getPhase todo)
     let firstPass = dumpPass 0 "Desugared"
     pure $ firstPass : (P.concat $ zipWith (\x y -> [x,y]) todo dumpPasses) ++ [finalPass]
@@ -100,5 +109,8 @@ dumpPass n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
 
 finalPass :: CoreToDo
 finalPass = CoreDoPluginPass "Finalize dump" $ \guts -> do
-    liftIO $ readIORef projectState >>= writeToFile (projectMetaFile "0")
+    liftIO $ do
+        time <- currentPosixMillis
+        modifyIORef projectState $ \(ProjectMeta mods _) -> ProjectMeta mods time
+        readIORef projectState >>= writeToFile (projectMetaFile "0")
     pure guts

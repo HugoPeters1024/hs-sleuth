@@ -30,12 +30,15 @@ import qualified Data.Text as T
 
 collectSessionMeta :: IO SessionMeta
 collectSessionMeta = do
-    slugs <- listDirectory coreDumpBaseDir
+    dirs <- listDirectory coreDumpBaseDir
          >>= filterM (pure . isPrefixOf "coredump-")
+    slugs <- pure dirs
          >>= mapM (pure . fromJust . stripPrefix "coredump-")
-    let ret = SessionMeta slugs
-    print ret
-    pure ret
+
+    projects <- pure slugs
+            >>= mapM (pure . projectMetaFile)
+            >>= mapM (readFromFile @ProjectMeta)
+    pure $ SessionMeta (zip (map T.pack slugs) projects)
 
 
 main :: IO ()

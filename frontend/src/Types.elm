@@ -11,6 +11,8 @@ import Loading exposing (Loading(..))
 import Generated.Types exposing (..)
 import HsCore.Helpers as H
 
+import UI.Tabs as Tabs
+import Time
 
 
 type SelectedTerm = SelectedBinder Binder
@@ -26,13 +28,15 @@ selectedTermToInt term = case term of
 type Page = Overview | Code
 
 type alias Model = 
-    { currentPage : Page
+    { pageTab : Tabs.Model
+    , currentPage : Page
     , sessionMetaLoading : Loading SessionMeta
     , projectMetaLoading : Loading ProjectMeta
     , moduleLoading : Loading Module
     , selectedTerm : Maybe SelectedTerm
     , hideTypes : Bool
     , disambiguateVariables : Bool
+    , timezone : Time.Zone
     }
 
 
@@ -45,5 +49,5 @@ type Msg = MsgGotSessionMeta (Result Http.Error SessionMeta)
          | MsgPrevPhase Module
          | MsgToggleHideTypes
          | MsgToggleDisambiguateVariables
-         | MsgLinkClicked Browser.UrlRequest
-         | MsgUrlChanged Url
+         | MsgPageTab Tabs.Msg
+         | MsgAdjustTimeZone Time.Zone
