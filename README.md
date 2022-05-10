@@ -2,12 +2,19 @@
 
 This a newer version that restarted with Ben's ghc-dump as a basis. The previous version is still available under the branch 'old'
 
+## Requirements
+
+* GHC 9.2
+* Cabal 3.16
 
 ## Quickstart
 
 The project is currently not on hackage so you need to add this repo as a local repo
 
-- Clone this repository to wherever you want (lets assume `..`)
+- Clone this repository to wherever you want (lets assume `..`) and update the submodules
+  ```sh
+  git clone --recurse-submodules https://github.com/HugoPeters1024/hs-comprehension 
+  ```
 - Create or edit a `cabal.project` file for your project: 
     ```sh
     packages: .
