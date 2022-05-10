@@ -1,4 +1,4 @@
-module Pages.Code.PrettyPrint exposing (..)
+module PrettyPrint exposing (..)
 
 import Types exposing (..)
 import Generated.Types as H

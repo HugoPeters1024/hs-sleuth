@@ -23,15 +23,21 @@ selectedTermToInt term = case term of
     SelectedTopLevel (b, _) -> H.binderToInt b
     SelectedExternal e -> H.externalNameToInt e
 
+type Page = Overview | Code
+
 type alias Model = 
-    { projectMetaLoading : Loading ProjectMeta
+    { currentPage : Page
+    , sessionMetaLoading : Loading SessionMeta
+    , projectMetaLoading : Loading ProjectMeta
     , moduleLoading : Loading Module
     , selectedTerm : Maybe SelectedTerm
     , hideTypes : Bool
     , disambiguateVariables : Bool
     }
 
-type Msg = MsgGotProjectMeta (Result Http.Error ProjectMeta)
+
+type Msg = MsgGotSessionMeta (Result Http.Error SessionMeta)
+         | MsgGotProjectMeta (Result Http.Error ProjectMeta)
          | MsgLoadModule String Int
          | MsgGotModule (Result Http.Error Module)
          | MsgSelectTerm SelectedTerm
@@ -39,6 +45,5 @@ type Msg = MsgGotProjectMeta (Result Http.Error ProjectMeta)
          | MsgPrevPhase Module
          | MsgToggleHideTypes
          | MsgToggleDisambiguateVariables
-         | MsgNoop
          | MsgLinkClicked Browser.UrlRequest
          | MsgUrlChanged Url

@@ -22,6 +22,7 @@ module Generated.Types exposing
     , CoreStats
     , ModuleMeta
     , ProjectMeta
+    , SessionMeta
     , BinderThunk(..)
     )
 
@@ -194,4 +195,8 @@ type alias ModuleMeta  =
 
 type alias ProjectMeta  =
     { modules : List ModuleMeta }
+
+
+type alias SessionMeta  =
+    { sessions : List String }
 type BinderThunk = Found Binder | NotFound | Untouched

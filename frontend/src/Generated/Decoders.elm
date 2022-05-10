@@ -22,6 +22,7 @@ module Generated.Decoders exposing
     , coreStatsDecoder
     , moduleMetaDecoder
     , projectMetaDecoder
+    , sessionMetaDecoder
     )
 
 import Generated.Types exposing (..)
@@ -51,7 +52,7 @@ externalNameDecoder =
             Json.Decode.map ExternalName (Json.Decode.succeed (\b c d e -> { externalModuleName = b
             , externalName = c
             , externalUnique = d
-            , externalType = e 
+            , externalType = e
             , localBinder = \_ -> Untouched}) |>
             Json.Decode.Pipeline.required "externalModuleName" moduleNameDecoder |>
             Json.Decode.Pipeline.required "externalName" Json.Decode.string |>
@@ -486,5 +487,11 @@ projectMetaDecoder : Json.Decode.Decoder ProjectMeta
 projectMetaDecoder =
     Json.Decode.succeed ProjectMeta |>
     Json.Decode.Pipeline.required "modules" (Json.Decode.list moduleMetaDecoder)
+
+
+sessionMetaDecoder : Json.Decode.Decoder SessionMeta
+sessionMetaDecoder =
+    Json.Decode.succeed SessionMeta |>
+    Json.Decode.Pipeline.required "sessions" (Json.Decode.list (Json.Decode.string))
 triple : a -> b -> c -> (a,b,c)
 triple x y z = (x,y,z)

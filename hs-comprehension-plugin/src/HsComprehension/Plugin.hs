@@ -50,7 +50,7 @@ plugin = defaultPlugin { installCoreToDos = install }
 
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install _ todo = do
-    liftIO $ FP.createDirectoryIfMissing True coreDumpDir
+    liftIO $ FP.createDirectoryIfMissing True (coreDumpDir "0")
     modName <- showPprUnsafe <$> getModule
     liftIO $ do
         let mod = ModuleMeta (length todo) (T.pack modName)
@@ -66,14 +66,17 @@ getPhase todo = showSDocUnsafe (ppr todo) ++ " " ++ showSDocUnsafe (pprPassDetai
 printPpr :: (Outputable a, MonadIO m) => a -> m ()
 printPpr a = liftIO $ putStrLn $ showSDocUnsafe (ppr a)
 
-coreDumpDir :: FilePath
-coreDumpDir = "./dist-newstyle/coredump/"
+coreDumpBaseDir :: String
+coreDumpBaseDir = "./dist-newstyle/"
 
-coreDumpFile :: String -> Int -> FilePath
-coreDumpFile mod id = coreDumpDir ++ mod ++ "." ++ show id ++ ".zstd"
+coreDumpDir :: String -> FilePath
+coreDumpDir pid = coreDumpBaseDir ++ "coredump-" ++ pid ++ "/"
 
-projectMetaFile :: FilePath
-projectMetaFile = coreDumpDir ++ "projectmeta.zstd"
+coreDumpFile :: String -> String -> Int -> FilePath
+coreDumpFile pid mod id = coreDumpDir pid ++ mod ++ "." ++ show id ++ ".zstd"
+
+projectMetaFile :: String -> FilePath
+projectMetaFile pid = coreDumpDir pid ++ "projectmeta.zstd"
 
 writeToFile :: (Serialise a) => FilePath -> a -> IO ()
 writeToFile fname = do
@@ -88,7 +91,7 @@ dumpPass n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
     guts <- liftIO $ Uniqify.uniqueModule in_guts
     dflags <- getDynFlags
     let prefix :: String = showSDocUnsafe (ppr (mg_module guts))
-    let fname = coreDumpFile prefix n
+    let fname = coreDumpFile "0" prefix n
     liftIO $ do
         putStrLn fname
         let smodule :: Ast.SModule = Ast.cvtModule dflags n phase guts
@@ -97,5 +100,5 @@ dumpPass n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
 
 finalPass :: CoreToDo
 finalPass = CoreDoPluginPass "Finalize dump" $ \guts -> do
-    liftIO $ readIORef projectState >>= writeToFile projectMetaFile
+    liftIO $ readIORef projectState >>= writeToFile (projectMetaFile "0")
     pure guts

@@ -30,3 +30,11 @@ data ProjectMeta = ProjectMeta
       deriving ( Aeson.ToJSON
                , HasElmType   
                , HasElmDecoder Aeson.Value) via ElmType "Generated.TODO.ProjectMeta" ProjectMeta
+
+
+data SessionMeta = SessionMeta
+    { sessions :: [String]
+    } deriving (Show, Generic, SOP.Generic, SOP.HasDatatypeInfo, Serialise)
+      deriving ( Aeson.ToJSON
+               , HasElmType
+               , HasElmDecoder Aeson.Value) via ElmType "Generated.TODO.SessionMeta" SessionMeta

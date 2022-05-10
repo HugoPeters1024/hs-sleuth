@@ -1,4 +1,4 @@
-module Pages.Code.Main exposing (..)
+module Pages.Code exposing (..)
 
 import Browser
 import Html exposing (..)
@@ -14,7 +14,7 @@ import HsCore.Helpers as H
 import HsCore.Trafo.Reconstruct as TR
 import HsCore.Trafo.EraseTypes exposing (eraseTypesModule)
 
-import Pages.Code.PrettyPrint as PP
+import PrettyPrint as PP
 import Commands as C
 
 import Loading exposing (Loading(..))
@@ -22,48 +22,25 @@ import Loading exposing (Loading(..))
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
 
-initModel : Model
-initModel = { projectMetaLoading = Loading Nothing
-            , moduleLoading = Loading Nothing
-            , selectedTerm = Nothing
-            , hideTypes = False
-            , disambiguateVariables = False
-            }
-
 init : Cmd Msg
 init = Cmd.batch [C.fetchProjectMeta, C.fetchPhase "Main" 0]
 
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg model = case msg of
-    MsgGotProjectMeta res -> ({model | projectMetaLoading = Loading.loadFromResult res}, Cmd.none)
-    MsgLoadModule mod id -> ({model | moduleLoading = Loading.setLoading model.moduleLoading}, C.fetchPhase mod id)
-    MsgGotModule res -> ({ model | moduleLoading = Loading.loadFromResult (Result.map TR.reconModule res)}, Cmd.none)
-    MsgSelectTerm term -> ({model | selectedTerm = Just term}, Cmd.none)
-    MsgNextPhase mod -> (model, C.fetchModifyPhase (\x->x + 1) mod)
-    MsgPrevPhase mod -> (model, C.fetchModifyPhase (\x->x - 1) mod)
-    MsgToggleHideTypes -> ({ model | hideTypes = not model.hideTypes }, Cmd.none)
-    MsgToggleDisambiguateVariables -> ({ model | disambiguateVariables = not model.disambiguateVariables }, Cmd.none)
-    MsgNoop -> (model, Cmd.none)
-    _       -> (model, Cmd.none)
 
-view : Model -> Browser.Document Msg
-view model = 
-    { title = "Code"
-    , body = [ node "link" [rel "stylesheet", href "/style.css", type_ "text/css"] []
-             , node "link" [rel "stylesheet", href "/pygments.css", type_ "text/css"] []
-             , Loading.renderLoading "ProjectMeta" model.projectMetaLoading <| \meta ->
-                 select [onInput (\x -> MsgLoadModule x 0)]
-                        (List.map (\m -> option [] [text m.name]) meta.modules)
+view : Model -> Html Msg
+view model = div [] [ node "link" [rel "stylesheet", href "/style.css", type_ "text/css"] []
+                    , node "link" [rel "stylesheet", href "/pygments.css", type_ "text/css"] []
+                    , Loading.renderLoading "ProjectMeta" model.projectMetaLoading <| \meta ->
+                        select [onInput (\x -> MsgLoadModule x 0)]
+                               (List.map (\m -> option [] [text m.name]) meta.modules)
 
-             , Loading.renderLoading "Module" model.moduleLoading <| \mod -> 
-                 div []
-                 [ viewHeader model mod
-                 , panel [ viewCode model mod
-                         , viewInfo model
-                         ]
-                 ]
-             ]
-    }
+                    , Loading.renderLoading "Module" model.moduleLoading <| \mod -> 
+                        div []
+                        [ viewHeader model mod
+                        , panel [ viewCode model mod
+                                , viewInfo model
+                                ]
+                        ]
+                    ]
 
 panel : List (Html Msg) -> Html Msg
 panel = div [ style "display" "grid"

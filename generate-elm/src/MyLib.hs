@@ -53,13 +53,16 @@ elmDefsFor = (,) <$> elmDefinition @a <*> elmDecoderDefinition @Aeson.Value @a
     , elmDefsFor @Ast.CoreStats 
     , elmDefsFor @Meta.ModuleMeta
     , elmDefsFor @Meta.ProjectMeta
+    , elmDefsFor @Meta.SessionMeta
     ]
 
 
 renderDefs :: String -> [Definition] -> String
 renderDefs name defs =
     let contents = show $ head $ map snd $ HashMap.toList $ Pretty.modules (map Simplification.simplifyDefinition defs)
-    in replace "TODO" name contents
+    in replace "Tuple.triple" "triple" 
+     $ replace "TODO" name 
+     $ contents
 
 tripleDef :: String
 tripleDef = unlines [ ""

@@ -8,7 +8,7 @@ import Generated.Decoders as HE
 
 
 fetchProjectMeta : Cmd Msg
-fetchProjectMeta = Http.get { url = "http://localhost:8080/meta"
+fetchProjectMeta = Http.get { url = "http://localhost:8080/0/meta"
                             , expect = Http.expectJson MsgGotProjectMeta HE.projectMetaDecoder
                             }
 
@@ -21,6 +21,11 @@ fetchModifyPhase f mod =
 
 
 fetchPhase : String -> Int -> Cmd Msg
-fetchPhase mod id = Http.get { url = "http://localhost:8080/" ++ mod ++ "/" ++ String.fromInt id
-                            , expect = Http.expectJson MsgGotModule HE.moduleDecoder
+fetchPhase mod id = Http.get { url = "http://localhost:8080/0/" ++ mod ++ "/" ++ String.fromInt id
+                             , expect = Http.expectJson MsgGotModule HE.moduleDecoder
+                             }
+
+fetchSessionMeta : Cmd Msg
+fetchSessionMeta = Http.get { url = "http://localhost:8080/session"
+                            , expect = Http.expectJson MsgGotSessionMeta HE.sessionMetaDecoder
                             }
