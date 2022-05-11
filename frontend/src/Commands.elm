@@ -6,23 +6,26 @@ import Loading exposing (..)
 import Http
 import Generated.Decoders as HE
 
+import HsCore.Trafo.Reconstruct as TR
+import Json.Decode
+
 
 fetchProjectMeta : Cmd Msg
 fetchProjectMeta = Http.get { url = "http://localhost:8080/0/meta"
                             , expect = Http.expectJson MsgGotProjectMeta HE.projectMetaDecoder
                             }
 
-fetchModifyPhase : (Int -> Int) -> Module -> Cmd Msg
-fetchModifyPhase f mod = 
+fetchCodeModifyPhase : TabId -> (Int -> Int) -> Module -> Cmd Msg
+fetchCodeModifyPhase tid f mod = 
     let n = Basics.clamp 0 19 (f mod.modulePhaseId)
     in if n /= mod.modulePhaseId
-       then fetchPhase mod.moduleName.getModuleName n
+       then fetchCodePhase tid mod.moduleName.getModuleName n
        else Cmd.none
 
 
-fetchPhase : String -> Int -> Cmd Msg
-fetchPhase mod id = Http.get { url = "http://localhost:8080/0/" ++ mod ++ "/" ++ String.fromInt id
-                             , expect = Http.expectJson MsgGotModule HE.moduleDecoder
+fetchCodePhase : TabId -> String -> Int -> Cmd Msg
+fetchCodePhase tid mod id = Http.get { url = "http://localhost:8080/0/" ++ mod ++ "/" ++ String.fromInt id
+                             , expect = Http.expectJson (MsgCodeMsg tid << CodeMsgGotModule) (Json.Decode.map TR.reconModule HE.moduleDecoder)
                              }
 
 fetchSessionMeta : Cmd Msg

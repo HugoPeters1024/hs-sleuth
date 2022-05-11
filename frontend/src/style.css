@@ -10,7 +10,7 @@ a.no-style, a.no-style:hover, a.no-style:visited, a.no-style:focus, a.no-style:a
   cursor: pointer;
 }
 
-pre.code { 
+pre.dark { 
     color: #FFFFFF;
     background-color: #122a34;
     padding: 2em;
@@ -18,6 +18,8 @@ pre.code {
     box-sizing: border-box;
     margin: 0;
     overflow: scroll;
+    font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
+    line-height: 1.2em;
 }
 
 .info-panel {

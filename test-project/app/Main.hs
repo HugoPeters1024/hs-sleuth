@@ -56,5 +56,5 @@ msg = bigOp [0,1,2,3]
 
 
 main :: IO ()
-main = putStrLn "Look at the core!!"
+main = putStrLn secret
 

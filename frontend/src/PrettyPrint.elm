@@ -31,10 +31,10 @@ prettyPrint info pp = Reader.runReader info pp []
                     |> List.intersperse [text "\n"]
                     |> List.concat
 
-defaultInfo : PPEnv
-defaultInfo = 
+defaultInfo : TabId -> PPEnv
+defaultInfo tid = 
     { selectId = Nothing
-    , onClickBinder = MsgSelectTerm
+    , onClickBinder = MsgCodeMsg tid << CodeMsgSelectTerm
     , renderBinderName = H.binderName
     }
 
