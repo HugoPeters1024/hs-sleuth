@@ -28,6 +28,7 @@ data ModuleMeta = ModuleMeta
 data ProjectMeta = ProjectMeta 
     { modules :: [ModuleMeta]
     , capturedAt :: Int
+    , slug :: Text
     } deriving (Generic, SOP.Generic, SOP.HasDatatypeInfo, Serialise)
       deriving ( Aeson.ToJSON
                , HasElmType   

@@ -52,7 +52,7 @@ bigOp = myMap (+1) . myMap (+1) . myMap (+1)
 
 
 
-msg = bigOp [0,1,2,3]
+msg = bigOp [0,1,2,3,5]
 
 
 main :: IO ()

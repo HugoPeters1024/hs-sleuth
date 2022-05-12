@@ -14,6 +14,9 @@ checkbox isChecked msg name =
         , text name
         ]
 
+checkboxSimple : Bool -> Html msg
+checkboxSimple isChecked = label [] [input [type_ "checkbox", checked isChecked] []]
+
 list : List (Html msg) -> Html msg
 list xs =
     let mkColumn el = td [] [el]
@@ -46,3 +49,15 @@ monthToInt month = case month of
     Time.Oct -> 10
     Time.Nov -> 11
     Time.Dec -> 12
+
+foreach : List a -> (a -> b) -> List b
+foreach xs f = List.map f xs
+
+panel : List ((Int, Html msg)) -> Html msg
+panel data = 
+    let (frs, els) = List.unzip data
+        template = String.join " " (List.map (\x -> String.fromInt x ++ "fr") frs)
+    in div [ style "display" "grid"
+           , style "width" "100%"
+           , style "grid-template-columns" template
+           ] els 

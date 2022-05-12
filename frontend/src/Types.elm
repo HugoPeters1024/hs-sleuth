@@ -9,6 +9,7 @@ import HsCore.Helpers as H
 import UI.Tabs as Tabs
 import Time
 import Dict exposing (Dict)
+import Set exposing (Set)
 
 
 type SelectedTerm = SelectedBinder Binder
@@ -21,15 +22,28 @@ selectedTermToInt term = case term of
     SelectedTopLevel (b, _) -> H.binderToInt b
     SelectedExternal e -> H.externalNameToInt e
 
+type alias PhaseId = Int
 type alias TabId = Int
+type alias Slug = String
+type alias ModuleName = String
 
 type alias CodeTab = 
-        { id : TabId
-        , moduleLoading : Loading Module
-        , selectedTerm : Maybe SelectedTerm
-        , hideTypes : Bool
-        , disambiguateVariables : Bool
-        }
+    { id : TabId
+    , name : String
+    , modules : Dict Slug (Loading Module)
+    , currentModule : ModuleName
+    , currentPhaseId : Int
+    , selectedTerm : Maybe SelectedTerm
+    , hideTypes : Bool
+    , disambiguateVariables : Bool
+    }
+
+type CodeTabMsg
+    = CodeMsgSetModule ModuleName Int
+    | CodeMsgGotModule Slug (Result Http.Error Module)
+    | CodeMsgSelectTerm SelectedTerm
+    | CodeMsgToggleHideTypes
+    | CodeMsgToggleDisambiguateVariables
 
 type alias Model = 
     { pageTab : Tabs.Model
@@ -37,16 +51,16 @@ type alias Model =
     , projectMetaLoading : Loading ProjectMeta
     , timezone : Time.Zone
     , codeTabs : Dict TabId CodeTab
+    , overviewTab : OverviewTab
+    , idGen : Int
     }
 
-type CodeTabMsg
-    = CodeMsgLoadModule String Int
-    | CodeMsgGotModule (Result Http.Error Module)
-    | CodeMsgSelectTerm SelectedTerm
-    | CodeMsgNextPhase Module
-    | CodeMsgPrevPhase Module
-    | CodeMsgToggleHideTypes
-    | CodeMsgToggleDisambiguateVariables
+type alias OverviewTab =
+    { enabledProjects : Set Slug
+    }
+
+type OverviewMsg
+    = OverviewMsgToggleSlug Slug
 
 
 type Msg 
@@ -54,4 +68,6 @@ type Msg
     | MsgGotProjectMeta (Result Http.Error ProjectMeta)
     | MsgCodeMsg TabId CodeTabMsg
     | MsgPageTab Tabs.Msg
+    | MsgOverViewTab OverviewMsg
+    | MsgOpenCodeTab
     | MsgAdjustTimeZone Time.Zone

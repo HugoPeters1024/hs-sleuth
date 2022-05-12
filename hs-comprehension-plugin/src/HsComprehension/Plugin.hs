@@ -50,6 +50,7 @@ projectState :: IORef ProjectMeta
 projectState = 
     let projectMeta = ProjectMeta { modules = []
                                   , capturedAt = 0
+                                  , slug = T.empty
                                   }
     in unsafePerformIO $ newIORef projectMeta
 
@@ -57,15 +58,19 @@ plugin :: Plugin
 plugin = defaultPlugin { installCoreToDos = install }
 
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
-install _ todo = do
-    liftIO $ FP.createDirectoryIfMissing True (coreDumpDir "0")
+install options todo = do
+    let slug = case options of
+                    [slug] -> slug
+                    _      -> error "provide a slug for the dump as exactly 1 argument"
+    liftIO $ print options
+    liftIO $ FP.createDirectoryIfMissing True (coreDumpDir slug)
     modName <- showPprUnsafe <$> getModule
     liftIO $ do
         let mod = ModuleMeta (length todo) (T.pack modName)
 
-        modifyIORef projectState $ \(ProjectMeta ms time) -> ProjectMeta (mod:ms) time
-    let dumpPasses = zipWith dumpPass [1..] (map getPhase todo)
-    let firstPass = dumpPass 0 "Desugared"
+        modifyIORef projectState $ \(ProjectMeta ms time _) -> ProjectMeta (mod:ms) time (T.pack slug)
+    let dumpPasses = zipWith (dumpPass slug) [1..] (map getPhase todo)
+    let firstPass = dumpPass slug 0 "Desugared"
     pure $ firstPass : (P.concat $ zipWith (\x y -> [x,y]) todo dumpPasses) ++ [finalPass]
 
 
@@ -95,12 +100,12 @@ readFromFile :: Serialise a => FilePath -> IO a
 readFromFile fname = do
     Ser.deserialise . Zstd.decompress <$> BSL.readFile fname
 
-dumpPass :: Int -> String -> CoreToDo
-dumpPass n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
+dumpPass :: String -> Int -> String -> CoreToDo
+dumpPass slug n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
     guts <- liftIO $ Uniqify.uniqueModule in_guts
     dflags <- getDynFlags
     let prefix :: String = showSDocUnsafe (ppr (mg_module guts))
-    let fname = coreDumpFile "0" prefix n
+    let fname = coreDumpFile slug prefix n
     liftIO $ do
         putStrLn fname
         let smodule :: Ast.SModule = Ast.cvtModule dflags n phase guts
@@ -111,6 +116,6 @@ finalPass :: CoreToDo
 finalPass = CoreDoPluginPass "Finalize dump" $ \guts -> do
     liftIO $ do
         time <- currentPosixMillis
-        modifyIORef projectState $ \(ProjectMeta mods _) -> ProjectMeta mods time
-        readIORef projectState >>= writeToFile (projectMetaFile "0")
+        modifyIORef projectState $ \(ProjectMeta mods _ slug) -> ProjectMeta mods time slug
+        readIORef projectState >>= \p@(ProjectMeta _ _ slug) -> writeToFile (projectMetaFile (T.unpack slug)) p
     pure guts

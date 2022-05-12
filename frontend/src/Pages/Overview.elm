@@ -1,24 +1,38 @@
-module Pages.Overview exposing (view, init)
+module Pages.Overview exposing (view, init, update)
 
 import Html exposing (..)
+import Html.Events exposing (..)
 import HtmlHelpers exposing (..)
 import Types exposing (..)
 import Loading exposing (Loading)
 import Commands
 
-import Bootstrap.Table as Table
+import Set exposing (Set)
 import Time
+
+import Bootstrap.Table as Table
+import Bootstrap.Button as Button
 
 init : Cmd Msg
 init = Commands.fetchSessionMeta
+
+toggleSet : comparable -> Set comparable -> Set comparable
+toggleSet x set = if Set.member x set then Set.remove x set else Set.insert x set
+
+update : OverviewMsg -> OverviewTab -> (OverviewTab, Cmd Msg)
+update msg tab = case msg of
+    OverviewMsgToggleSlug slug -> ({tab | enabledProjects = toggleSet slug tab.enabledProjects}, Cmd.none)
 
 view : Model -> Html Msg
 view m = 
     let
         mkRow (name, project) = 
-            Table.tr [] 
-                [ Table.td [] [text name]
-                    , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix project.capturedAt))]
+            Table.tr [Table.rowAttr (onClick (MsgOverViewTab (OverviewMsgToggleSlug name)))] 
+                [ Table.td [] [ checkboxSimple
+                                (Set.member name m.overviewTab.enabledProjects) 
+                              ]
+                , Table.td [] [text name]
+                , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix project.capturedAt))]
                 ] 
     in Loading.renderLoading "SessionMeta" m.sessionMetaLoading <| \session ->
             div []
@@ -26,11 +40,18 @@ view m =
                 , Table.table
                     { options = [Table.striped, Table.hover]
                     , thead = Table.simpleThead
-                        [ Table.th [] [text "Capture Slug"]
+                        [ Table.th [] [text "selected"]
+                        , Table.th [] [text "Capture Slug"]
                         , Table.th [] [text "Captured at"]
                         ]
                     , tbody = Table.tbody [] (List.map mkRow session.sessions)
                     }
+                , Button.button 
+                    [ Button.primary
+                    , Button.disabled (Set.isEmpty m.overviewTab.enabledProjects)
+                    , Button.attrs [onClick MsgOpenCodeTab]
+                    ] 
+                    [text "Open Tab"]
                 ]
 
 

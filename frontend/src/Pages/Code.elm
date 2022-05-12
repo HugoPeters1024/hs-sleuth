@@ -5,20 +5,17 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import HtmlHelpers exposing (..)
-
+import Dict exposing (Dict)
 import Generated.Types exposing (..)
-
 import Types exposing (..)
 import HsCore.Helpers as H
-
 import HsCore.Trafo.Reconstruct as TR
 import HsCore.Trafo.EraseTypes exposing (eraseTypesModule)
-
 import PrettyPrint as PP
 import Commands as C
-
 import Loading exposing (Loading(..))
 import Commands
+import Bootstrap.Grid as Grid
 
 mkCodeMsg : CodeTabMsg -> TabId -> Msg
 mkCodeMsg msg id = MsgCodeMsg id msg
@@ -26,53 +23,71 @@ mkCodeMsg msg id = MsgCodeMsg id msg
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
 
+makeCodeTab : Model -> List Slug -> (Model, CodeTab, Cmd Msg)
+makeCodeTab model slugs = 
+    let tabId = model.idGen
+    in
+    ( { model | idGen = model.idGen + 1 }
+    , { id = tabId
+      , name = "Code-" ++ String.fromInt tabId
+      , modules = Dict.fromList (List.map (\s -> (s, Loading Nothing)) slugs)
+      , selectedTerm = Nothing
+      , hideTypes = False
+      , disambiguateVariables = False
+      , currentModule = "Main"
+      , currentPhaseId = 0
+      }
+    , Cmd.batch (List.map (\slug -> C.fetchCodePhase tabId slug "Main" 0) slugs)
+    )
+
 init : Cmd Msg
-init = Cmd.batch [C.fetchProjectMeta, C.fetchCodePhase 0 "Main" 0]
+init = Cmd.batch [C.fetchProjectMeta "secret", C.fetchCodePhase 0 "secret" "Main" 0, C.fetchCodePhase 0 "notsecret" "Main" 0]
 
 update : CodeTabMsg -> CodeTab -> (CodeTab, Cmd Msg)
 update msg tab = case msg of
-    CodeMsgLoadModule mod phaseid -> ({tab | moduleLoading = Loading.setLoading tab.moduleLoading}, Commands.fetchCodePhase tab.id mod phaseid)
-    CodeMsgGotModule mod -> ({tab | moduleLoading = Loading.loadFromResult mod}, Cmd.none)
+    CodeMsgSetModule modname phaseid -> 
+        ( {tab | modules = Dict.map (\_ -> Loading.setLoading) tab.modules 
+               , currentModule = modname
+               , currentPhaseId = phaseid
+          }
+        , Cmd.batch 
+            ( List.map
+             (\slug -> Commands.fetchCodePhase tab.id slug modname phaseid)
+             (Dict.keys tab.modules)
+            )
+        )
+    CodeMsgGotModule slug res -> ({tab | modules = Dict.insert slug (Loading.loadFromResult res) tab.modules}, Cmd.none)
     CodeMsgSelectTerm term -> ({tab | selectedTerm = Just term}, Cmd.none)
-    CodeMsgNextPhase mod -> (tab, Commands.fetchCodeModifyPhase tab.id (\x -> x + 1) mod)
-    CodeMsgPrevPhase mod -> (tab, Commands.fetchCodeModifyPhase tab.id (\x -> x - 1) mod)
     CodeMsgToggleHideTypes -> ({tab | hideTypes = not tab.hideTypes}, Cmd.none)
     CodeMsgToggleDisambiguateVariables -> ({tab | disambiguateVariables = not tab.disambiguateVariables}, Cmd.none)
 
 
 view : Model -> CodeTab -> Html Msg
 view model tab = 
-    div [] [ node "link" [rel "stylesheet", href "/style.css", type_ "text/css"] []
-           , node "link" [rel "stylesheet", href "/pygments.css", type_ "text/css"] []
-           , Loading.renderLoading "ProjectMeta" model.projectMetaLoading <| \meta ->
-               select [onInput (\x -> mkCodeMsg (CodeMsgLoadModule x 0) tab.id)]
+    div [] [ Loading.renderLoading "ProjectMeta" model.projectMetaLoading <| \meta ->
+               select [onInput (\x -> mkCodeMsg (CodeMsgSetModule x 0) tab.id)]
                       (List.map (\m -> option [] [text m.name]) meta.modules)
-
-           , Loading.renderLoading "Module" tab.moduleLoading <| \mod -> 
-               div []
-               [ viewHeader model tab mod
-               , panel [ viewCode model tab mod
-                       , viewInfo model tab
-                       ]
-               ]
+           , panel
+                (
+                    (foreach (Dict.toList tab.modules) <| \(slug, mod) ->
+                        (4, Loading.renderLoading "Code" mod <| \m -> viewCode model tab m)
+                    )
+                    ++
+                    [ (2, viewInfo model tab) ]
+                )
            ]
 
-panel : List (Html Msg) -> Html Msg
-panel = div [ style "display" "grid"
-            , style "width" "100%"
-            , style "grid-template-columns" "4fr 1fr"
-            ]
 
 selectedTermId : CodeTab -> Maybe Int
 selectedTermId tab = Maybe.map selectedTermToInt tab.selectedTerm
 
 
-viewHeader : Model -> CodeTab -> Module -> Html Msg
-viewHeader _ tab mod = 
+viewHeader : Model -> CodeTab -> Html Msg
+viewHeader _ tab = 
     div []
-        [ h3 [] [ text (String.fromInt mod.modulePhaseId ++ ". " ++ mod.moduleName.getModuleName ++ " -- " ++ mod.modulePhase) ]
-        , button [onClick (mkCodeMsg (CodeMsgPrevPhase mod) tab.id)] [text "Previous"]
-        , button [onClick (mkCodeMsg (CodeMsgNextPhase mod) tab.id)] [text "Next"]
+        [ h3 []  [ text tab.currentModule]
+        , button [] [text "Previous"]
+        , button [] [text "Next"]
         ]
 
 

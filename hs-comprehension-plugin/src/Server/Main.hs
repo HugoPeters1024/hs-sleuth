@@ -45,17 +45,17 @@ main :: IO ()
 main = collectSessionMeta >>= server
 
 fetchCore :: Text -> Text -> Text -> IO (Maybe ByteString)
-fetchCore pidString modString idString = do
+fetchCore slugString modString idString = do
     let mid :: Int = read (T.unpack idString)
-    let pid :: String = T.unpack pidString
-    let fname = coreDumpFile pid (T.unpack modString) mid
-    mod <- readSModule fname
+    let slug :: String = T.unpack slugString
+    let fname = coreDumpFile slug (T.unpack modString) mid
+    mod <- readFromFile @SModule fname
     pure (Just (JSON.encode mod))
 
 fetchProjectMeta :: Text -> IO (Maybe ByteString)
-fetchProjectMeta pidString = do
-    let pid :: String = T.unpack pidString
-    Just <$> resJsonFile @ProjectMeta (projectMetaFile pid)
+fetchProjectMeta slugString = do
+    let slug :: String = T.unpack slugString
+    Just <$> resJsonFile @ProjectMeta (projectMetaFile slug)
 
 resJsonFile :: forall a. (Serialise a, ToJSON a) => FilePath -> IO ByteString
 resJsonFile fname = do
@@ -67,8 +67,8 @@ resJsonFile fname = do
 app :: SessionMeta -> Application
 app session rec respond = do
     content <- case pathInfo rec of
-        (pidString:modString:idString:[]) -> fetchCore pidString modString idString
-        (pidString:"meta":[])             -> fetchProjectMeta pidString
+        (slugString:modString:idString:[]) -> fetchCore slugString modString idString
+        (slugString:"meta":[])             -> fetchProjectMeta slugString
         ("session":[])                    -> pure $ Just $ encodePretty session
         _                       -> pure Nothing
 

@@ -19,7 +19,7 @@ pre.dark {
     margin: 0;
     overflow: scroll;
     font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
-    line-height: 1.2em;
+    line-height: 1.0em;
 }
 
 .info-panel {
