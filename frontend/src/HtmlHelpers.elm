@@ -53,10 +53,17 @@ monthToInt month = case month of
 foreach : List a -> (a -> b) -> List b
 foreach xs f = List.map f xs
 
-panel : List ((Int, Html msg)) -> Html msg
+type Column 
+    = Fraction Int
+    | Pixels Int
+
+panel : List ((Column, Html msg)) -> Html msg
 panel data = 
     let (frs, els) = List.unzip data
-        template = String.join " " (List.map (\x -> String.fromInt x ++ "fr") frs)
+        renderColumn c = case c of
+            Fraction fr -> "minmax(0," ++ String.fromInt fr ++ "fr)"
+            Pixels px -> String.fromInt px ++ "px"
+        template = String.join " " (List.map renderColumn frs)
     in div [ style "display" "grid"
            , style "width" "100%"
            , style "grid-template-columns" template

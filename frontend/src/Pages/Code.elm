@@ -40,9 +40,6 @@ makeCodeTab model slugs =
     , Cmd.batch (List.map (\slug -> C.fetchCodePhase tabId slug "Main" 0) slugs)
     )
 
-init : Cmd Msg
-init = Cmd.batch [C.fetchProjectMeta "secret", C.fetchCodePhase 0 "secret" "Main" 0, C.fetchCodePhase 0 "notsecret" "Main" 0]
-
 update : CodeTabMsg -> CodeTab -> (CodeTab, Cmd Msg)
 update msg tab = case msg of
     CodeMsgSetModule modname phaseid -> 
@@ -64,16 +61,17 @@ update msg tab = case msg of
 
 view : Model -> CodeTab -> Html Msg
 view model tab = 
-    div [] [ Loading.renderLoading "ProjectMeta" model.projectMetaLoading <| \meta ->
+    div [] [ Loading.debugLoading "ProjectMeta" model.projectMetaLoading <| \meta ->
                select [onInput (\x -> mkCodeMsg (CodeMsgSetModule x 0) tab.id)]
                       (List.map (\m -> option [] [text m.name]) meta.modules)
+           , viewHeader model tab
            , panel
                 (
                     (foreach (Dict.toList tab.modules) <| \(slug, mod) ->
-                        (4, Loading.renderLoading "Code" mod <| \m -> viewCode model tab m)
+                        (Fraction 4, viewCode model tab slug mod)
                     )
                     ++
-                    [ (2, viewInfo model tab) ]
+                    [ (Pixels 500, viewInfo model tab) ]
                 )
            ]
 
@@ -85,27 +83,34 @@ selectedTermId tab = Maybe.map selectedTermToInt tab.selectedTerm
 viewHeader : Model -> CodeTab -> Html Msg
 viewHeader _ tab = 
     div []
-        [ h3 []  [ text tab.currentModule]
-        , button [] [text "Previous"]
-        , button [] [text "Next"]
+        [ h3 []  [text (tab.currentModule ++ " - " ++ String.fromInt tab.currentPhaseId)]
+        , button [onClick (mkCodeMsg (CodeMsgSetModule tab.currentModule (tab.currentPhaseId - 1)) tab.id)] [text "Previous"]
+        , button [onClick (mkCodeMsg (CodeMsgSetModule tab.currentModule (tab.currentPhaseId + 1)) tab.id)] [text "Next"]
         ]
 
 
 
-viewCode : Model -> CodeTab -> Module -> Html Msg
-viewCode model tab mod = 
+viewCode : Model -> CodeTab -> Slug -> Loading Module -> Html Msg
+viewCode model tab slug modloading = 
     let ppInfo = PP.defaultInfo tab.id
             |> \r -> {r | selectId = Maybe.map selectedTermToInt tab.selectedTerm}
             |> if tab.disambiguateVariables then PP.withFullNameBinder else identity
-    in pre [class "dark"] 
-           [ code [] (
-                     (if tab.hideTypes then eraseTypesModule mod else mod)
-                     |> .moduleTopBindings
-                     |> List.map PP.ppTopBinding
-                     |> PP.ppSepped "\n\n"
-                     |> PP.prettyPrint ppInfo
-                     )
-           ]
+    in div []
+        [ h4 [] [text slug]
+        , pre [class "dark"] 
+            [ code [] 
+                   [Loading.renderLoading modloading <| \mod ->
+                       (
+                         (if tab.hideTypes then eraseTypesModule mod else mod)
+                         |> .moduleTopBindings
+                         |> List.map PP.ppTopBinding
+                         |> PP.ppSepped "\n\n"
+                         |> PP.prettyPrint ppInfo
+                         |> \x -> div [] x
+                       )
+                   ]
+            ]
+        ]
 
 fromMaybe : a -> Maybe a -> a
 fromMaybe def m = case m of

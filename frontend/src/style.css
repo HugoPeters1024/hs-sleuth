@@ -11,6 +11,9 @@ a.no-style, a.no-style:hover, a.no-style:visited, a.no-style:focus, a.no-style:a
 }
 
 pre.dark { 
+    width: 100%;
+    max-width: 100%;
+    min-height: 1024px;
     color: #FFFFFF;
     background-color: #122a34;
     padding: 2em;
@@ -22,7 +25,14 @@ pre.dark {
     line-height: 1.0em;
 }
 
+pre>code {
+    width: 100%;
+    max-width: 100%;
+}
+
 .info-panel {
+    width: 100%;
+    max-width: 100%
     padding: 1em;
     box-sizing: border-box;
     color: #dddddd;

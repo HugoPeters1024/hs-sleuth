@@ -46,7 +46,7 @@ addCodeTab : CodeTab -> Model -> Model
 addCodeTab tab model = { model | codeTabs = Dict.insert tab.id tab model.codeTabs }
 
 init : () -> (Model, Cmd Msg)
-init flags = (initModel, Cmd.batch [Task.perform MsgAdjustTimeZone Time.here, Overview.init, Code.init])
+init flags = (initModel, Cmd.batch [Task.perform MsgAdjustTimeZone Time.here, Overview.init, Commands.fetchProjectMeta "secret"])
 
 
 viewCodeTabs model =
@@ -70,10 +70,6 @@ view m =
                      [ Tabs.item
                          { name = "Overview"
                          , content = Overview.view m
-                         }
-                     , Tabs.item
-                         { name = "Test"
-                         , content = Html.text "yikes"
                          }
                      ]
                      ++ viewCodeTabs m

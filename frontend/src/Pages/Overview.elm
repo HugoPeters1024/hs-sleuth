@@ -34,7 +34,7 @@ view m =
                 , Table.td [] [text name]
                 , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix project.capturedAt))]
                 ] 
-    in Loading.renderLoading "SessionMeta" m.sessionMetaLoading <| \session ->
+    in Loading.debugLoading "SessionMeta" m.sessionMetaLoading <| \session ->
             div []
                 [ h1 [] [text "Overview"]
                 , Table.table
