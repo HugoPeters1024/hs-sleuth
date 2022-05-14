@@ -15,7 +15,9 @@ import PrettyPrint as PP
 import Commands as C
 import Loading exposing (Loading(..))
 import Commands
-import Bootstrap.Grid as Grid
+
+import Bootstrap.Card as Card
+import Bootstrap.Card.Block as Block
 
 mkCodeMsg : CodeTabMsg -> TabId -> Msg
 mkCodeMsg msg id = MsgCodeMsg id msg
@@ -43,7 +45,7 @@ makeCodeTab model slugs =
 update : CodeTabMsg -> CodeTab -> (CodeTab, Cmd Msg)
 update msg tab = case msg of
     CodeMsgSetModule modname phaseid -> 
-        ( {tab | modules = Dict.map (\_ -> Loading.setLoading) tab.modules 
+        ( {tab | modules = Dict.map (\_ _ -> Loading Nothing) tab.modules 
                , currentModule = modname
                , currentPhaseId = phaseid
           }
@@ -119,29 +121,27 @@ fromMaybe def m = case m of
 
 viewInfo : Model -> CodeTab -> Html Msg
 viewInfo model tab = 
-    div [ class "info-panel" ]
-        [ h1 [] [text "Menu"]
-        , hr [] []
-        , h2 [] [text "ViewSettings"]
-        , HtmlHelpers.list 
+    Card.config []
+    |> Card.headerH3 [] [text "Options"]
+    |> Card.block []
+        [ Block.titleH4 [] [text "View Options"]
+        , Block.custom <|
+            HtmlHelpers.list 
               [ checkbox tab.hideTypes (mkCodeMsg CodeMsgToggleHideTypes tab.id) "Hide Types"
               , checkbox tab.disambiguateVariables (mkCodeMsg CodeMsgToggleDisambiguateVariables tab.id) "Disambiguate Variables Names"
+              , hr [] []
+              , h4 [] [text "Selected Variable"]
+              , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map viewTermInfo tab.selectedTerm)
               ]
-        , hr [] []
-        , fromMaybe (h3 [] [text "No term selected"]) (Maybe.map viewTermInfo tab.selectedTerm)
         ]
+    |> Card.view
 
 viewTermInfo : SelectedTerm -> Html Msg
-viewTermInfo term = div []
-                          [ h3 [] [text "Selected term"]
-                          --, p [] [text "details:"]
-                          --, p [] [text (Debug.toString term)]
-                          , case term of
-                              SelectedBinder b -> viewTermBinder b
-                              SelectedTopLevel (b,s) -> div [] [viewTermBinder b, br [] [], text (Debug.toString s)]
-                              SelectedExternal (ExternalName e) -> p [] [ text (H.typeToString e.externalType) ]
-                              SelectedExternal ForeignCall -> p [] [text "ForeignCall"]
-                          ]
+viewTermInfo term = case term of
+    SelectedBinder b -> viewTermBinder b
+    SelectedTopLevel (b,s) -> div [] [viewTermBinder b, br [] [], text (Debug.toString s)]
+    SelectedExternal (ExternalName e) -> p [] [ text (H.typeToString e.externalType) ]
+    SelectedExternal ForeignCall -> p [] [text "ForeignCall"]
 
 viewTermBinder : Binder -> Html Msg
 viewTermBinder bndr = HtmlHelpers.list
