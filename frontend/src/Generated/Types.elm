@@ -194,9 +194,9 @@ type alias ModuleMeta  =
 
 
 type alias ProjectMeta  =
-    { modules : List ModuleMeta, capturedAt : Int }
+    { modules : List ModuleMeta, capturedAt : Int, slug : String }
 
 
 type alias SessionMeta  =
-    { sessions : List (String , ProjectMeta) }
+    { sessions : List ProjectMeta }
 type BinderThunk = Found Binder | NotFound | Untouched

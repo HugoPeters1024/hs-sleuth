@@ -7,7 +7,7 @@ import Types exposing (..)
 import Loading exposing (Loading)
 import Commands
 
-import Set exposing (Set)
+import Set.Any exposing (AnySet)
 import Time
 
 import Bootstrap.Table as Table
@@ -16,22 +16,19 @@ import Bootstrap.Button as Button
 init : Cmd Msg
 init = Commands.fetchSessionMeta
 
-toggleSet : comparable -> Set comparable -> Set comparable
-toggleSet x set = if Set.member x set then Set.remove x set else Set.insert x set
-
 update : OverviewMsg -> OverviewTab -> (OverviewTab, Cmd Msg)
 update msg tab = case msg of
-    OverviewMsgToggleSlug slug -> ({tab | enabledProjects = toggleSet slug tab.enabledProjects}, Cmd.none)
+    OverviewMsgToggleProject project -> ({tab | enabledProjects = Set.Any.toggle project tab.enabledProjects}, Cmd.none)
 
 view : Model -> Html Msg
 view m = 
     let
-        mkRow (name, project) = 
-            Table.tr [Table.rowAttr (onClick (MsgOverViewTab (OverviewMsgToggleSlug name)))] 
+        mkRow project = 
+            Table.tr [Table.rowAttr (onClick (MsgOverViewTab (OverviewMsgToggleProject project)))] 
                 [ Table.td [] [ checkboxSimple
-                                (Set.member name m.overviewTab.enabledProjects) 
+                                (Set.Any.member project m.overviewTab.enabledProjects) 
                               ]
-                , Table.td [] [text name]
+                , Table.td [] [text project.slug]
                 , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix project.capturedAt))]
                 ] 
     in Loading.debugLoading "SessionMeta" m.sessionMetaLoading <| \session ->
@@ -48,7 +45,7 @@ view m =
                     }
                 , Button.button 
                     [ Button.primary
-                    , Button.disabled (Set.isEmpty m.overviewTab.enabledProjects)
+                    , Button.disabled (Set.Any.isEmpty m.overviewTab.enabledProjects)
                     , Button.attrs [onClick MsgOpenCodeTab]
                     ] 
                     [text "Open Tab"]

@@ -52,8 +52,8 @@ externalNameDecoder =
             Json.Decode.map ExternalName (Json.Decode.succeed (\b c d e -> { externalModuleName = b
             , externalName = c
             , externalUnique = d
-            , externalType = e
-            , localBinder = \_ -> Untouched}) |>
+            , externalType = e 
+            , localBinder = \_ -> Untouched }) |>
             Json.Decode.Pipeline.required "externalModuleName" moduleNameDecoder |>
             Json.Decode.Pipeline.required "externalName" Json.Decode.string |>
             Json.Decode.Pipeline.required "externalUnique" uniqueDecoder |>
@@ -487,12 +487,13 @@ projectMetaDecoder : Json.Decode.Decoder ProjectMeta
 projectMetaDecoder =
     Json.Decode.succeed ProjectMeta |>
     Json.Decode.Pipeline.required "modules" (Json.Decode.list moduleMetaDecoder) |>
-    Json.Decode.Pipeline.required "capturedAt" Json.Decode.int
+    Json.Decode.Pipeline.required "capturedAt" Json.Decode.int |>
+    Json.Decode.Pipeline.required "slug" Json.Decode.string
 
 
 sessionMetaDecoder : Json.Decode.Decoder SessionMeta
 sessionMetaDecoder =
     Json.Decode.succeed SessionMeta |>
-    Json.Decode.Pipeline.required "sessions" (Json.Decode.list (Json.Decode.map2 Tuple.pair (Json.Decode.index 0 Json.Decode.string) (Json.Decode.index 1 projectMetaDecoder)))
+    Json.Decode.Pipeline.required "sessions" (Json.Decode.list projectMetaDecoder)
 triple : a -> b -> c -> (a,b,c)
 triple x y z = (x,y,z)

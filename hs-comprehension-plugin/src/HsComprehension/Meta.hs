@@ -36,7 +36,7 @@ data ProjectMeta = ProjectMeta
 
 
 data SessionMeta = SessionMeta
-    { sessions :: [(Text, ProjectMeta)]
+    { sessions :: [ProjectMeta]
     } deriving (Generic, SOP.Generic, SOP.HasDatatypeInfo, Serialise)
       deriving ( Aeson.ToJSON
                , HasElmType

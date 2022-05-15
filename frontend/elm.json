@@ -16,13 +16,15 @@
             "elm/url": "1.0.0",
             "folkertdev/elm-state": "3.0.1",
             "rundis/elm-bootstrap": "5.2.0",
-            "toastal/either": "3.6.3"
+            "toastal/either": "3.6.3",
+            "turboMaCk/any-set": "1.5.0"
         },
         "indirect": {
             "avh4/elm-color": "1.0.0",
             "elm/bytes": "1.0.8",
             "elm/file": "1.0.5",
-            "elm/virtual-dom": "1.0.2"
+            "elm/virtual-dom": "1.0.2",
+            "turboMaCk/any-dict": "2.6.0"
         }
     },
     "test-dependencies": {

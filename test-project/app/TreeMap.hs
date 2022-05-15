@@ -1,6 +1,8 @@
 module TreeMap where
 
-data Tree a = Leaf a | Node (Tree a) (Tree a) deriving Show
+data Tree a = Leaf a 
+            | Node (Tree a) (Tree a) 
+            deriving Show
 
 {-# Rules
    "mapTree/mapTree"   forall f g.   mapTree f . mapTree g    = mapTree (f. g)   ;

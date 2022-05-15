@@ -11,7 +11,7 @@ import Loading exposing (..)
 import Time
 import Task
 import Dict exposing (Dict)
-import Set exposing (Set)
+import Set.Any exposing (AnySet)
 
 import Commands
 import HsCore.Trafo.Reconstruct as TR
@@ -33,10 +33,9 @@ main = Browser.document
 initModel : Model
 initModel = { pageTab = Tabs.init
             , sessionMetaLoading = Loading Nothing
-            , projectMetaLoading = Loading Nothing
             , timezone = Time.utc
             , overviewTab =
-                { enabledProjects = Set.empty
+                { enabledProjects = Set.Any.empty .slug
                 }
             , idGen = 0
             , codeTabs = Dict.empty
@@ -46,7 +45,7 @@ addCodeTab : CodeTab -> Model -> Model
 addCodeTab tab model = { model | codeTabs = Dict.insert tab.id tab model.codeTabs }
 
 init : () -> (Model, Cmd Msg)
-init flags = (initModel, Cmd.batch [Task.perform MsgAdjustTimeZone Time.here, Overview.init, Commands.fetchProjectMeta "secret"])
+init flags = (initModel, Cmd.batch [Task.perform MsgAdjustTimeZone Time.here, Overview.init])
 
 
 viewCodeTabs model =
@@ -85,7 +84,6 @@ updateDictWithEffect f dict key = Dict.get key dict
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
     MsgGotSessionMeta res -> ({model | sessionMetaLoading = Loading.loadFromResult res}, Cmd.none)
-    MsgGotProjectMeta res -> ({model | projectMetaLoading = Loading.loadFromResult res}, Cmd.none)
     MsgPageTab tabmsg -> ({model | pageTab = Tabs.update tabmsg model.pageTab}, Cmd.none)
     MsgAdjustTimeZone zone -> ({model | timezone = zone}, Cmd.none)
     MsgCodeMsg tid codemsg -> case updateDictWithEffect (Code.update codemsg) model.codeTabs tid of
@@ -95,9 +93,9 @@ update msg model = case msg of
         let (ntab, cmd) = Overview.update tabmsg model.overviewTab
         in ({model | overviewTab = ntab}, cmd)
     MsgOpenCodeTab -> 
-        if (Set.isEmpty model.overviewTab.enabledProjects)
+        if (Set.Any.isEmpty model.overviewTab.enabledProjects)
         then (model, Cmd.none)
         else
-            let (nmodel, codeTab, cmd) = Code.makeCodeTab model (Set.toList model.overviewTab.enabledProjects)
+            let (nmodel, codeTab, cmd) = Code.makeCodeTab model (Set.Any.toList model.overviewTab.enabledProjects)
             in (addCodeTab codeTab nmodel, cmd)
 

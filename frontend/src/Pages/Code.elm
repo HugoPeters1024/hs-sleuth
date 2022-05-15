@@ -25,14 +25,18 @@ mkCodeMsg msg id = MsgCodeMsg id msg
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
 
-makeCodeTab : Model -> List Slug -> (Model, CodeTab, Cmd Msg)
-makeCodeTab model slugs = 
+makeCodeTab : Model -> List ProjectMeta -> (Model, CodeTab, Cmd Msg)
+makeCodeTab model metas = 
     let tabId = model.idGen
+        slugs = List.map .slug metas
+        slugsandmetas = H.zip slugs metas
+        
     in
     ( { model | idGen = model.idGen + 1 }
     , { id = tabId
       , name = "Code-" ++ String.fromInt tabId
       , modules = Dict.fromList (List.map (\s -> (s, Loading Nothing)) slugs)
+      , projectMetas = Dict.fromList slugsandmetas
       , selectedTerm = Nothing
       , hideTypes = False
       , disambiguateVariables = False
@@ -63,10 +67,7 @@ update msg tab = case msg of
 
 view : Model -> CodeTab -> Html Msg
 view model tab = 
-    div [] [ Loading.debugLoading "ProjectMeta" model.projectMetaLoading <| \meta ->
-               select [onInput (\x -> mkCodeMsg (CodeMsgSetModule x 0) tab.id)]
-                      (List.map (\m -> option [] [text m.name]) meta.modules)
-           , viewHeader model tab
+    div [] [ viewHeader model tab
            , panel
                 (
                     (foreach (Dict.toList tab.modules) <| \(slug, mod) ->

@@ -6,6 +6,7 @@ This a newer version that restarted with Ben's ghc-dump as a basis. The previous
 
 * GHC 9.2
 * Cabal 3.16
+* zlib (`sudo apt install zlib1g-dev`)
 
 ## Quickstart
 

@@ -56,5 +56,5 @@ msg = bigOp [0,1,2,3,5]
 
 
 main :: IO ()
-main = putStrLn secret
+main = print (mapTreeId (Leaf 0))
 

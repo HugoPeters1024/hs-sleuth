@@ -9,7 +9,7 @@ import HsCore.Helpers as H
 import UI.Tabs as Tabs
 import Time
 import Dict exposing (Dict)
-import Set exposing (Set)
+import Set.Any exposing (AnySet)
 
 
 type SelectedTerm = SelectedBinder Binder
@@ -31,6 +31,7 @@ type alias CodeTab =
     { id : TabId
     , name : String
     , modules : Dict Slug (Loading Module)
+    , projectMetas : Dict Slug ProjectMeta
     , currentModule : ModuleName
     , currentPhaseId : Int
     , selectedTerm : Maybe SelectedTerm
@@ -48,7 +49,6 @@ type CodeTabMsg
 type alias Model = 
     { pageTab : Tabs.Model
     , sessionMetaLoading : Loading SessionMeta
-    , projectMetaLoading : Loading ProjectMeta
     , timezone : Time.Zone
     , codeTabs : Dict TabId CodeTab
     , overviewTab : OverviewTab
@@ -56,16 +56,15 @@ type alias Model =
     }
 
 type alias OverviewTab =
-    { enabledProjects : Set Slug
+    { enabledProjects : AnySet Slug ProjectMeta
     }
 
 type OverviewMsg
-    = OverviewMsgToggleSlug Slug
+    = OverviewMsgToggleProject ProjectMeta
 
 
 type Msg 
     = MsgGotSessionMeta (Result Http.Error SessionMeta)
-    | MsgGotProjectMeta (Result Http.Error ProjectMeta)
     | MsgCodeMsg TabId CodeTabMsg
     | MsgPageTab Tabs.Msg
     | MsgOverViewTab OverviewMsg
