@@ -9,7 +9,10 @@ import HsCore.Helpers as H
 import UI.Tabs as Tabs
 import Time
 import Dict exposing (Dict)
+import Set exposing (Set)
 import Set.Any exposing (AnySet)
+
+import Bootstrap.Dropdown  as Dropdown
 
 
 type SelectedTerm = SelectedBinder Binder
@@ -31,12 +34,13 @@ type alias CodeTab =
     { id : TabId
     , name : String
     , modules : Dict Slug (Loading Module)
-    , projectMetas : Dict Slug ProjectMeta
+    , moduleNameSet : Set ModuleName
     , currentModule : ModuleName
     , currentPhaseId : Int
     , selectedTerm : Maybe SelectedTerm
     , hideTypes : Bool
     , disambiguateVariables : Bool
+    , moduleDropdown : Dropdown.State
     }
 
 type CodeTabMsg
@@ -45,6 +49,7 @@ type CodeTabMsg
     | CodeMsgSelectTerm SelectedTerm
     | CodeMsgToggleHideTypes
     | CodeMsgToggleDisambiguateVariables
+    | CodeMsgModuleDropdown Dropdown.State
 
 type alias Model = 
     { pageTab : Tabs.Model

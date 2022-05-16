@@ -16,8 +16,12 @@ import Commands as C
 import Loading exposing (Loading(..))
 import Commands
 
+import Set exposing (Set)
+
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
+import Bootstrap.Dropdown  as Dropdown
+import Bootstrap.Button  as Button
 
 mkCodeMsg : CodeTabMsg -> TabId -> Msg
 mkCodeMsg msg id = MsgCodeMsg id msg
@@ -29,19 +33,18 @@ makeCodeTab : Model -> List ProjectMeta -> (Model, CodeTab, Cmd Msg)
 makeCodeTab model metas = 
     let tabId = model.idGen
         slugs = List.map .slug metas
-        slugsandmetas = H.zip slugs metas
-        
     in
     ( { model | idGen = model.idGen + 1 }
     , { id = tabId
       , name = "Code-" ++ String.fromInt tabId
       , modules = Dict.fromList (List.map (\s -> (s, Loading Nothing)) slugs)
-      , projectMetas = Dict.fromList slugsandmetas
+      , moduleNameSet = Set.fromList (List.map .name (List.concatMap .modules metas))
+      , currentModule = "Main"
+      , currentPhaseId = 0
       , selectedTerm = Nothing
       , hideTypes = False
       , disambiguateVariables = False
-      , currentModule = "Main"
-      , currentPhaseId = 0
+      , moduleDropdown = Dropdown.initialState
       }
     , Cmd.batch (List.map (\slug -> C.fetchCodePhase tabId slug "Main" 0) slugs)
     )
@@ -63,6 +66,7 @@ update msg tab = case msg of
     CodeMsgSelectTerm term -> ({tab | selectedTerm = Just term}, Cmd.none)
     CodeMsgToggleHideTypes -> ({tab | hideTypes = not tab.hideTypes}, Cmd.none)
     CodeMsgToggleDisambiguateVariables -> ({tab | disambiguateVariables = not tab.disambiguateVariables}, Cmd.none)
+    CodeMsgModuleDropdown state -> ({tab | moduleDropdown = state}, Cmd.none)
 
 
 view : Model -> CodeTab -> Html Msg
@@ -87,6 +91,14 @@ viewHeader : Model -> CodeTab -> Html Msg
 viewHeader _ tab = 
     div []
         [ h3 []  [text (tab.currentModule ++ " - " ++ String.fromInt tab.currentPhaseId)]
+        , Dropdown.dropdown tab.moduleDropdown
+            { options = []
+            , toggleMsg = \s -> mkCodeMsg (CodeMsgModuleDropdown s) tab.id
+            , toggleButton = Dropdown.toggle [Button.primary] [text "Module"]
+            , items = List.map 
+                (\modname -> Dropdown.buttonItem [onClick (mkCodeMsg (CodeMsgSetModule modname 0) tab.id)] [text modname]) 
+                (Set.toList tab.moduleNameSet)
+            }
         , button [onClick (mkCodeMsg (CodeMsgSetModule tab.currentModule (tab.currentPhaseId - 1)) tab.id)] [text "Previous"]
         , button [onClick (mkCodeMsg (CodeMsgSetModule tab.currentModule (tab.currentPhaseId + 1)) tab.id)] [text "Next"]
         ]
