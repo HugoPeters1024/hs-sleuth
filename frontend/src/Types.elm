@@ -7,6 +7,7 @@ import Generated.Types exposing (..)
 import HsCore.Helpers as H
 
 import UI.Tabs as Tabs
+import UI.Slider as Slider
 import Time
 import Dict exposing (Dict)
 import Set exposing (Set)
@@ -30,13 +31,18 @@ type alias TabId = Int
 type alias Slug = String
 type alias ModuleName = String
 
+type alias CodeTabModule =
+    { mod : Loading Module
+    , projectMeta : ProjectMeta
+    , phaseSlider : Slider.Model
+    }
+
 type alias CodeTab = 
     { id : TabId
     , name : String
-    , modules : Dict Slug (Loading Module)
+    , modules : Dict Slug CodeTabModule
     , moduleNameSet : Set ModuleName
     , currentModule : ModuleName
-    , currentPhaseId : Int
     , selectedTerm : Maybe SelectedTerm
     , hideTypes : Bool
     , disambiguateVariables : Bool
@@ -50,6 +56,7 @@ type CodeTabMsg
     | CodeMsgToggleHideTypes
     | CodeMsgToggleDisambiguateVariables
     | CodeMsgModuleDropdown Dropdown.State
+    | CodeMsgSlider Slug Slider.Msg
 
 type alias Model = 
     { pageTab : Tabs.Model

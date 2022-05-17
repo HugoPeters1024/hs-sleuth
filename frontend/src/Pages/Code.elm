@@ -1,5 +1,7 @@
 module Pages.Code exposing (..)
 
+import ElmHelpers as EH
+
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -18,6 +20,8 @@ import Commands
 
 import Set exposing (Set)
 
+import UI.Slider as Slider
+
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Dropdown  as Dropdown
@@ -29,6 +33,13 @@ mkCodeMsg msg id = MsgCodeMsg id msg
 subscriptions : Model -> Sub Msg
 subscriptions _ = Sub.none
 
+initCodeTabModule : ProjectMeta -> CodeTabModule
+initCodeTabModule meta = 
+    { mod = Loading Nothing
+    , projectMeta = meta
+    , phaseSlider = Slider.init 0
+    }
+
 makeCodeTab : Model -> List ProjectMeta -> (Model, CodeTab, Cmd Msg)
 makeCodeTab model metas = 
     let tabId = model.idGen
@@ -37,10 +48,9 @@ makeCodeTab model metas =
     ( { model | idGen = model.idGen + 1 }
     , { id = tabId
       , name = "Code-" ++ String.fromInt tabId
-      , modules = Dict.fromList (List.map (\s -> (s, Loading Nothing)) slugs)
+      , modules = Dict.fromList (List.map (\m -> (m.slug, initCodeTabModule m)) metas)
       , moduleNameSet = Set.fromList (List.map .name (List.concatMap .modules metas))
       , currentModule = "Main"
-      , currentPhaseId = 0
       , selectedTerm = Nothing
       , hideTypes = False
       , disambiguateVariables = False
@@ -52,21 +62,32 @@ makeCodeTab model metas =
 update : CodeTabMsg -> CodeTab -> (CodeTab, Cmd Msg)
 update msg tab = case msg of
     CodeMsgSetModule modname phaseid -> 
-        ( {tab | modules = Dict.map (\_ _ -> Loading Nothing) tab.modules 
-               , currentModule = modname
-               , currentPhaseId = phaseid
-          }
+        ( {tab | currentModule = modname }
         , Cmd.batch 
             ( List.map
              (\slug -> Commands.fetchCodePhase tab.id slug modname phaseid)
              (Dict.keys tab.modules)
             )
         )
-    CodeMsgGotModule slug res -> ({tab | modules = Dict.insert slug (Loading.loadFromResult res) tab.modules}, Cmd.none)
+    CodeMsgGotModule slug res -> 
+        let updateModuleTab : CodeTabModule -> CodeTabModule 
+            updateModuleTab tabmod = {tabmod | mod = Loading.loadFromResult res }
+        in ({tab | modules = Dict.update slug (Maybe.map updateModuleTab) tab.modules}, Cmd.none)
     CodeMsgSelectTerm term -> ({tab | selectedTerm = Just term}, Cmd.none)
     CodeMsgToggleHideTypes -> ({tab | hideTypes = not tab.hideTypes}, Cmd.none)
     CodeMsgToggleDisambiguateVariables -> ({tab | disambiguateVariables = not tab.disambiguateVariables}, Cmd.none)
     CodeMsgModuleDropdown state -> ({tab | moduleDropdown = state}, Cmd.none)
+    CodeMsgSlider slug slidermsg ->
+        let updateModuleTab : CodeTabModule -> CodeTabModule
+            updateModuleTab tabmod = {tabmod | phaseSlider = Slider.update slidermsg tabmod.phaseSlider }
+
+            newtab : CodeTab
+            newtab = {tab | modules = Dict.update slug (Maybe.map updateModuleTab) tab.modules}
+        in ( newtab
+           , case Dict.get slug newtab.modules of
+               Nothing -> Cmd.none
+               Just modtab -> Commands.fetchCodePhase tab.id slug tab.currentModule modtab.phaseSlider.value
+           )
 
 
 view : Model -> CodeTab -> Html Msg
@@ -90,7 +111,7 @@ selectedTermId tab = Maybe.map selectedTermToInt tab.selectedTerm
 viewHeader : Model -> CodeTab -> Html Msg
 viewHeader _ tab = 
     div []
-        [ h3 []  [text (tab.currentModule ++ " - " ++ String.fromInt tab.currentPhaseId)]
+        [ h3 []  [text tab.currentModule]
         , Dropdown.dropdown tab.moduleDropdown
             { options = []
             , toggleMsg = \s -> mkCodeMsg (CodeMsgModuleDropdown s) tab.id
@@ -99,22 +120,29 @@ viewHeader _ tab =
                 (\modname -> Dropdown.buttonItem [onClick (mkCodeMsg (CodeMsgSetModule modname 0) tab.id)] [text modname]) 
                 (Set.toList tab.moduleNameSet)
             }
-        , button [onClick (mkCodeMsg (CodeMsgSetModule tab.currentModule (tab.currentPhaseId - 1)) tab.id)] [text "Previous"]
-        , button [onClick (mkCodeMsg (CodeMsgSetModule tab.currentModule (tab.currentPhaseId + 1)) tab.id)] [text "Next"]
         ]
 
 
 
-viewCode : Model -> CodeTab -> Slug -> Loading Module -> Html Msg
-viewCode model tab slug modloading = 
+viewCode : Model -> CodeTab -> Slug -> CodeTabModule -> Html Msg
+viewCode model tab slug modtab = 
     let ppInfo = PP.defaultInfo tab.id
             |> \r -> {r | selectId = Maybe.map selectedTermToInt tab.selectedTerm}
             |> if tab.disambiguateVariables then PP.withFullNameBinder else identity
     in div []
         [ h4 [] [text slug]
+        , Loading.renderLoading modtab.mod (\mod -> text mod.modulePhase)
+        , Slider.config
+            { lift = \msg -> mkCodeMsg (CodeMsgSlider slug msg) tab.id
+            , mininum = 0
+            , maximum = case EH.find (\x -> x.name == tab.currentModule) modtab.projectMeta.modules of
+                Just x -> x.nrPasses
+                Nothing -> 0
+            }
+            |> Slider.view modtab.phaseSlider
         , pre [class "dark"] 
             [ code [] 
-                   [Loading.renderLoading modloading <| \mod ->
+                   [Loading.renderLoading modtab.mod <| \mod ->
                        (
                          (if tab.hideTypes then eraseTypesModule mod else mod)
                          |> .moduleTopBindings
