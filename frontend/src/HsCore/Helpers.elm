@@ -63,6 +63,16 @@ isConstructorName name = case String.toList name of
     x::_ -> Char.isUpper x
     _    -> False
 
+useFullSpan : SrcSpan -> Bool
+useFullSpan span = case span of
+    SrcSpan _ -> True
+    NoSpan -> False
+
+isSrcBinder : Binder -> Bool
+isSrcBinder binder = case binder of
+    Binder b -> useFullSpan b.binderSrcSpan && not (String.startsWith "$" b.binderName)
+    _ -> False
+
 isTyBinder : Binder -> Bool
 isTyBinder b = case b of
     Binder _ -> False
@@ -97,6 +107,9 @@ leadingForalls type_ = case type_ of
 
 getModuleBinders : Module -> List Binder
 getModuleBinders mod = List.concatMap getTopLevelBinders mod.moduleTopBindings
+
+getModuleTopNames : Module -> List (String, Bool)
+getModuleTopNames mod = List.map (\b -> (binderName b, isSrcBinder b)) (getModuleBinders mod)
 
 unzip3 : List (a,b,c) -> (List a, List b, List c)
 unzip3 xs = case xs of

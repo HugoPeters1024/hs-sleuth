@@ -17,3 +17,12 @@ lookup : List (k, v) -> k -> Maybe v
 lookup xs k = case xs of
     [] -> Nothing
     (kk,v)::tl -> if k == kk then Just v else lookup tl k
+
+mapMaybe : (a -> Maybe b) -> List a -> List b
+mapMaybe f list = case list of
+    x::xs -> case f x of
+        Just y -> y::mapMaybe f xs
+        Nothing -> mapMaybe f xs
+    []    -> []
+
+

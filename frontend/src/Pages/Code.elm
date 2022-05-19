@@ -38,7 +38,18 @@ initCodeTabModule meta =
     { mod = Loading Nothing
     , projectMeta = meta
     , phaseSlider = Slider.init 0
+    , topNames = []
     }
+
+getProjectMetas : CodeTab -> List ProjectMeta
+getProjectMetas tab = List.map .projectMeta (Dict.values tab.modules)
+
+getMergedModuleNames : CodeTab -> List String
+getMergedModuleNames tab = List.map .name (List.concatMap .modules (getProjectMetas tab))
+
+getMergedTopBinders : CodeTab -> List Binder
+getMergedTopBinders tab = List.concatMap .topNames (Dict.values tab.modules)
+
 
 makeCodeTab : Model -> List ProjectMeta -> (Model, CodeTab, Cmd Msg)
 makeCodeTab model metas = 
@@ -49,7 +60,6 @@ makeCodeTab model metas =
     , { id = tabId
       , name = "Code-" ++ String.fromInt tabId
       , modules = Dict.fromList (List.map (\m -> (m.slug, initCodeTabModule m)) metas)
-      , moduleNameSet = Set.fromList (List.map .name (List.concatMap .modules metas))
       , currentModule = "Main"
       , selectedTerm = Nothing
       , hideTypes = False
@@ -71,7 +81,10 @@ update msg tab = case msg of
         )
     CodeMsgGotModule slug res -> 
         let updateModuleTab : CodeTabModule -> CodeTabModule 
-            updateModuleTab tabmod = {tabmod | mod = Loading.loadFromResult res }
+            updateModuleTab tabmod = 
+                let mod = Loading.loadFromResult res
+                    topNames = Loading.withDefault [] (Loading.map H.getModuleBinders mod)
+                in {tabmod | mod = mod, topNames = topNames }
         in ({tab | modules = Dict.update slug (Maybe.map updateModuleTab) tab.modules}, Cmd.none)
     CodeMsgSelectTerm term -> ({tab | selectedTerm = Just term}, Cmd.none)
     CodeMsgToggleHideTypes -> ({tab | hideTypes = not tab.hideTypes}, Cmd.none)
@@ -118,7 +131,7 @@ viewHeader _ tab =
             , toggleButton = Dropdown.toggle [Button.primary] [text "Module"]
             , items = List.map 
                 (\modname -> Dropdown.buttonItem [onClick (mkCodeMsg (CodeMsgSetModule modname 0) tab.id)] [text modname]) 
-                (Set.toList tab.moduleNameSet)
+                (getMergedModuleNames tab)
             }
         ]
 
@@ -173,6 +186,9 @@ viewInfo model tab =
               , hr [] []
               , h4 [] [text "Selected Variable"]
               , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map viewTermInfo tab.selectedTerm)
+              , hr [] []
+              , h4 [] [text "Toplevel functions"]
+              , HtmlHelpers.list (List.map (text << H.binderName) (List.filter H.isSrcBinder (getMergedTopBinders tab)))
               ]
         ]
     |> Card.view

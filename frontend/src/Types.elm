@@ -35,13 +35,13 @@ type alias CodeTabModule =
     { mod : Loading Module
     , projectMeta : ProjectMeta
     , phaseSlider : Slider.Model
+    , topNames : List Binder
     }
 
 type alias CodeTab = 
     { id : TabId
     , name : String
     , modules : Dict Slug CodeTabModule
-    , moduleNameSet : Set ModuleName
     , currentModule : ModuleName
     , selectedTerm : Maybe SelectedTerm
     , hideTypes : Bool

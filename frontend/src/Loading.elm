@@ -35,5 +35,18 @@ renderLoading load f = case load of
     Loading (Just x) -> f x
     _ -> Spinner.spinner [] []
 
+map : (a -> b) -> Loading a -> Loading b
+map f load = case load of
+    Ready x -> Ready (f x)
+    Loading (Just x) -> Loading (Just (f x))
+    Loading Nothing -> Loading Nothing
+    Error e -> Error e
+    NotRequested -> NotRequested
+
+withDefault : a -> Loading a -> a
+withDefault def load = case load of
+    Ready x -> x
+    Loading (Just x) -> x
+    _  -> def
 
 
