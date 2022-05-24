@@ -1,5 +1,6 @@
 module Generated.Types exposing
-    ( Unique(..)
+    ( Capture
+    , Unique(..)
     , ExternalName(..)
     , BinderId(..)
     , Binder(..)
@@ -10,7 +11,6 @@ module Generated.Types exposing
     , Lit(..)
     , TyCon(..)
     , Type(..)
-    , ModuleName
     , Module
     , Expr(..)
     , Alt
@@ -18,14 +18,18 @@ module Generated.Types exposing
     , LineCol
     , SrcSpan(..)
     , Tick
+    , TopBindingInfo
     , TopBinding(..)
-    , CoreStats
-    , ModuleMeta
-    , ProjectMeta
-    , SessionMeta
     , BinderThunk(..)
+    , CoreStats
     )
 
+
+
+type alias Capture  =
+    { captureName : String
+    , captureDate : Int
+    , captureModules : List (String , Int) }
 
 
 type Unique 
@@ -33,7 +37,7 @@ type Unique
 
 
 type ExternalName 
-    = ExternalName { externalModuleName : ModuleName
+    = ExternalName { externalModuleName : String
     , externalName : String
     , externalUnique : Unique
     , externalType : Type
@@ -128,12 +132,8 @@ type Type
     | CoercionTy 
 
 
-type alias ModuleName  =
-    { getModuleName : String }
-
-
 type alias Module  =
-    { moduleName : ModuleName
+    { moduleName : String
     , modulePhase : String
     , modulePhaseId : Int
     , moduleTopBindings : List TopBinding }
@@ -176,9 +176,15 @@ type alias Tick  =
     { sourceTickSpan : SrcSpan }
 
 
+type alias TopBindingInfo  =
+    { topBindingBinder : Binder
+    , topBindingCoreState : CoreStats
+    , topBindingRHS : Expr }
+
+
 type TopBinding 
-    = NonRecTopBinding Binder CoreStats Expr
-    | RecTopBinding (List (Binder, CoreStats, Expr))
+    = NonRecTopBinding TopBindingInfo
+    | RecTopBinding (List TopBindingInfo)
 
 
 type alias CoreStats  =
@@ -187,16 +193,4 @@ type alias CoreStats  =
     , csCoercions : Int
     , csValBinds : Int
     , csJoinBinds : Int }
-
-
-type alias ModuleMeta  =
-    { nrPasses : Int, name : String }
-
-
-type alias ProjectMeta  =
-    { modules : List ModuleMeta, capturedAt : Int, slug : String }
-
-
-type alias SessionMeta  =
-    { sessions : List ProjectMeta }
 type BinderThunk = Found Binder | NotFound | Untouched

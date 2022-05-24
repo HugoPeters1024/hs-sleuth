@@ -30,10 +30,10 @@ import Bootstrap.Button  as Button
 mkCodeMsg : CodeTabMsg -> TabId -> Msg
 mkCodeMsg msg id = MsgCodeMsg id msg
 
-subscriptions : Model -> Sub Msg
-subscriptions _ = Sub.none
+subscriptions : CodeTab -> Sub Msg
+subscriptions tab = Sub.map (MsgCodeMsg tab.id) (Dropdown.subscriptions tab.moduleDropdown CodeMsgModuleDropdown)
 
-initCodeTabModule : ProjectMeta -> CodeTabModule
+initCodeTabModule : Capture -> CodeTabModule
 initCodeTabModule meta = 
     { mod = Loading Nothing
     , projectMeta = meta
@@ -41,30 +41,34 @@ initCodeTabModule meta =
     , topNames = []
     }
 
-getProjectMetas : CodeTab -> List ProjectMeta
-getProjectMetas tab = List.map .projectMeta (Dict.values tab.modules)
+getCaptures : CodeTab -> List Capture
+getCaptures tab = List.map .projectMeta (Dict.values tab.modules)
 
 getMergedModuleNames : CodeTab -> List String
-getMergedModuleNames tab = List.map .name (List.concatMap .modules (getProjectMetas tab))
+getMergedModuleNames tab = List.map Tuple.first (List.concatMap .captureModules (getCaptures tab))
+    |> Set.fromList
+    |> Set.toList
 
 getMergedTopBinders : CodeTab -> List Binder
 getMergedTopBinders tab = List.concatMap .topNames (Dict.values tab.modules)
 
 
-makeCodeTab : Model -> List ProjectMeta -> (Model, CodeTab, Cmd Msg)
-makeCodeTab model metas = 
+
+makeCodeTab : Model -> List Capture -> (Model, CodeTab, Cmd Msg)
+makeCodeTab model captures = 
     let tabId = model.idGen
-        slugs = List.map .slug metas
+        slugs = List.map .captureName captures
     in
     ( { model | idGen = model.idGen + 1 }
     , { id = tabId
       , name = "Code-" ++ String.fromInt tabId
-      , modules = Dict.fromList (List.map (\m -> (m.slug, initCodeTabModule m)) metas)
+      , modules = Dict.fromList (List.map (\m -> (m.captureName, initCodeTabModule m)) captures)
       , currentModule = "Main"
       , selectedTerm = Nothing
+      , moduleDropdown = Dropdown.initialState
       , hideTypes = False
       , disambiguateVariables = False
-      , moduleDropdown = Dropdown.initialState
+      , showRecursiveGroups = False
       }
     , Cmd.batch (List.map (\slug -> C.fetchCodePhase tabId slug "Main" 0) slugs)
     )
@@ -89,6 +93,7 @@ update msg tab = case msg of
     CodeMsgSelectTerm term -> ({tab | selectedTerm = Just term}, Cmd.none)
     CodeMsgToggleHideTypes -> ({tab | hideTypes = not tab.hideTypes}, Cmd.none)
     CodeMsgToggleDisambiguateVariables -> ({tab | disambiguateVariables = not tab.disambiguateVariables}, Cmd.none)
+    CodeMsgToggleShowRecursiveGroups -> ({tab | showRecursiveGroups = not tab.showRecursiveGroups}, Cmd.none)
     CodeMsgModuleDropdown state -> ({tab | moduleDropdown = state}, Cmd.none)
     CodeMsgSlider slug slidermsg ->
         let updateModuleTab : CodeTabModule -> CodeTabModule
@@ -101,7 +106,6 @@ update msg tab = case msg of
                Nothing -> Cmd.none
                Just modtab -> Commands.fetchCodePhase tab.id slug tab.currentModule modtab.phaseSlider.value
            )
-
 
 view : Model -> CodeTab -> Html Msg
 view model tab = 
@@ -148,8 +152,8 @@ viewCode model tab slug modtab =
         , Slider.config
             { lift = \msg -> mkCodeMsg (CodeMsgSlider slug msg) tab.id
             , mininum = 0
-            , maximum = case EH.find (\x -> x.name == tab.currentModule) modtab.projectMeta.modules of
-                Just x -> x.nrPasses
+            , maximum = case EH.find (\(name,_) -> name == tab.currentModule) modtab.projectMeta.captureModules of
+                Just (_, nrPasses) -> nrPasses
                 Nothing -> 0
             }
             |> Slider.view modtab.phaseSlider
@@ -158,6 +162,7 @@ viewCode model tab slug modtab =
                    [Loading.renderLoading modtab.mod <| \mod ->
                        (
                          (if tab.hideTypes then eraseTypesModule mod else mod)
+                         |> (if tab.showRecursiveGroups then identity else \m -> {m | moduleTopBindings = H.removeRecursiveGroups m.moduleTopBindings})
                          |> .moduleTopBindings
                          |> List.map PP.ppTopBinding
                          |> PP.ppSepped "\n\n"
@@ -183,6 +188,7 @@ viewInfo model tab =
             HtmlHelpers.list 
               [ checkbox tab.hideTypes (mkCodeMsg CodeMsgToggleHideTypes tab.id) "Hide Types"
               , checkbox tab.disambiguateVariables (mkCodeMsg CodeMsgToggleDisambiguateVariables tab.id) "Disambiguate Variables Names"
+              , checkbox tab.showRecursiveGroups   (mkCodeMsg CodeMsgToggleShowRecursiveGroups   tab.id) "Show Recursive Groups"
               , hr [] []
               , h4 [] [text "Selected Variable"]
               , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map viewTermInfo tab.selectedTerm)

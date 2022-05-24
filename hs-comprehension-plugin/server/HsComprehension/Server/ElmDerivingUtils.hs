@@ -8,7 +8,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-module HsComprehension.ElmDeriving where
+module HsComprehension.Server.ElmDerivingUtils where
 
 import Data.Proxy
 import Data.String (fromString)

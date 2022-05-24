@@ -56,5 +56,5 @@ msg = bigOp [0,1,2,3,5]
 
 
 main :: IO ()
-main = print (mapTreeId (Leaf 0))
+main = print (fac 5)
 

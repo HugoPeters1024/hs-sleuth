@@ -1,5 +1,5 @@
 packages: .
-        , ../hs-comprehension-plugin
         , ../ghc-dump/ghc-dump-core
-        , ../ghc-dump/ghc-dump-util
+        , ../hs-comprehension-plugin/plugin
+        , ../hs-comprehension-plugin/server
 allow-newer: all

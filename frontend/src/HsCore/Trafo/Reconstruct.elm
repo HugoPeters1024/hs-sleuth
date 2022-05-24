@@ -32,12 +32,15 @@ reconExternalName env ename = case ename of
 
 
 reconTopBinding : Env -> TopBinding -> TopBinding
-reconTopBinding env tb = case tb of
-    -- TODO: also recon the binding again for the unfolding
-    NonRecTopBinding b stats expr -> NonRecTopBinding (reconBinder env b) stats (reconExpr env expr)
-    RecTopBinding xs ->
-        let (bs, stats, exprs) = H.unzip3 xs 
-        in RecTopBinding <| H.zip3 (List.map (reconBinder env) bs) stats (List.map (reconExpr env) exprs)
+reconTopBinding env tb = 
+    let go : TopBindingInfo -> TopBindingInfo 
+        go bi = { bi | topBindingBinder = reconBinder env bi.topBindingBinder 
+                     , topBindingRHS = reconExpr env bi.topBindingRHS
+                }
+    in case tb of
+        -- TODO: also recon the binding again for the unfolding
+        NonRecTopBinding bi -> NonRecTopBinding (go bi)
+        RecTopBinding bis -> RecTopBinding (List.map go bis)
 
 reconBinder : Env -> Binder -> Binder
 reconBinder env binder = case binder of

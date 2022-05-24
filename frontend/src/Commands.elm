@@ -17,6 +17,6 @@ fetchCodePhase tid slug mod id =
              }
 
 fetchSessionMeta : Cmd Msg
-fetchSessionMeta = Http.get { url = "http://localhost:8080/session"
-                            , expect = Http.expectJson MsgGotSessionMeta HE.sessionMetaDecoder
+fetchSessionMeta = Http.get { url = "http://localhost:8080/captures"
+                            , expect = Http.expectJson MsgGotCaptures (Json.Decode.list HE.captureDecoder)
                             }

@@ -33,7 +33,7 @@ type alias ModuleName = String
 
 type alias CodeTabModule =
     { mod : Loading Module
-    , projectMeta : ProjectMeta
+    , projectMeta : Capture
     , phaseSlider : Slider.Model
     , topNames : List Binder
     }
@@ -43,10 +43,11 @@ type alias CodeTab =
     , name : String
     , modules : Dict Slug CodeTabModule
     , currentModule : ModuleName
+    , moduleDropdown : Dropdown.State
     , selectedTerm : Maybe SelectedTerm
     , hideTypes : Bool
     , disambiguateVariables : Bool
-    , moduleDropdown : Dropdown.State
+    , showRecursiveGroups : Bool 
     }
 
 type CodeTabMsg
@@ -55,12 +56,13 @@ type CodeTabMsg
     | CodeMsgSelectTerm SelectedTerm
     | CodeMsgToggleHideTypes
     | CodeMsgToggleDisambiguateVariables
+    | CodeMsgToggleShowRecursiveGroups
     | CodeMsgModuleDropdown Dropdown.State
     | CodeMsgSlider Slug Slider.Msg
 
 type alias Model = 
     { pageTab : Tabs.Model
-    , sessionMetaLoading : Loading SessionMeta
+    , capturesLoading : Loading (List Capture)
     , timezone : Time.Zone
     , codeTabs : Dict TabId CodeTab
     , overviewTab : OverviewTab
@@ -68,15 +70,15 @@ type alias Model =
     }
 
 type alias OverviewTab =
-    { enabledProjects : AnySet Slug ProjectMeta
+    { enabledProjects : AnySet Slug Capture
     }
 
 type OverviewMsg
-    = OverviewMsgToggleProject ProjectMeta
+    = OverviewMsgToggleProject Capture
 
 
 type Msg 
-    = MsgGotSessionMeta (Result Http.Error SessionMeta)
+    = MsgGotCaptures (Result Http.Error (List Capture))
     | MsgCodeMsg TabId CodeTabMsg
     | MsgPageTab Tabs.Msg
     | MsgOverViewTab OverviewMsg

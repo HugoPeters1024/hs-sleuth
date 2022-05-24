@@ -67,10 +67,13 @@ runPP info pp = Reader.runReader info pp []
 
 
 indented : PP -> PP
-indented pp = Reader <| \info -> 
-    let whitespace = String.fromList (List.repeat 4 ' ')
-        block = List.map (\x -> text whitespace::x) (runPP info pp)
-    in \acc -> block ++ acc
+indented pp = ppSeq
+    [ Reader <| \info -> 
+        let whitespace = String.fromList (List.repeat 4 ' ')
+            block = List.map (\x -> text whitespace::x) (runPP info pp)
+        in \acc -> block ++ acc
+    , newline
+    ]
 
 newline : PP
 newline = Reader.pure <| \acc -> []::acc
@@ -88,6 +91,9 @@ emit node = Reader.pure <| \acc -> case acc of
 
 emitText : String -> PP
 emitText msg = emit (text msg)
+
+emitLine : String -> PP
+emitLine t = ppSeq [newline, emitText t]
 
 emitSpan : String -> String -> PP
 emitSpan c msg = emit (span [class c] [text msg])
@@ -160,8 +166,16 @@ uncurry3 f = \(x,y,z) -> f x y z
 
 ppTopBinding : H.TopBinding -> PP
 ppTopBinding b = case b of
-    H.NonRecTopBinding bndr _ e -> ppBinding True (bndr, e)
-    H.RecTopBinding xs -> ppSepped "\n\n" (List.map (ppTopBinding << uncurry3 H.NonRecTopBinding) xs)
+    H.NonRecTopBinding bi -> ppTopBindingInfo bi
+    H.RecTopBinding bis -> 
+        ppSeq [ emitText "Rec {"
+              , newline
+              , indented <| ppSepped "\n\n" (List.map ppTopBindingInfo bis)
+              , emitText "}"
+              ]
+
+ppTopBindingInfo : H.TopBindingInfo -> PP
+ppTopBindingInfo bi = ppBinding True (bi.topBindingBinder, bi.topBindingRHS)
 
 
 ppBinding : Bool -> (H.Binder, H.Expr) -> PP
@@ -178,7 +192,8 @@ ppBinding toplevel (b, e) =
                  , emitText " "
                  , ppSepped " " (List.map ppBinder bs)
                  , emitText (if List.isEmpty bs then "" else " ")
-                 , emitText "= ", ppExpr fe]
+                 , emitText "= ", ppExpr fe
+                 ]
 
 ppUnique : H.Unique -> PP
 ppUnique (H.Unique _ i) = emitText (String.fromInt i)
@@ -206,9 +221,7 @@ ppCase e b alts = ppSeq [ emitKeyword "case "
                         , emitKeyword " of {"
                         , indented <| 
                             ppSeq (List.map (\alt -> ppSeq [ppAlt b alt, newline]) (List.reverse alts))
-                        , newline
                         , emitText "}"
-                        , newline
                         ]
 
 ppAlt : H.Binder -> H.Alt -> PP

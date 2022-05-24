@@ -27,15 +27,15 @@ main = Browser.document
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
 
 initModel : Model
 initModel = { pageTab = Tabs.init
-            , sessionMetaLoading = Loading Nothing
+            , capturesLoading = Loading Nothing
             , timezone = Time.utc
             , overviewTab =
-                { enabledProjects = Set.Any.empty .slug
+                { enabledProjects = Set.Any.empty .captureName
                 }
             , idGen = 0
             , codeTabs = Dict.empty
@@ -46,6 +46,9 @@ addCodeTab tab model = { model | codeTabs = Dict.insert tab.id tab model.codeTab
 
 init : () -> (Model, Cmd Msg)
 init flags = (initModel, Cmd.batch [Task.perform MsgAdjustTimeZone Time.here, Overview.init])
+
+subscriptions : Model -> Sub Msg
+subscriptions model = Sub.batch (List.map Code.subscriptions (Dict.values model.codeTabs))
 
 
 viewCodeTabs model =
@@ -83,7 +86,7 @@ updateDictWithEffect f dict key = Dict.get key dict
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
-    MsgGotSessionMeta res -> ({model | sessionMetaLoading = Loading.loadFromResult res}, Cmd.none)
+    MsgGotCaptures res -> ({model | capturesLoading = Loading.loadFromResult res}, Cmd.none)
     MsgPageTab tabmsg -> ({model | pageTab = Tabs.update tabmsg model.pageTab}, Cmd.none)
     MsgAdjustTimeZone zone -> ({model | timezone = zone}, Cmd.none)
     MsgCodeMsg tid codemsg -> case updateDictWithEffect (Code.update codemsg) model.codeTabs tid of

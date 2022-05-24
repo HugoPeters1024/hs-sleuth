@@ -1,0 +1,5 @@
+packages: .
+        , ../plugin
+        , ../../ghc-dump/ghc-dump-core
+        , ../../ghc-dump/ghc-dump-util
+allow-newer: all

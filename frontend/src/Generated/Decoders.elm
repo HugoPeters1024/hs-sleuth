@@ -1,5 +1,6 @@
 module Generated.Decoders exposing
-    ( uniqueDecoder
+    ( captureDecoder
+    , uniqueDecoder
     , externalNameDecoder
     , binderIdDecoder
     , binderDecoder
@@ -10,7 +11,6 @@ module Generated.Decoders exposing
     , litDecoder
     , tyConDecoder
     , typeDecoder
-    , moduleNameDecoder
     , moduleDecoder
     , exprDecoder
     , altDecoder
@@ -18,17 +18,23 @@ module Generated.Decoders exposing
     , lineColDecoder
     , srcSpanDecoder
     , tickDecoder
+    , topBindingInfoDecoder
     , topBindingDecoder
     , coreStatsDecoder
-    , moduleMetaDecoder
-    , projectMetaDecoder
-    , sessionMetaDecoder
     )
 
 import Generated.Types exposing (..)
 import Json.Decode
 import Generated.Types exposing (..)
 import Json.Decode.Pipeline
+
+
+captureDecoder : Json.Decode.Decoder Capture
+captureDecoder =
+    Json.Decode.succeed Capture |>
+    Json.Decode.Pipeline.required "captureName" Json.Decode.string |>
+    Json.Decode.Pipeline.required "captureDate" Json.Decode.int |>
+    Json.Decode.Pipeline.required "captureModules" (Json.Decode.list (Json.Decode.map2 Tuple.pair (Json.Decode.index 0 Json.Decode.string) (Json.Decode.index 1 Json.Decode.int)))
 
 
 uniqueDecoder : Json.Decode.Decoder Unique
@@ -52,9 +58,9 @@ externalNameDecoder =
             Json.Decode.map ExternalName (Json.Decode.succeed (\b c d e -> { externalModuleName = b
             , externalName = c
             , externalUnique = d
-            , externalType = e 
-            , localBinder = \_ -> Untouched }) |>
-            Json.Decode.Pipeline.required "externalModuleName" moduleNameDecoder |>
+            , localBinder = \_ -> Untouched
+            , externalType = e }) |>
+            Json.Decode.Pipeline.required "externalModuleName" Json.Decode.string |>
             Json.Decode.Pipeline.required "externalName" Json.Decode.string |>
             Json.Decode.Pipeline.required "externalUnique" uniqueDecoder |>
             Json.Decode.Pipeline.required "externalType" typeDecoder)
@@ -316,16 +322,10 @@ typeDecoder =
             Json.Decode.fail "No matching constructor")
 
 
-moduleNameDecoder : Json.Decode.Decoder ModuleName
-moduleNameDecoder =
-    Json.Decode.succeed ModuleName |>
-    Json.Decode.Pipeline.required "getModuleName" Json.Decode.string
-
-
 moduleDecoder : Json.Decode.Decoder Module
 moduleDecoder =
     Json.Decode.succeed Module |>
-    Json.Decode.Pipeline.required "moduleName" moduleNameDecoder |>
+    Json.Decode.Pipeline.required "moduleName" Json.Decode.string |>
     Json.Decode.Pipeline.required "modulePhase" Json.Decode.string |>
     Json.Decode.Pipeline.required "modulePhaseId" Json.Decode.int |>
     Json.Decode.Pipeline.required "moduleTopBindings" (Json.Decode.list topBindingDecoder)
@@ -448,19 +448,25 @@ tickDecoder =
     Json.Decode.Pipeline.required "sourceTickSpan" srcSpanDecoder
 
 
+topBindingInfoDecoder : Json.Decode.Decoder TopBindingInfo
+topBindingInfoDecoder =
+    Json.Decode.succeed TopBindingInfo |>
+    Json.Decode.Pipeline.required "topBindingBinder" binderDecoder |>
+    Json.Decode.Pipeline.required "topBindingCoreState" coreStatsDecoder |>
+    Json.Decode.Pipeline.required "topBindingRHS" exprDecoder
+
+
 topBindingDecoder : Json.Decode.Decoder TopBinding
 topBindingDecoder =
     Json.Decode.field "tag" Json.Decode.string |>
     Json.Decode.andThen (\a -> case a of
         "NonRecTopBinding" ->
-            Json.Decode.field "contents" (Json.Decode.succeed NonRecTopBinding |>
-            Json.Decode.Pipeline.custom (Json.Decode.index 0 binderDecoder) |>
-            Json.Decode.Pipeline.custom (Json.Decode.index 1 coreStatsDecoder) |>
-            Json.Decode.Pipeline.custom (Json.Decode.index 2 exprDecoder))
+            Json.Decode.succeed NonRecTopBinding |>
+            Json.Decode.Pipeline.required "contents" topBindingInfoDecoder
 
         "RecTopBinding" ->
             Json.Decode.succeed RecTopBinding |>
-            Json.Decode.Pipeline.required "contents" (Json.Decode.list (Json.Decode.map3 triple (Json.Decode.index 0 binderDecoder) (Json.Decode.index 1 coreStatsDecoder) (Json.Decode.index 2 exprDecoder)))
+            Json.Decode.Pipeline.required "contents" (Json.Decode.list topBindingInfoDecoder)
 
         _ ->
             Json.Decode.fail "No matching constructor")
@@ -474,26 +480,3 @@ coreStatsDecoder =
     Json.Decode.Pipeline.required "csCoercions" Json.Decode.int |>
     Json.Decode.Pipeline.required "csValBinds" Json.Decode.int |>
     Json.Decode.Pipeline.required "csJoinBinds" Json.Decode.int
-
-
-moduleMetaDecoder : Json.Decode.Decoder ModuleMeta
-moduleMetaDecoder =
-    Json.Decode.succeed ModuleMeta |>
-    Json.Decode.Pipeline.required "nrPasses" Json.Decode.int |>
-    Json.Decode.Pipeline.required "name" Json.Decode.string
-
-
-projectMetaDecoder : Json.Decode.Decoder ProjectMeta
-projectMetaDecoder =
-    Json.Decode.succeed ProjectMeta |>
-    Json.Decode.Pipeline.required "modules" (Json.Decode.list moduleMetaDecoder) |>
-    Json.Decode.Pipeline.required "capturedAt" Json.Decode.int |>
-    Json.Decode.Pipeline.required "slug" Json.Decode.string
-
-
-sessionMetaDecoder : Json.Decode.Decoder SessionMeta
-sessionMetaDecoder =
-    Json.Decode.succeed SessionMeta |>
-    Json.Decode.Pipeline.required "sessions" (Json.Decode.list projectMetaDecoder)
-triple : a -> b -> c -> (a,b,c)
-triple x y z = (x,y,z)

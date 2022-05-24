@@ -34,4 +34,4 @@ executable hs-plugin-test
                     , text
     hs-source-dirs:   app
     default-language: Haskell2010
-    ghc-options: -O0 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:O0
+    ghc-options: -O2 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:O2

@@ -3,22 +3,16 @@ module HsCore.Trafo.EraseTypes exposing (eraseTypesModule, eraseTypesTopBinding)
 import Generated.Types exposing (..)
 import HsCore.Helpers as H
 
-mapMaybe : (a -> Maybe b) -> List a -> List b
-mapMaybe f l = case l of
-    [] -> []
-    x::xs -> case f x of
-        Just y -> y :: mapMaybe f xs
-        Nothing -> mapMaybe f xs
-
 eraseTypesModule : Module -> Module
-eraseTypesModule mod = {mod | moduleTopBindings = mapMaybe (eraseTypesTopBinding) mod.moduleTopBindings}
+eraseTypesModule mod = {mod | moduleTopBindings = List.map eraseTypesTopBinding mod.moduleTopBindings}
 
-eraseTypesTopBinding : TopBinding -> Maybe TopBinding
-eraseTypesTopBinding tp = case tp of
-    NonRecTopBinding b stats expr -> if H.isTyBinder b then Nothing else Just (NonRecTopBinding b stats (eraseTypesExpr expr))
-    RecTopBinding bss -> 
-        let (bs, stats, exprs) = H.unzip3 bss
-        in Just (RecTopBinding (H.zip3 bs stats (List.map eraseTypesExpr exprs)))
+eraseTypesTopBinding : TopBinding -> TopBinding
+eraseTypesTopBinding tp = 
+    let go : TopBindingInfo -> TopBindingInfo
+        go bi = {bi | topBindingRHS = eraseTypesExpr bi.topBindingRHS }
+    in case tp of
+        NonRecTopBinding bi -> NonRecTopBinding (go bi)
+        RecTopBinding bis -> RecTopBinding (List.map go bis)
 
 eraseTypesExpr : Expr -> Expr
 eraseTypesExpr expr = case expr of

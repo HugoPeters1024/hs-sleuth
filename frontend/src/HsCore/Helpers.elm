@@ -126,10 +126,17 @@ zip3 xs ys zs = case (xs, ys, zs) of
     (x::xss, y::yss, z::zss) -> (x,y,z) :: zip3 xss yss zss
     _                        -> []
 
+removeRecursiveGroups : List TopBinding -> List TopBinding
+removeRecursiveGroups tbs =
+    let go tb = case tb of
+            NonRecTopBinding b -> [NonRecTopBinding b]
+            RecTopBinding bs -> List.map NonRecTopBinding bs
+    in List.concatMap go tbs
+
 getTopLevelBinders : TopBinding -> List Binder
 getTopLevelBinders tp = case tp of
-    NonRecTopBinding b _ _ -> [b]
-    RecTopBinding xs -> let (bs, _, _) = unzip3 xs in bs
+    NonRecTopBinding bi -> [bi.topBindingBinder]
+    RecTopBinding bis -> List.map (.topBindingBinder) bis
 
 typeToStringParens : Type -> String
 typeToStringParens type_ = case type_ of

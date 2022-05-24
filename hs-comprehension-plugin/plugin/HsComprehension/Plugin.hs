@@ -5,8 +5,9 @@ import Prelude as P
 import Data.Maybe
 import GHC.Plugins
 
-import HsComprehension.Meta
 import HsComprehension.Uniqify as Uniqify
+import HsComprehension.Ast
+import HsComprehension.Cvt
 
 import Control.Monad.IO.Class
 import qualified Data.ByteString.Lazy as BSL
@@ -29,11 +30,7 @@ import Data.Set (Set)
 import qualified Data.Set as S
 
 import Data.ByteString.Lazy (hPutStr)
-import Data.Aeson.Encode.Pretty (encodePretty)
-import qualified GhcDump.Ast as Ast
-import GhcDump.ToHtml (topBindingsToHtml)
-import qualified GhcDump.Convert as Ast (cvtModule)
-import GhcDump.Reconstruct (reconModule)
+import qualified GhcDump.Convert
 
 import Data.Time
 import Data.Time.Clock.POSIX
@@ -45,14 +42,17 @@ millisSinceEpoch =
 currentPosixMillis :: IO Int
 currentPosixMillis = millisSinceEpoch <$> getPOSIXTime
 
+cvtGhcModule :: DynFlags -> Int -> String -> GHC.Plugins.ModGuts -> HsComprehension.Ast.Module
+cvtGhcModule dflags phaseId phase = HsComprehension.Cvt.cvtModule . GhcDump.Convert.cvtModule dflags phaseId phase
 
-projectState :: IORef ProjectMeta
+projectState :: IORef Capture
 projectState = 
-    let projectMeta = ProjectMeta { modules = []
-                                  , capturedAt = 0
-                                  , slug = T.empty
-                                  }
-    in unsafePerformIO $ newIORef projectMeta
+    let capture = 
+            Capture { captureName = T.empty
+                    , captureDate = 0
+                    , captureModules = []
+                    }
+    in unsafePerformIO $ newIORef capture
 
 plugin :: Plugin
 plugin = defaultPlugin { installCoreToDos = install }
@@ -65,10 +65,11 @@ install options todo = do
     liftIO $ print options
     liftIO $ FP.createDirectoryIfMissing True (coreDumpDir slug)
     modName <- showPprUnsafe <$> getModule
-    liftIO $ do
-        let mod = ModuleMeta (length todo) (T.pack modName)
-
-        modifyIORef projectState $ \(ProjectMeta ms time _) -> ProjectMeta (mod:ms) time (T.pack slug)
+    liftIO $ modifyIORef projectState $ \capture -> 
+        capture 
+            { captureModules = (T.pack modName, length todo) : captureModules capture 
+            , captureName = T.pack slug
+            }
     let dumpPasses = zipWith (dumpPass slug) [1..] (map getPhase todo)
     let firstPass = dumpPass slug 0 "Desugared"
     pure $ firstPass : (P.concat $ zipWith (\x y -> [x,y]) todo dumpPasses) ++ [finalPass]
@@ -89,8 +90,8 @@ coreDumpDir pid = coreDumpBaseDir ++ "coredump-" ++ pid ++ "/"
 coreDumpFile :: String -> String -> Int -> FilePath
 coreDumpFile pid mod id = coreDumpDir pid ++ mod ++ "." ++ show id ++ ".zstd"
 
-projectMetaFile :: String -> FilePath
-projectMetaFile pid = coreDumpDir pid ++ "projectmeta.zstd"
+captureFile :: String -> FilePath
+captureFile pid = coreDumpDir pid ++ "capture.zstd"
 
 writeToFile :: (Serialise a) => FilePath -> a -> IO ()
 writeToFile fname = do
@@ -108,14 +109,15 @@ dumpPass slug n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
     let fname = coreDumpFile slug prefix n
     liftIO $ do
         putStrLn fname
-        let smodule :: Ast.SModule = Ast.cvtModule dflags n phase guts
-        writeToFile fname smodule
+        let mod = cvtGhcModule dflags n phase guts
+        writeToFile fname mod
     pure guts
 
 finalPass :: CoreToDo
 finalPass = CoreDoPluginPass "Finalize dump" $ \guts -> do
     liftIO $ do
         time <- currentPosixMillis
-        modifyIORef projectState $ \(ProjectMeta mods _ slug) -> ProjectMeta mods time slug
-        readIORef projectState >>= \p@(ProjectMeta _ _ slug) -> writeToFile (projectMetaFile (T.unpack slug)) p
+        modifyIORef projectState $ \capture -> capture { captureDate = time }
+        readIORef projectState >>= \capture -> 
+            writeToFile (captureFile (T.unpack (captureName capture))) capture
     pure guts

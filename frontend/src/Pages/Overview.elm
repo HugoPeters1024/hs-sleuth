@@ -28,10 +28,10 @@ view m =
                 [ Table.td [] [ checkboxSimple
                                 (Set.Any.member project m.overviewTab.enabledProjects) 
                               ]
-                , Table.td [] [text project.slug]
-                , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix project.capturedAt))]
+                , Table.td [] [text project.captureName]
+                , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix project.captureDate))]
                 ] 
-    in Loading.debugLoading "SessionMeta" m.sessionMetaLoading <| \session ->
+    in Loading.debugLoading "SessionMeta" m.capturesLoading <| \captures ->
             div []
                 [ h1 [] [text "Overview"]
                 , Table.table
@@ -41,7 +41,7 @@ view m =
                         , Table.th [] [text "Capture Slug"]
                         , Table.th [] [text "Captured at"]
                         ]
-                    , tbody = Table.tbody [] (List.map mkRow session.sessions)
+                    , tbody = Table.tbody [] (List.map mkRow captures)
                     }
                 , Button.button 
                     [ Button.primary
