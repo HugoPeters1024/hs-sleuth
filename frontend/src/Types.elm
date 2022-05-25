@@ -35,7 +35,7 @@ type alias CodeTabModule =
     { mod : Loading Module
     , projectMeta : Capture
     , phaseSlider : Slider.Model
-    , topNames : List Binder
+    , topNames : List TopBindingInfo
     }
 
 type alias CodeTab = 

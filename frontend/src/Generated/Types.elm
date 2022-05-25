@@ -179,7 +179,8 @@ type alias Tick  =
 type alias TopBindingInfo  =
     { topBindingBinder : Binder
     , topBindingCoreState : CoreStats
-    , topBindingRHS : Expr }
+    , topBindingRHS : Expr
+    , topBindingFromSource : Bool }
 
 
 type TopBinding 

@@ -36,11 +36,6 @@ binderSpan bind = case bind of
     Binder b -> b.binderSrcSpan
     _        -> NoSpan
 
-externalName : ExternalName -> String
-externalName en = case en of
-    ExternalName n -> n.externalName
-    ForeignCall -> "ForeignCall"
-
 binderToInt : Binder -> Int
 binderToInt = binderIdToInt << binderId
 
@@ -67,11 +62,6 @@ useFullSpan : SrcSpan -> Bool
 useFullSpan span = case span of
     SrcSpan _ -> True
     NoSpan -> False
-
-isSrcBinder : Binder -> Bool
-isSrcBinder binder = case binder of
-    Binder b -> useFullSpan b.binderSrcSpan && not (String.startsWith "$" b.binderName)
-    _ -> False
 
 isTyBinder : Binder -> Bool
 isTyBinder b = case b of
@@ -105,11 +95,8 @@ leadingForalls type_ = case type_ of
     _            -> (type_, [])
 
 
-getModuleBinders : Module -> List Binder
-getModuleBinders mod = List.concatMap getTopLevelBinders mod.moduleTopBindings
-
-getModuleTopNames : Module -> List (String, Bool)
-getModuleTopNames mod = List.map (\b -> (binderName b, isSrcBinder b)) (getModuleBinders mod)
+getModuleTopBinders : Module -> List TopBindingInfo
+getModuleTopBinders mod = List.concatMap getTopLevelBinders mod.moduleTopBindings
 
 unzip3 : List (a,b,c) -> (List a, List b, List c)
 unzip3 xs = case xs of
@@ -133,10 +120,10 @@ removeRecursiveGroups tbs =
             RecTopBinding bs -> List.map NonRecTopBinding bs
     in List.concatMap go tbs
 
-getTopLevelBinders : TopBinding -> List Binder
+getTopLevelBinders : TopBinding -> List TopBindingInfo
 getTopLevelBinders tp = case tp of
-    NonRecTopBinding bi -> [bi.topBindingBinder]
-    RecTopBinding bis -> List.map (.topBindingBinder) bis
+    NonRecTopBinding bi -> [bi]
+    RecTopBinding bis -> bis
 
 typeToStringParens : Type -> String
 typeToStringParens type_ = case type_ of

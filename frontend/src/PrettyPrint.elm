@@ -246,15 +246,17 @@ ppExternalName name = case name of
     H.ForeignCall -> ppActualExternalName name
 
 ppActualExternalName : H.ExternalName -> PP
-ppActualExternalName e = 
-    let go env = let classes = [ class (if H.isConstructorName (H.externalName e) then "k" else "")
-                               , class (if externalIsSelected env e then "highlight" else "") 
-                               ] 
-                 in emit (a [ class "no-style"
-                            , onClick (env.onClickBinder (SelectedExternal e))
-                            ] 
-                            [span classes [text (H.externalName e)]])
-    in Reader.exec go
+ppActualExternalName exname = case exname of
+    H.ExternalName e ->
+        let go env = let classes = [ class (if H.isConstructorName (e.externalName) then "k" else "")
+                                   , class (if externalIsSelected env exname then "highlight" else "") 
+                                   ] 
+                     in emit (a [ class "no-style"
+                                , onClick (env.onClickBinder (SelectedExternal exname))
+                                ] 
+                                [span classes [text (e.externalModuleName ++ "." ++ e.externalName)]])
+        in Reader.exec go
+    H.ForeignCall -> emitText "[ForeignCall]"
 
 
 ppType : H.Type -> PP

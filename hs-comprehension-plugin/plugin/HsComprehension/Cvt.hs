@@ -105,6 +105,7 @@ cvtTopBinding tb =
             TopBindingInfo { topBindingBinder = cvtBinder bndr 
                            , topBindingCoreState = stats
                            , topBindingRHS = cvtExpr expr
+                           , topBindingFromSource = False
                            }
     in case tb of
          GHCD.NonRecTopBinding bndr stats expr -> NonRecTopBinding (cvtInfo (bndr, stats, expr))

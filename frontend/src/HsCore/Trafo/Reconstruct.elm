@@ -20,9 +20,9 @@ lookupBinder env u = \_ -> case Dict.get (H.uniqueToInt u) env of
 
 reconModule : Module -> Module
 reconModule mod = 
-    let initialenv = withBindingN (H.getModuleBinders mod) Dict.empty
+    let initialenv = withBindingN (List.map .topBindingBinder (H.getModuleTopBinders mod)) Dict.empty
         newbinders = List.map (reconTopBinding initialenv) mod.moduleTopBindings
-        env = withBindingN (List.concatMap H.getTopLevelBinders newbinders) initialenv
+        env = withBindingN (List.concatMap (List.map .topBindingBinder << H.getTopLevelBinders) newbinders) initialenv
     in { mod | moduleTopBindings = List.map (reconTopBinding env) mod.moduleTopBindings }
 
 reconExternalName : Env -> ExternalName -> ExternalName

@@ -1,5 +1,7 @@
 module ElmHelpers exposing (..)
 
+import Set.Any
+
 zip : List a -> List b -> List (a, b)
 zip lhs rhs = case (lhs, rhs) of
     (x::xs, y::ys) -> (x,y) :: zip xs ys
@@ -25,4 +27,10 @@ mapMaybe f list = case list of
         Nothing -> mapMaybe f xs
     []    -> []
 
+
+removeDuplicatesKey : (a -> comparable) -> List a -> List a
+removeDuplicatesKey f = Set.Any.toList << Set.Any.fromList f
+
+removeDuplicates : List comparable -> List comparable
+removeDuplicates = removeDuplicatesKey identity
 

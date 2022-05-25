@@ -46,11 +46,11 @@ getCaptures tab = List.map .projectMeta (Dict.values tab.modules)
 
 getMergedModuleNames : CodeTab -> List String
 getMergedModuleNames tab = List.map Tuple.first (List.concatMap .captureModules (getCaptures tab))
-    |> Set.fromList
-    |> Set.toList
+    |> EH.removeDuplicates
 
-getMergedTopBinders : CodeTab -> List Binder
+getMergedTopBinders : CodeTab -> List TopBindingInfo
 getMergedTopBinders tab = List.concatMap .topNames (Dict.values tab.modules)
+    |> EH.removeDuplicatesKey (H.binderName << .topBindingBinder)
 
 
 
@@ -87,7 +87,7 @@ update msg tab = case msg of
         let updateModuleTab : CodeTabModule -> CodeTabModule 
             updateModuleTab tabmod = 
                 let mod = Loading.loadFromResult res
-                    topNames = Loading.withDefault [] (Loading.map H.getModuleBinders mod)
+                    topNames = Loading.withDefault [] (Loading.map H.getModuleTopBinders mod)
                 in {tabmod | mod = mod, topNames = topNames }
         in ({tab | modules = Dict.update slug (Maybe.map updateModuleTab) tab.modules}, Cmd.none)
     CodeMsgSelectTerm term -> ({tab | selectedTerm = Just term}, Cmd.none)
@@ -194,7 +194,7 @@ viewInfo model tab =
               , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map viewTermInfo tab.selectedTerm)
               , hr [] []
               , h4 [] [text "Toplevel functions"]
-              , HtmlHelpers.list (List.map (text << H.binderName) (List.filter H.isSrcBinder (getMergedTopBinders tab)))
+              , HtmlHelpers.list (List.map (text << H.binderName << .topBindingBinder) (List.filter .topBindingFromSource (getMergedTopBinders tab)))
               ]
         ]
     |> Card.view
