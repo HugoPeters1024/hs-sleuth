@@ -2,6 +2,7 @@ module HsCore.Helpers exposing (..)
 
 import Char
 
+import Types exposing (..)
 import Generated.Types exposing (..)
 
 concatWith : String -> List String -> String
@@ -9,6 +10,47 @@ concatWith sep = String.concat << List.intersperse sep
 
 concatSpaced : List String -> String
 concatSpaced = concatWith " "
+
+varIsTopLevel : Var -> Bool
+varIsTopLevel var = case var of
+    VarTop _ -> True
+    _        -> False
+
+varToInt : Var -> Int
+varToInt term = case term of
+    VarBinder b -> binderToInt b
+    VarTop tb -> binderToInt tb.topBindingBinder
+    VarExternal e -> externalNameToInt e
+
+varIsConstructor : Var -> Bool
+varIsConstructor = isConstructorName << varName False
+
+varName : Bool -> Var -> String
+varName fullext var = case var of
+    VarBinder b -> binderName b
+    VarTop tb -> binderName tb.topBindingBinder
+    VarExternal ext -> case ext of
+        ExternalName e -> 
+            if fullext 
+            then e.externalModuleName ++ "." ++ e.externalName
+            else e.externalName
+        _              -> "[ForeignCall]"
+
+-- external names can refer to module local bindings
+varExternalLocalBinder : Var -> Maybe Binder
+varExternalLocalBinder var = case var of
+    VarExternal (ExternalName e) -> case e.localBinder () of
+        Found b -> Just b
+        _       -> Nothing
+    _                            -> Nothing
+
+varType : Var -> Type
+varType var = case var of
+    VarBinder b -> binderType b
+    VarTop b -> binderType b.topBindingBinder
+    VarExternal ext -> case ext of
+        ExternalName e -> e.externalType
+        ForeignCall -> TyConApp (TyCon "ForeignCall" (Unique 't' -1)) []
 
 binderName : Binder -> String
 binderName binder = case binder of

@@ -64,7 +64,7 @@ makeCodeTab model captures =
       , name = "Code-" ++ String.fromInt tabId
       , modules = Dict.fromList (List.map (\m -> (m.captureName, initCodeTabModule m)) captures)
       , currentModule = "Main"
-      , selectedTerm = Nothing
+      , selectedVar = Nothing
       , moduleDropdown = Dropdown.initialState
       , hideTypes = False
       , disambiguateVariables = False
@@ -90,7 +90,7 @@ update msg tab = case msg of
                     topNames = Loading.withDefault [] (Loading.map H.getModuleTopBinders mod)
                 in {tabmod | mod = mod, topNames = topNames }
         in ({tab | modules = Dict.update slug (Maybe.map updateModuleTab) tab.modules}, Cmd.none)
-    CodeMsgSelectTerm term -> ({tab | selectedTerm = Just term}, Cmd.none)
+    CodeMsgSelectVar var -> ({tab | selectedVar = Just var}, Cmd.none)
     CodeMsgToggleHideTypes -> ({tab | hideTypes = not tab.hideTypes}, Cmd.none)
     CodeMsgToggleDisambiguateVariables -> ({tab | disambiguateVariables = not tab.disambiguateVariables}, Cmd.none)
     CodeMsgToggleShowRecursiveGroups -> ({tab | showRecursiveGroups = not tab.showRecursiveGroups}, Cmd.none)
@@ -122,7 +122,7 @@ view model tab =
 
 
 selectedTermId : CodeTab -> Maybe Int
-selectedTermId tab = Maybe.map selectedTermToInt tab.selectedTerm
+selectedTermId tab = Maybe.map H.varToInt tab.selectedVar
 
 
 viewHeader : Model -> CodeTab -> Html Msg
@@ -144,7 +144,7 @@ viewHeader _ tab =
 viewCode : Model -> CodeTab -> Slug -> CodeTabModule -> Html Msg
 viewCode model tab slug modtab = 
     let ppInfo = PP.defaultInfo tab.id
-            |> \r -> {r | selectId = Maybe.map selectedTermToInt tab.selectedTerm}
+            |> \r -> {r | selectId = Maybe.map H.varToInt tab.selectedVar}
             |> if tab.disambiguateVariables then PP.withFullNameBinder else identity
     in div []
         [ h4 [] [text slug]
@@ -191,7 +191,7 @@ viewInfo model tab =
               , checkbox tab.showRecursiveGroups   (mkCodeMsg CodeMsgToggleShowRecursiveGroups   tab.id) "Show Recursive Groups"
               , hr [] []
               , h4 [] [text "Selected Variable"]
-              , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map viewTermInfo tab.selectedTerm)
+              , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map viewVarInfo tab.selectedVar)
               , hr [] []
               , h4 [] [text "Toplevel functions"]
               , HtmlHelpers.list (List.map (text << H.binderName << .topBindingBinder) (List.filter .topBindingFromSource (getMergedTopBinders tab)))
@@ -199,19 +199,28 @@ viewInfo model tab =
         ]
     |> Card.view
 
-viewTermInfo : SelectedTerm -> Html Msg
-viewTermInfo term = case term of
-    SelectedBinder b -> viewTermBinder b
-    SelectedTopLevel (b,s) -> div [] [viewTermBinder b, br [] [], text (Debug.toString s)]
-    SelectedExternal (ExternalName e) -> p [] [ text (H.typeToString e.externalType) ]
-    SelectedExternal ForeignCall -> p [] [text "ForeignCall"]
+viewVarInfo : Var -> Html Msg
+viewVarInfo term = case term of
+    VarBinder b -> viewBinderInfo b
+    VarTop tb -> viewBinderInfo tb.topBindingBinder
+    VarExternal e -> viewExternalInfo e
 
-viewTermBinder : Binder -> Html Msg
-viewTermBinder bndr = HtmlHelpers.list
+viewBinderInfo : Binder -> Html Msg
+viewBinderInfo bndr = HtmlHelpers.list
             [ text ("name: " ++ H.binderName bndr)
             , text ("type: " ++ H.typeToString (H.binderType bndr))
             , text ("span: " ++ Debug.toString (H.binderSpan bndr))
             ]
+
+viewExternalInfo : ExternalName -> Html Msg
+viewExternalInfo ext = case ext of
+    ForeignCall -> text ("[ForeignCall]")
+    ExternalName e -> HtmlHelpers.list
+        [ text ("name: " ++ e.externalName)
+        , text ("module:"  ++ e.externalModuleName)
+        , text ("type: " ++ H.typeToString e.externalType)
+        ]
+
 
 
 

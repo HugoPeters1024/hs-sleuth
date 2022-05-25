@@ -17,8 +17,8 @@ import Html.Events exposing (..)
 import Reader exposing (Reader(..))
 
 type alias PPEnv = { selectId : Maybe Int
-                   , onClickBinder : SelectedTerm -> Msg
-                   , renderBinderName : H.Binder -> String
+                   , onClickBinder : Var -> Msg
+                   , renderVarName : Var -> String
                    }
 
 type alias PPM a = Reader PPEnv a
@@ -34,15 +34,15 @@ prettyPrint info pp = Reader.runReader info pp []
 defaultInfo : TabId -> PPEnv
 defaultInfo tid = 
     { selectId = Nothing
-    , onClickBinder = MsgCodeMsg tid << CodeMsgSelectTerm
-    , renderBinderName = H.binderName
+    , onClickBinder = MsgCodeMsg tid << CodeMsgSelectVar
+    , renderVarName = H.varName False
     }
 
 withFullNameBinder : PPEnv -> PPEnv
-withFullNameBinder env = { env | renderBinderName = \b -> H.binderName b ++ "_" ++ H.binderUniqueStr b }
+withFullNameBinder env = { env | renderVarName = H.varName True }
 
-binderIsSelected : PPEnv -> H.Binder -> Bool
-binderIsSelected env b = Maybe.withDefault False <| (Maybe.map (\id -> id == H.binderToInt b) (env.selectId))
+varIsSelected : PPEnv -> Var -> Bool
+varIsSelected env b = Maybe.withDefault False <| (Maybe.map (\id -> id == H.varToInt b) (env.selectId))
 
 externalIsSelected : PPEnv -> H.ExternalName -> Bool
 externalIsSelected env e = Maybe.withDefault False <| (Maybe.map (\id -> id == H.externalNameToInt e) (env.selectId))
@@ -134,35 +134,36 @@ ppLit lit  = case lit of
     H.LitNatural n -> emitSpan "m" n
     H.LitRubbish -> emitText "[LitRubbish]"
 
-ppBinderClass : String -> H.Binder -> PP
-ppBinderClass c b = Reader.ask 
-    |> Reader.andThen (\env ->
-        emit <| a [ class "no-style"
-                  , onClick (env.onClickBinder (SelectedBinder b))
-                  ]
-                  [ span [ class c
-                         , class (if binderIsSelected env b then "highlight" else "")
-                         ] 
-                         [text (env.renderBinderName b)] 
-                  ])
+getVarClasses : Var -> PPM (List (Attribute msg))
+getVarClasses var = Reader <| \env -> List.concat 
+    [  if varIsSelected env var then [class "highlight"] else []
+    ,  if H.varIsConstructor var then [class "k"] else []
+    ,  if H.varIsTopLevel var then [class "nf"] else []
+    ]
+
+ppVar : Var -> PP
+ppVar var = case H.varExternalLocalBinder var of
+    Just b -> ppVar (VarBinder b)
+    Nothing -> Reader.map2 (\env cs -> 
+        a [ class "no-style"]
+          [ span (onClick (env.onClickBinder var)::cs) [text (env.renderVarName var)]
+          ]
+        ) Reader.ask (getVarClasses var) |> Reader.andThen emit
 
 ppBinder : H.Binder -> PP
-ppBinder b = ppBinderClass (if H.isConstructorName (H.binderName b) then "k" else "") b
-
-ppBinderM : Maybe H.Binder -> PP
-ppBinderM mb = case mb of
-    Just b -> ppBinder b
-    Nothing -> emitText "[!UKNOWN VARIABLE!]"
+ppBinder = ppVar << VarBinder
 
 ppBinderT : H.BinderThunk -> PP
 ppBinderT mb = case mb of
-    H.Found b -> ppBinder b
+    H.Found b -> ppVar (VarBinder b)
     H.NotFound -> emitText "[!UKNOWN VARIABLE!]" 
     H.Untouched -> emitText "[!I WAS NEVER TOUCHED!]"
 
 uncurry3 : (a -> b -> c -> d) -> ((a,b,c) -> d)
 uncurry3 f = \(x,y,z) -> f x y z
 
+ppTopBindingInfo : H.TopBindingInfo -> PP
+ppTopBindingInfo bi = ppBinding (VarTop bi, bi.topBindingRHS)
 
 ppTopBinding : H.TopBinding -> PP
 ppTopBinding b = case b of
@@ -174,21 +175,20 @@ ppTopBinding b = case b of
               , emitText "}"
               ]
 
-ppTopBindingInfo : H.TopBindingInfo -> PP
-ppTopBindingInfo bi = ppBinding True (bi.topBindingBinder, bi.topBindingRHS)
+ppBinding_binder : (H.Binder, H.Expr) -> PP
+ppBinding_binder (b,e) = ppBinding (VarBinder b, e)
 
-
-ppBinding : Bool -> (H.Binder, H.Expr) -> PP
-ppBinding toplevel (b, e) = 
+ppBinding : (Var, H.Expr) -> PP
+ppBinding (var, e) = 
     let (fe, bs) = H.leadingLambdas e
-        in ppSeq [ if toplevel
-                   then ppSeq [ ppBinderClass "nf" b
+        in ppSeq [ if H.varIsTopLevel var
+                   then ppSeq [ ppVar var
                               , emitText " :: "
-                              , ppType (H.binderType b)
+                              , ppType (H.varType var)
                               , newline
                               ]
                    else emitText ""
-                 , ppBinderClass (if toplevel then "nf" else "") b
+                 , ppVar var
                  , emitText " "
                  , ppSepped " " (List.map ppBinder bs)
                  , emitText (if List.isEmpty bs then "" else " ")
@@ -201,13 +201,13 @@ ppUnique (H.Unique _ i) = emitText (String.fromInt i)
 ppExpr : H.Expr -> PP
 ppExpr expr = case expr of
     H.EVar (H.BinderId _ getBinder) -> ppBinderT (getBinder ())
-    H.EVarGlobal name -> ppExternalName name
+    H.EVarGlobal name -> ppVar (VarExternal name)
     H.ELit lit -> ppLit lit
     H.ETyLam b e -> ppExpr (H.ELam b e)
     H.EApp f a -> ppSeq [ppExpr f, emitText " ", parensExpr a]
     H.ELam b e -> ppSeq [emitText "\\", ppBinder b, emitText " -> ", indented (ppExpr e)]
     H.ELet bs e ->  ppSeq [ emitKeyword "let "
-                          , indented <| ppLines (List.map (ppBinding False) bs)
+                          , indented <| ppLines (List.map ppBinding_binder bs)
                           , newline
                           , emitKeyword " in ", ppExpr e
                           ]
@@ -237,27 +237,6 @@ ppAltCon con = case con of
     H.AltDataCon s -> if H.isConstructorName s then emitKeyword s else emitText s
     H.AltLit l -> ppLit l
     H.AltDefault -> emitText ""
-
-ppExternalName : H.ExternalName -> PP
-ppExternalName name = case name of 
-    H.ExternalName e -> case e.localBinder () of
-        H.Found b -> ppBinder b
-        _         -> ppActualExternalName name
-    H.ForeignCall -> ppActualExternalName name
-
-ppActualExternalName : H.ExternalName -> PP
-ppActualExternalName exname = case exname of
-    H.ExternalName e ->
-        let go env = let classes = [ class (if H.isConstructorName (e.externalName) then "k" else "")
-                                   , class (if externalIsSelected env exname then "highlight" else "") 
-                                   ] 
-                     in emit (a [ class "no-style"
-                                , onClick (env.onClickBinder (SelectedExternal exname))
-                                ] 
-                                [span classes [text (e.externalModuleName ++ "." ++ e.externalName)]])
-        in Reader.exec go
-    H.ForeignCall -> emitText "[ForeignCall]"
-
 
 ppType : H.Type -> PP
 ppType type_ = case type_ of

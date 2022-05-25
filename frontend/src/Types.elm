@@ -4,7 +4,6 @@ import Http
 import Loading exposing (Loading(..))
 
 import Generated.Types exposing (..)
-import HsCore.Helpers as H
 
 import UI.Tabs as Tabs
 import UI.Slider as Slider
@@ -16,15 +15,10 @@ import Set.Any exposing (AnySet)
 import Bootstrap.Dropdown  as Dropdown
 
 
-type SelectedTerm = SelectedBinder Binder
-                  | SelectedTopLevel (Binder, CoreStats)
-                  | SelectedExternal ExternalName
+type Var = VarBinder Binder
+         | VarTop TopBindingInfo
+         | VarExternal ExternalName
 
-selectedTermToInt : SelectedTerm -> Int
-selectedTermToInt term = case term of
-    SelectedBinder b -> H.binderToInt b
-    SelectedTopLevel (b, _) -> H.binderToInt b
-    SelectedExternal e -> H.externalNameToInt e
 
 type alias PhaseId = Int
 type alias TabId = Int
@@ -44,7 +38,7 @@ type alias CodeTab =
     , modules : Dict Slug CodeTabModule
     , currentModule : ModuleName
     , moduleDropdown : Dropdown.State
-    , selectedTerm : Maybe SelectedTerm
+    , selectedVar : Maybe Var
     , hideTypes : Bool
     , disambiguateVariables : Bool
     , showRecursiveGroups : Bool 
@@ -53,12 +47,13 @@ type alias CodeTab =
 type CodeTabMsg
     = CodeMsgSetModule ModuleName Int
     | CodeMsgGotModule Slug (Result Http.Error Module)
-    | CodeMsgSelectTerm SelectedTerm
+    | CodeMsgSelectVar Var
     | CodeMsgToggleHideTypes
     | CodeMsgToggleDisambiguateVariables
     | CodeMsgToggleShowRecursiveGroups
     | CodeMsgModuleDropdown Dropdown.State
     | CodeMsgSlider Slug Slider.Msg
+    
 
 type alias Model = 
     { pageTab : Tabs.Model
