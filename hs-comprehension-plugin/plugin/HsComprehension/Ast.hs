@@ -42,7 +42,7 @@ data Capture = Capture
     , captureDate :: Int
     , captureModules :: [(Text, Int)]
     }
-    deriving (Generic, Serialise)
+    deriving (Generic, Serialise, Show)
 
 data ExternalName = ExternalName
     { externalModuleName :: Text
@@ -51,7 +51,7 @@ data ExternalName = ExternalName
     , externalType :: Type
     }
     | ForeignCall
-    deriving (Generic, Serialise)
+    deriving (Generic, Serialise, Show)
 
 data Binder = Binder
     { binderName :: Text
@@ -60,14 +60,16 @@ data Binder = Binder
     , binderIdDetails :: IdDetails
     , binderType :: Type
     , binderSrcSpan :: SrcSpan
+    , binderPhaseId :: Int
     } 
     |
     TyBinder { binderName :: Text
              , binderId :: BinderId
              , binderKind :: Type
+             , binderPhaseId :: Int
              }
 
-    deriving (Generic, Serialise)
+    deriving (Generic, Serialise, Show)
 
 data IdInfo = IdInfo 
     { idiArity         :: !Int
@@ -79,7 +81,7 @@ data IdInfo = IdInfo
     , idiDemandSig     :: !T.Text
     , idiCallArity     :: !Int
     }
-    deriving (Generic, Serialise)
+    deriving (Generic, Serialise, Show)
 
 data Unfolding
     = NoUnfolding
@@ -92,7 +94,7 @@ data Unfolding
                     , unfIsWorkFree :: Bool
                     , unfGuidance   :: T.Text
                     }
-    deriving (Generic, Serialise)
+    deriving (Generic, Serialise, Show)
 
 data Lit 
     = MachChar Char
@@ -108,7 +110,7 @@ data Lit
    | LitInteger Text
    | LitNatural Text
    | LitRubbish
-   deriving (Generic, Serialise)
+   deriving (Generic, Serialise, Show, Eq)
 
 data Type
     = VarTy BinderId
@@ -118,7 +120,7 @@ data Type
     | ForAllTy Binder Type
     | LitTy
     | CoercionTy
-    deriving (Generic, Serialise)
+    deriving (Generic, Serialise, Show)
 
 data Module = Module
     { moduleName :: Text
@@ -126,7 +128,7 @@ data Module = Module
     , modulePhaseId :: Int
     , moduleTopBindings :: [TopBinding]
     }
-    deriving (Generic, Serialise)
+    deriving (Generic, Serialise, Show)
 
 data Expr
     = EVar BinderId
@@ -140,20 +142,22 @@ data Expr
     | ETick Tick Expr
     | EType Type
     | ECoercion
-    deriving (Generic, Serialise)
+    -- Marker tokens
+    | EMarkDiff Expr
+    deriving (Generic, Serialise, Show)
 
 data Alt = Alt
     { altCon :: AltCon
     , altBinders :: [Binder]
     , altRHS :: Expr
     }
-    deriving (Generic, Serialise)
+    deriving (Generic, Serialise, Show)
 
 data AltCon 
     = AltDataCon !T.Text
     | AltLit Lit
     | AltDefault
-    deriving (Generic, Serialise)
+    deriving (Generic, Serialise, Show)
 
 data TopBindingInfo = TopBindingInfo
     { topBindingBinder :: Binder
@@ -161,10 +165,10 @@ data TopBindingInfo = TopBindingInfo
     , topBindingRHS :: Expr
     , topBindingFromSource :: Bool
     }
-    deriving (Generic, Serialise)
+    deriving (Generic, Serialise, Show)
 
 data TopBinding
     = NonRecTopBinding TopBindingInfo
     | RecTopBinding [TopBindingInfo]
-    deriving (Generic, Serialise)
+    deriving (Generic, Serialise, Show)
 

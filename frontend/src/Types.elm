@@ -42,6 +42,7 @@ type alias CodeTab =
     , hideTypes : Bool
     , disambiguateVariables : Bool
     , showRecursiveGroups : Bool 
+    , selectedTopLevels : List TopBindingInfo
     }
 
 type CodeTabMsg
@@ -53,6 +54,7 @@ type CodeTabMsg
     | CodeMsgToggleShowRecursiveGroups
     | CodeMsgModuleDropdown Dropdown.State
     | CodeMsgSlider Slug Slider.Msg
+    | CodeMsgMarkTopLevel TopBindingInfo
     
 
 type alias Model = 

@@ -30,6 +30,10 @@ pre>code {
     max-width: 100%;
 }
 
+span.diff {
+    background-color: red;
+}
+
 .info-panel {
     width: 100%;
     max-width: 100%
@@ -44,8 +48,13 @@ ul.no-dot {
   margin-left: -16px;
 }
 
-.highlight {
+.highlight-exact {
     background-color: yellow;
+    color: black !important;
+}
+
+.highlight-approx {
+    background-color: purple;
     color: black !important;
 }
 
@@ -54,3 +63,4 @@ ul.no-dot {
     grid-template-columns: 2fr 2fr 1fr;
     width: 100%;
 }
+

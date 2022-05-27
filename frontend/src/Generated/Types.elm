@@ -55,8 +55,12 @@ type Binder
     , binderIdInfo : IdInfo
     , binderIdDetails : IdDetails
     , binderType : Type
-    , binderSrcSpan : SrcSpan }
-    | TyBinder { binderName : String, binderId : BinderId, binderKind : Type }
+    , binderSrcSpan : SrcSpan
+    , binderPhaseId : Int }
+    | TyBinder { binderName : String
+    , binderId : BinderId
+    , binderKind : Type
+    , binderPhaseId : Int }
 
 
 type alias IdInfo  =
@@ -151,6 +155,7 @@ type Expr
     | ETick Tick Expr
     | EType Type
     | ECoercion 
+    | EMarkDiff Expr
 
 
 type alias Alt  =

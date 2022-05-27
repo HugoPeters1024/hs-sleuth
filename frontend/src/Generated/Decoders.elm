@@ -82,26 +82,30 @@ binderDecoder =
     Json.Decode.field "tag" Json.Decode.string |>
     Json.Decode.andThen (\a -> case a of
         "Binder" ->
-            Json.Decode.map Binder (Json.Decode.succeed (\b c d e f g -> { binderName = b
+            Json.Decode.map Binder (Json.Decode.succeed (\b c d e f g h -> { binderName = b
             , binderId = c
             , binderIdInfo = d
             , binderIdDetails = e
             , binderType = f
-            , binderSrcSpan = g }) |>
+            , binderSrcSpan = g
+            , binderPhaseId = h }) |>
             Json.Decode.Pipeline.required "binderName" Json.Decode.string |>
             Json.Decode.Pipeline.required "binderId" binderIdDecoder |>
             Json.Decode.Pipeline.required "binderIdInfo" idInfoDecoder |>
             Json.Decode.Pipeline.required "binderIdDetails" idDetailsDecoder |>
             Json.Decode.Pipeline.required "binderType" typeDecoder |>
-            Json.Decode.Pipeline.required "binderSrcSpan" srcSpanDecoder)
+            Json.Decode.Pipeline.required "binderSrcSpan" srcSpanDecoder |>
+            Json.Decode.Pipeline.required "binderPhaseId" Json.Decode.int)
 
         "TyBinder" ->
-            Json.Decode.map TyBinder (Json.Decode.succeed (\b c d -> { binderName = b
+            Json.Decode.map TyBinder (Json.Decode.succeed (\b c d e -> { binderName = b
             , binderId = c
-            , binderKind = d }) |>
+            , binderKind = d
+            , binderPhaseId = e }) |>
             Json.Decode.Pipeline.required "binderName" Json.Decode.string |>
             Json.Decode.Pipeline.required "binderId" binderIdDecoder |>
-            Json.Decode.Pipeline.required "binderKind" typeDecoder)
+            Json.Decode.Pipeline.required "binderKind" typeDecoder |>
+            Json.Decode.Pipeline.required "binderPhaseId" Json.Decode.int)
 
         _ ->
             Json.Decode.fail "No matching constructor")
@@ -384,6 +388,10 @@ exprDecoder =
 
         "ECoercion" ->
             Json.Decode.succeed ECoercion
+
+        "EMarkDiff" ->
+            Json.Decode.succeed EMarkDiff |>
+            Json.Decode.Pipeline.required "contents" exprDecoder
 
         _ ->
             Json.Decode.fail "No matching constructor")

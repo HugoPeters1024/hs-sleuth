@@ -7,6 +7,9 @@ zip lhs rhs = case (lhs, rhs) of
     (x::xs, y::ys) -> (x,y) :: zip xs ys
     _              -> []
 
+zipWith : (a -> b -> c) -> List a -> List b -> List c
+zipWith f lhs rhs = List.map (\(x, y) -> f x y) <| zip lhs rhs
+
 annotate : (a -> b) -> List a -> List (b, a)
 annotate f xs = zip (List.map f xs) xs
 

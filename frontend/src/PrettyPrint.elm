@@ -16,7 +16,7 @@ import Html.Events exposing (..)
 
 import Reader exposing (Reader(..))
 
-type alias PPEnv = { selectId : Maybe Int
+type alias PPEnv = { selectedVar : Maybe Var
                    , onClickBinder : Var -> Msg
                    , renderVarName : Var -> String
                    }
@@ -33,7 +33,7 @@ prettyPrint info pp = Reader.runReader info pp []
 
 defaultInfo : TabId -> PPEnv
 defaultInfo tid = 
-    { selectId = Nothing
+    { selectedVar = Nothing
     , onClickBinder = MsgCodeMsg tid << CodeMsgSelectVar
     , renderVarName = H.varName False
     }
@@ -41,12 +41,17 @@ defaultInfo tid =
 withFullNameBinder : PPEnv -> PPEnv
 withFullNameBinder env = { env | renderVarName = H.varName True }
 
-varIsSelected : PPEnv -> Var -> Bool
-varIsSelected env b = Maybe.withDefault False <| (Maybe.map (\id -> id == H.varToInt b) (env.selectId))
+varHighlightClass : PPEnv -> Var -> String
+varHighlightClass env o = case env.selectedVar of
+    Nothing -> ""
+    Just v -> 
+        if H.varToInt v == H.varToInt o
+        then ( if H.varPhaseId v == H.varPhaseId o
+               then "highlight-exact"  
+               else "highlight-approx"
+             )
+        else ""
 
-externalIsSelected : PPEnv -> H.ExternalName -> Bool
-externalIsSelected env e = Maybe.withDefault False <| (Maybe.map (\id -> id == H.externalNameToInt e) (env.selectId))
-        
 ppWhen : Bool -> PP -> PP
 ppWhen b pp = if b then pp else Reader.pure identity
 
@@ -136,7 +141,7 @@ ppLit lit  = case lit of
 
 getVarClasses : Var -> PPM (List (Attribute msg))
 getVarClasses var = Reader <| \env -> List.concat 
-    [  if varIsSelected env var then [class "highlight"] else []
+    [  [class (varHighlightClass env var)]
     ,  if H.varIsConstructor var then [class "k"] else []
     ,  if H.varIsTopLevel var then [class "nf"] else []
     ]
@@ -213,7 +218,9 @@ ppExpr expr = case expr of
                           ]
     H.ECase e b alts -> ppCase e b alts
     H.EType t -> ppSeq [emitSpan "o" "@", parensType t]
-    _ -> emitText "[Expr TODO]"
+    H.ECoercion -> emitText "[Coercion]"
+    H.ETick _ e -> ppExpr e
+    H.EMarkDiff e -> Reader.ask |> Reader.andThen (\env -> emit (span [class "diff"] (prettyPrint env (ppExpr e))))
 
 ppCase : H.Expr -> H.Binder -> List H.Alt -> PP
 ppCase e b alts = ppSeq [ emitKeyword "case "

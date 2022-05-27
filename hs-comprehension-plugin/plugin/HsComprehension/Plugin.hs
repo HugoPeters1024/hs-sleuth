@@ -7,8 +7,7 @@ import GHC.Plugins
 
 import HsComprehension.Uniqify as Uniqify
 import HsComprehension.Ast
-import HsComprehension.Cvt
-import qualified HsComprehension.Embellish as Embellish
+import qualified HsComprehension.Cvt as Cvt
 
 import Control.Monad.IO.Class
 import qualified Data.ByteString.Lazy as BSL
@@ -45,9 +44,9 @@ currentPosixMillis = millisSinceEpoch <$> getPOSIXTime
 
 cvtGhcModule :: DynFlags -> Int -> String -> GHC.Plugins.ModGuts -> HsComprehension.Ast.Module
 cvtGhcModule dflags phaseId phase = 
-    let embEnv = Embellish.EmbellishEnv { Embellish.phaseId = phaseId
-                                        }
-    in Embellish.embellishModule embEnv . HsComprehension.Cvt.cvtModule . GhcDump.Convert.cvtModule dflags phaseId phase
+    let cvtEnv = Cvt.CvtEnv { Cvt.cvtEnvPhaseId = phaseId
+                            }
+    in Cvt.cvtModule cvtEnv . GhcDump.Convert.cvtModule dflags phaseId phase
 
 projectState :: IORef Capture
 projectState = 

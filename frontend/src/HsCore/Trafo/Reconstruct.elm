@@ -76,6 +76,7 @@ reconExpr env expr = case expr of
     ETick t e -> ETick t (reconExpr env e)
     EType t -> EType (reconType env t)
     ECoercion -> ECoercion
+    EMarkDiff e -> EMarkDiff (reconExpr env e)
 
 reconAlt : Env -> Alt -> Alt
 reconAlt env alt = case alt.altBinders of 

@@ -33,6 +33,7 @@ eraseTypesExpr expr = case expr of
     ETick t e -> ETick t (eraseTypesExpr e)
     EType t -> EType t
     ECoercion -> ECoercion
+    EMarkDiff e -> EMarkDiff (eraseTypesExpr e)
 
 eraseTypesAlt : Alt -> Alt
 eraseTypesAlt alt = { alt | altBinders = List.filter (not << H.isTyBinder) alt.altBinders

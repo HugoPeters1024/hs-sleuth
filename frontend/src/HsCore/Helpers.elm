@@ -19,8 +19,17 @@ varIsTopLevel var = case var of
 varToInt : Var -> Int
 varToInt term = case term of
     VarBinder b -> binderToInt b
-    VarTop tb -> binderToInt tb.topBindingBinder
+    VarTop tb -> topBindingInfoToInt tb
     VarExternal e -> externalNameToInt e
+
+varPhaseId : Var -> Int
+varPhaseId var = case var of
+    VarBinder b -> binderPhaseId b
+    VarTop b -> binderPhaseId b.topBindingBinder
+    VarExternal _ -> -1
+
+topBindingInfoToInt : TopBindingInfo -> Int
+topBindingInfoToInt = binderToInt << .topBindingBinder
 
 varIsConstructor : Var -> Bool
 varIsConstructor = isConstructorName << varName False
@@ -61,6 +70,11 @@ binderId : Binder -> BinderId
 binderId binder = case binder of
     Binder b -> b.binderId
     TyBinder b -> b.binderId
+
+binderPhaseId : Binder -> Int
+binderPhaseId binder = case binder of
+    Binder b -> b.binderPhaseId
+    TyBinder b -> b.binderPhaseId
 
 binderUnique : Binder -> Unique
 binderUnique b = let (BinderId u _) = binderId b in u
@@ -198,3 +212,7 @@ typeToString type_ = case type_ of
     CoercionTy -> "[CoercionTy]"
 
 
+topBindingMap : (TopBindingInfo -> TopBindingInfo) -> TopBinding -> TopBinding
+topBindingMap f top = case top of
+    NonRecTopBinding b -> NonRecTopBinding (f b)
+    RecTopBinding bs -> RecTopBinding (List.map f bs)

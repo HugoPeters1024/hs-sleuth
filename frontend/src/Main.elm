@@ -15,6 +15,7 @@ import Set.Any exposing (AnySet)
 
 import Commands
 import HsCore.Trafo.Reconstruct as TR
+import HsCore.Trafo.Diff as Diff
 import Pages.Code as Code
 import Pages.Overview as Overview
 

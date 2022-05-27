@@ -34,4 +34,4 @@ executable hs-plugin-test
                     , text
     hs-source-dirs:   app
     default-language: Haskell2010
-    ghc-options: -ddump-asm -O2 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:MyCapture
+    ghc-options: -ddump-asm -O2 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:DifferentCapture

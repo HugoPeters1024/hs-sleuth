@@ -22,7 +22,6 @@ library
     exposed-modules:  HsComprehension.Plugin
                     , HsComprehension.Ast
                     , HsComprehension.Cvt
-                    , HsComprehension.Embellish
                     , HsComprehension.Uniqify
 
     -- Modules included in this library but not exported.

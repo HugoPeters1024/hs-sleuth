@@ -11,8 +11,8 @@ import Dict exposing (Dict)
 import Generated.Types exposing (..)
 import Types exposing (..)
 import HsCore.Helpers as H
-import HsCore.Trafo.Reconstruct as TR
 import HsCore.Trafo.EraseTypes exposing (eraseTypesModule)
+import HsCore.Trafo.Diff as Diff
 import PrettyPrint as PP
 import Commands as C
 import Loading exposing (Loading(..))
@@ -69,6 +69,7 @@ makeCodeTab model captures =
       , hideTypes = False
       , disambiguateVariables = False
       , showRecursiveGroups = False
+      , selectedTopLevels = []
       }
     , Cmd.batch (List.map (\slug -> C.fetchCodePhase tabId slug "Main" 0) slugs)
     )
@@ -106,6 +107,7 @@ update msg tab = case msg of
                Nothing -> Cmd.none
                Just modtab -> Commands.fetchCodePhase tab.id slug tab.currentModule modtab.phaseSlider.value
            )
+    CodeMsgMarkTopLevel ti -> ({tab | selectedTopLevels = ti::tab.selectedTopLevels }, Cmd.none)
 
 view : Model -> CodeTab -> Html Msg
 view model tab = 
@@ -144,7 +146,7 @@ viewHeader _ tab =
 viewCode : Model -> CodeTab -> Slug -> CodeTabModule -> Html Msg
 viewCode model tab slug modtab = 
     let ppInfo = PP.defaultInfo tab.id
-            |> \r -> {r | selectId = Maybe.map H.varToInt tab.selectedVar}
+            |> \r -> {r | selectedVar = tab.selectedVar}
             |> if tab.disambiguateVariables then PP.withFullNameBinder else identity
     in div []
         [ h4 [] [text slug]
@@ -161,7 +163,8 @@ viewCode model tab slug modtab =
             [ code [] 
                    [Loading.renderLoading modtab.mod <| \mod ->
                        (
-                         (if tab.hideTypes then eraseTypesModule mod else mod)
+                         processDiff tab mod
+                         |> (if tab.hideTypes then eraseTypesModule else identity)
                          |> (if tab.showRecursiveGroups then identity else \m -> {m | moduleTopBindings = H.removeRecursiveGroups m.moduleTopBindings})
                          |> .moduleTopBindings
                          |> List.map PP.ppTopBinding
@@ -172,6 +175,22 @@ viewCode model tab slug modtab =
                    ]
             ]
         ]
+
+processDiff : CodeTab -> Module -> Module
+processDiff tab mod = case tab.selectedTopLevels of
+    [lhs, rhs] -> 
+        let go : TopBindingInfo -> TopBindingInfo
+            go tb = 
+                if H.topBindingInfoToInt tb == H.topBindingInfoToInt lhs && H.binderPhaseId tb.topBindingBinder == H.binderPhaseId lhs.topBindingBinder
+                then Tuple.first (Diff.anotateTopBindingInfo (lhs, rhs)) 
+                else (
+                    if H.topBindingInfoToInt tb == H.topBindingInfoToInt rhs && H.binderPhaseId tb.topBindingBinder == H.binderPhaseId rhs.topBindingBinder
+                    then Tuple.second (Diff.anotateTopBindingInfo (lhs, rhs))
+                    else tb
+                )
+                    
+        in { mod | moduleTopBindings = List.map (H.topBindingMap go) mod.moduleTopBindings }
+    _          -> mod
 
 fromMaybe : a -> Maybe a -> a
 fromMaybe def m = case m of
@@ -191,7 +210,7 @@ viewInfo model tab =
               , checkbox tab.showRecursiveGroups   (mkCodeMsg CodeMsgToggleShowRecursiveGroups   tab.id) "Show Recursive Groups"
               , hr [] []
               , h4 [] [text "Selected Variable"]
-              , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map viewVarInfo tab.selectedVar)
+              , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map (viewVarInfo tab) tab.selectedVar)
               , hr [] []
               , h4 [] [text "Toplevel functions"]
               , HtmlHelpers.list (List.map (text << H.binderName << .topBindingBinder) (List.filter .topBindingFromSource (getMergedTopBinders tab)))
@@ -199,11 +218,12 @@ viewInfo model tab =
         ]
     |> Card.view
 
-viewVarInfo : Var -> Html Msg
-viewVarInfo term = case term of
+viewVarInfo : CodeTab -> Var -> Html Msg
+viewVarInfo tab term = case term of
     VarBinder b -> viewBinderInfo b
-    VarTop tb -> viewBinderInfo tb.topBindingBinder
+    VarTop tb -> viewTopInfo tab tb
     VarExternal e -> viewExternalInfo e
+
 
 viewBinderInfo : Binder -> Html Msg
 viewBinderInfo bndr = HtmlHelpers.list
@@ -211,6 +231,13 @@ viewBinderInfo bndr = HtmlHelpers.list
             , text ("type: " ++ H.typeToString (H.binderType bndr))
             , text ("span: " ++ Debug.toString (H.binderSpan bndr))
             ]
+
+viewTopInfo : CodeTab -> TopBindingInfo -> Html Msg
+viewTopInfo tab ti = div []
+    [ button [onClick (mkCodeMsg (CodeMsgMarkTopLevel ti) tab.id)] [text "Mark"]
+    , text ("#markers: " ++ String.fromInt (List.length tab.selectedTopLevels))
+    , viewBinderInfo ti.topBindingBinder
+    ]
 
 viewExternalInfo : ExternalName -> Html Msg
 viewExternalInfo ext = case ext of

@@ -6,6 +6,7 @@ import HtmlHelpers exposing (..)
 import Types exposing (..)
 import Loading exposing (Loading)
 import Commands
+import HsCore.Helpers as H
 
 import Set.Any exposing (AnySet)
 import Time
