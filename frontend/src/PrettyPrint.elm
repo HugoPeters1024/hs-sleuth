@@ -19,6 +19,7 @@ import Reader exposing (Reader(..))
 type alias PPEnv = { selectedVar : Maybe Var
                    , onClickBinder : Var -> Msg
                    , renderVarName : Var -> String
+                   , renderVarAttributes : Var -> List (Attribute Msg)
                    }
 
 type alias PPM a = Reader PPEnv a
@@ -36,6 +37,7 @@ defaultInfo tid =
     { selectedVar = Nothing
     , onClickBinder = MsgCodeMsg tid << CodeMsgSelectVar
     , renderVarName = H.varName False
+    , renderVarAttributes = \_ -> []
     }
 
 withFullNameBinder : PPEnv -> PPEnv
@@ -139,21 +141,21 @@ ppLit lit  = case lit of
     H.LitNatural n -> emitSpan "m" n
     H.LitRubbish -> emitText "[LitRubbish]"
 
-getVarClasses : Var -> PPM (List (Attribute msg))
-getVarClasses var = Reader <| \env -> List.concat 
+getVarClasses : PPEnv -> Var -> List (Attribute msg)
+getVarClasses env var = List.concat 
     [  [class (varHighlightClass env var)]
     ,  if H.varIsConstructor var then [class "k"] else []
     ,  if H.varIsTopLevel var then [class "nf"] else []
     ]
 
 ppVar : Var -> PP
-ppVar var = case H.varExternalLocalBinder var of
+ppVar var = Reader.ask |> Reader.andThen (\env -> case H.varExternalLocalBinder var of
     Just b -> ppVar (VarBinder b)
-    Nothing -> Reader.map2 (\env cs -> 
-        a [ class "no-style"]
-          [ span (onClick (env.onClickBinder var)::cs) [text (env.renderVarName var)]
+    Nothing -> emit <|
+        a [class "no-style"]
+          [ span (onClick (env.onClickBinder var)::(getVarClasses env var ++ env.renderVarAttributes var)) [text (env.renderVarName var)]
           ]
-        ) Reader.ask (getVarClasses var) |> Reader.andThen emit
+    )
 
 ppBinder : H.Binder -> PP
 ppBinder = ppVar << VarBinder
@@ -197,7 +199,10 @@ ppBinding (var, e) =
                  , emitText " "
                  , ppSepped " " (List.map ppBinder bs)
                  , emitText (if List.isEmpty bs then "" else " ")
-                 , emitText "= ", ppExpr fe
+                 , emitText "= "
+                 , if H.exprIsSmall e
+                   then ppExpr fe
+                   else indented (ppExpr fe)
                  ]
 
 ppUnique : H.Unique -> PP
@@ -209,7 +214,10 @@ ppExpr expr = case expr of
     H.EVarGlobal name -> ppVar (VarExternal name)
     H.ELit lit -> ppLit lit
     H.ETyLam b e -> ppExpr (H.ELam b e)
-    H.EApp f a -> ppSeq [ppExpr f, emitText " ", parensExpr a]
+    H.EApp f a -> 
+        if H.exprIsSmall (H.EApp f a)
+        then ppSeq [ppExpr f, emitText " ", parensExpr a]
+        else ppSeq [ppExpr f, newline, parensExpr a]
     H.ELam b e -> ppSeq [emitText "\\", ppBinder b, emitText " -> ", indented (ppExpr e)]
     H.ELet bs e ->  ppSeq [ emitKeyword "let "
                           , indented <| ppLines (List.map ppBinding_binder bs)
@@ -224,7 +232,9 @@ ppExpr expr = case expr of
 
 ppCase : H.Expr -> H.Binder -> List H.Alt -> PP
 ppCase e b alts = ppSeq [ emitKeyword "case "
-                        , ppExpr e
+                        , if H.exprIsSmall e
+                          then ppExpr e
+                          else indented <| ppExpr e
                         , emitKeyword " of {"
                         , indented <| 
                             ppSeq (List.map (\alt -> ppSeq [ppAlt b alt, newline]) (List.reverse alts))

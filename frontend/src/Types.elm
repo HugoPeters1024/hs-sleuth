@@ -12,6 +12,8 @@ import Dict exposing (Dict)
 import Set exposing (Set)
 import Set.Any exposing (AnySet)
 
+import ContextMenu exposing (ContextMenu)
+
 import Bootstrap.Dropdown  as Dropdown
 
 
@@ -56,6 +58,8 @@ type CodeTabMsg
     | CodeMsgSlider Slug Slider.Msg
     | CodeMsgMarkTopLevel TopBindingInfo
     
+type CtxMenu =
+    OnTerm String
 
 type alias Model = 
     { pageTab : Tabs.Model
@@ -64,6 +68,7 @@ type alias Model =
     , codeTabs : Dict TabId CodeTab
     , overviewTab : OverviewTab
     , idGen : Int
+    , ctxMenu : ContextMenu CtxMenu
     }
 
 type alias OverviewTab =
@@ -81,3 +86,5 @@ type Msg
     | MsgOverViewTab OverviewMsg
     | MsgOpenCodeTab
     | MsgAdjustTimeZone Time.Zone
+    | MsgCtxMenu (ContextMenu.Msg CtxMenu)
+    | MsgCtxMenuItem Int

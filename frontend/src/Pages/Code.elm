@@ -18,6 +18,8 @@ import Commands as C
 import Loading exposing (Loading(..))
 import Commands
 
+import ContextMenu
+
 import Set exposing (Set)
 
 import UI.Slider as Slider
@@ -146,7 +148,8 @@ viewHeader _ tab =
 viewCode : Model -> CodeTab -> Slug -> CodeTabModule -> Html Msg
 viewCode model tab slug modtab = 
     let ppInfo = PP.defaultInfo tab.id
-            |> \r -> {r | selectedVar = tab.selectedVar}
+            |> \r1 -> {r1 | selectedVar = tab.selectedVar}
+            |> \r2 -> {r2 | renderVarAttributes = \var -> [ContextMenu.open MsgCtxMenu (OnTerm (H.varName False var))]}
             |> if tab.disambiguateVariables then PP.withFullNameBinder else identity
     in div []
         [ h4 [] [text slug]

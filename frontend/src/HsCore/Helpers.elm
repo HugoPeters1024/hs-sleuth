@@ -143,6 +143,7 @@ leadingLambdas : Expr -> (Expr, List Binder)
 leadingLambdas expr = case expr of
     ELam b e -> let (fe, bs) = leadingLambdas e in (fe, b::bs)
     ETyLam b e -> let (fe, bs) = leadingLambdas e in (fe, b::bs)
+    EMarkDiff e -> leadingLambdas e
     _ -> (expr, [])
 
 leadingForalls : Type -> (Type, List Binder)
@@ -216,3 +217,37 @@ topBindingMap : (TopBindingInfo -> TopBindingInfo) -> TopBinding -> TopBinding
 topBindingMap f top = case top of
     NonRecTopBinding b -> NonRecTopBinding (f b)
     RecTopBinding bs -> RecTopBinding (List.map f bs)
+
+exprIsAtom : Expr -> Bool
+exprIsAtom expr = case expr of
+    EVar _ -> True
+    EVarGlobal _ -> True
+    ELit _ -> True
+    EApp _ _ -> False
+    ETyLam _ _ -> False
+    ELam _ _ -> False
+    ELet _ _ -> False
+    ECase _ _ _ -> False
+    ETick _ e -> exprIsAtom e
+    EType _ -> True
+    ECoercion -> True
+    EMarkDiff e -> exprIsAtom e
+
+exprTerms : Expr -> Int
+exprTerms expr = case expr of
+    EVar _ -> 1
+    EVarGlobal _ -> 1
+    ELit _ -> 1
+    EApp f a -> exprTerms f + exprTerms a
+    ETyLam _ _ -> 1
+    ELam _ e -> 1 + exprTerms e
+    ELet _ e -> 1 + exprTerms e
+    ECase e _ alts -> 2 + exprTerms e + List.sum (List.map (exprTerms << .altRHS) alts)
+    ETick _ e -> exprTerms e
+    EType _ -> 1
+    ECoercion -> 1
+    EMarkDiff e -> exprTerms e
+
+exprIsSmall : Expr -> Bool
+exprIsSmall e = exprTerms e <= 4
+
