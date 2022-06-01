@@ -1,9 +1,11 @@
 module HsCore.Helpers exposing (..)
 
 import Char
-
-import Types exposing (..)
 import Generated.Types exposing (..)
+
+type Var = VarBinder Binder
+         | VarTop TopBindingInfo
+         | VarExternal ExternalName
 
 concatWith : String -> List String -> String
 concatWith sep = String.concat << List.intersperse sep
@@ -29,7 +31,7 @@ varPhaseId var = case var of
     VarExternal _ -> -1
 
 topBindingInfoToInt : TopBindingInfo -> Int
-topBindingInfoToInt = binderToInt << .topBindingBinder
+topBindingInfoToInt = .topBindingIdx
 
 varIsConstructor : Var -> Bool
 varIsConstructor = isConstructorName << varName False

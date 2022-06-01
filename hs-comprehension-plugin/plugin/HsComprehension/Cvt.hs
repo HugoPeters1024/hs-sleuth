@@ -7,6 +7,8 @@ import HsComprehension.Ast
 import Data.Text (Text)
 import qualified Data.Text as T
 
+import Data.Hashable as Hash
+
 import qualified GhcDump.Ast as GHCD
 
 data CvtEnv = CvtEnv 
@@ -15,6 +17,10 @@ data CvtEnv = CvtEnv
 
 showText :: Show a => a -> Text
 showText = T.pack . show
+
+getBinderName :: Binder -> Text
+getBinderName Binder {..} = binderName
+getBinderName TyBinder {..} = binderName
 
 cvtExternalName :: CvtEnv -> GHCD.SExternalName -> ExternalName
 cvtExternalName env GHCD.ExternalName {..} = ExternalName 
@@ -104,22 +110,29 @@ cvtType env (GHCD.ForAllTy bndr t) = ForAllTy (cvtBinder env bndr) (cvtType env 
 cvtType env (GHCD.LitTy) = LitTy
 cvtType env (GHCD.CoercionTy) = CoercionTy
 
-cvtTopBinding :: CvtEnv -> GHCD.STopBinding -> TopBinding
-cvtTopBinding env tb = 
+cvtTopBinding :: Text -> CvtEnv -> GHCD.STopBinding -> TopBinding
+cvtTopBinding modname env tb = 
     let cvtInfo :: (GHCD.SBinder, CoreStats, GHCD.SExpr) -> TopBindingInfo
         cvtInfo (bndr, stats, expr) =
-            TopBindingInfo { topBindingBinder = cvtBinder env bndr 
-                           , topBindingCoreState = stats
-                           , topBindingRHS = cvtExpr env expr
-                           , topBindingFromSource = False
-                           }
+            let cvtedBinder = cvtBinder env bndr
+                bndrName = getBinderName cvtedBinder
+
+            in TopBindingInfo 
+                { topBindingBinder = cvtedBinder
+                , topBindingCoreState = stats
+                , topBindingRHS = cvtExpr env expr
+                , topBindingFromSource = False
+                , topBindingIdx = Hash.hash (bndrName, modname)
+                }
     in case tb of
          GHCD.NonRecTopBinding bndr stats expr -> NonRecTopBinding (cvtInfo (bndr, stats, expr))
          GHCD.RecTopBinding bs -> RecTopBinding (map cvtInfo bs)
 
 cvtModule :: CvtEnv -> GHCD.SModule -> Module
-cvtModule env GHCD.Module {..} = Module 
-    { moduleName = GHCD.getModuleName moduleName
-    , moduleTopBindings = map (cvtTopBinding env) moduleTopBindings
+cvtModule env GHCD.Module {..} = 
+    let modName = GHCD.getModuleName moduleName
+    in Module 
+    { moduleName = modName
+    , moduleTopBindings = map (cvtTopBinding modName env) moduleTopBindings
     , ..
     }

@@ -185,7 +185,8 @@ type alias TopBindingInfo  =
     { topBindingBinder : Binder
     , topBindingCoreState : CoreStats
     , topBindingRHS : Expr
-    , topBindingFromSource : Bool }
+    , topBindingFromSource : Bool
+    , topBindingIdx : Int }
 
 
 type TopBinding 

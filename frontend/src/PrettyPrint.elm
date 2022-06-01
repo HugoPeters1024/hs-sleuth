@@ -1,8 +1,8 @@
 module PrettyPrint exposing (..)
 
 import Types exposing (..)
-import Generated.Types as H
-import HsCore.Helpers as H
+import Generated.Types exposing (..)
+import HsCore.Helpers exposing (..)
 import State exposing (State)
 import State as S
 
@@ -36,19 +36,19 @@ defaultInfo : TabId -> PPEnv
 defaultInfo tid = 
     { selectedVar = Nothing
     , onClickBinder = MsgCodeMsg tid << CodeMsgSelectVar
-    , renderVarName = H.varName False
+    , renderVarName = varName False
     , renderVarAttributes = \_ -> []
     }
 
 withFullNameBinder : PPEnv -> PPEnv
-withFullNameBinder env = { env | renderVarName = H.varName True }
+withFullNameBinder env = { env | renderVarName = varName True }
 
 varHighlightClass : PPEnv -> Var -> String
 varHighlightClass env o = case env.selectedVar of
     Nothing -> ""
     Just v -> 
-        if H.varToInt v == H.varToInt o
-        then ( if H.varPhaseId v == H.varPhaseId o
+        if varToInt v == varToInt o
+        then ( if varPhaseId v == varPhaseId o
                then "highlight-exact"  
                else "highlight-approx"
              )
@@ -111,45 +111,45 @@ emitKeyword = emitSpan "k"
 parens : PP -> PP
 parens pp = ppSeq [emitText "(", pp, emitText ")"]
 
-parensExpr : H.Expr -> PP
+parensExpr : Expr -> PP
 parensExpr expr = case expr of
-    H.EVar b -> ppExpr (H.EVar b)
-    H.EVarGlobal b -> ppExpr (H.EVarGlobal b)
-    H.ELit l -> ppExpr (H.ELit l)
-    H.EType t -> ppExpr (H.EType t)
+    EVar b -> ppExpr (EVar b)
+    EVarGlobal b -> ppExpr (EVarGlobal b)
+    ELit l -> ppExpr (ELit l)
+    EType t -> ppExpr (EType t)
     _        -> parens (ppExpr expr)
 
-parensType : H.Type -> PP
+parensType : Type -> PP
 parensType type_ = case type_ of
-    H.VarTy t -> ppType (H.VarTy t)
-    H.TyConApp con xs -> ppType (H.TyConApp con xs)
+    VarTy t -> ppType (VarTy t)
+    TyConApp con xs -> ppType (TyConApp con xs)
     _         -> parens (ppType type_)
 
-ppLit : H.Lit -> PP
+ppLit : Lit -> PP
 ppLit lit  = case lit of
-    H.MachChar c -> emitSpan "s" (String.fromList ['\'', c, '\''])
-    H.MachStr s  -> emitSpan "s" ("" ++ s ++ "")
-    H.MachNullAddr -> emitKeyword "NullAddr#"
-    H.MachInt i  -> emitSpan "m" i
-    H.MachInt64 i -> emitSpan "m" i
-    H.MachWord i -> emitSpan "m" i
-    H.MachWord64 i -> emitSpan "m" i
-    H.MachFloat f -> emitSpan "m" f
-    H.MachDouble d -> emitSpan "m" d
-    H.MachLabel l -> emitText l
-    H.LitInteger i  -> emitSpan "m" i
-    H.LitNatural n -> emitSpan "m" n
-    H.LitRubbish -> emitText "[LitRubbish]"
+    MachChar c -> emitSpan "s" (String.fromList ['\'', c, '\''])
+    MachStr s  -> emitSpan "s" ("" ++ s ++ "")
+    MachNullAddr -> emitKeyword "NullAddr#"
+    MachInt i  -> emitSpan "m" i
+    MachInt64 i -> emitSpan "m" i
+    MachWord i -> emitSpan "m" i
+    MachWord64 i -> emitSpan "m" i
+    MachFloat f -> emitSpan "m" f
+    MachDouble d -> emitSpan "m" d
+    MachLabel l -> emitText l
+    LitInteger i  -> emitSpan "m" i
+    LitNatural n -> emitSpan "m" n
+    LitRubbish -> emitText "[LitRubbish]"
 
 getVarClasses : PPEnv -> Var -> List (Attribute msg)
 getVarClasses env var = List.concat 
     [  [class (varHighlightClass env var)]
-    ,  if H.varIsConstructor var then [class "k"] else []
-    ,  if H.varIsTopLevel var then [class "nf"] else []
+    ,  if varIsConstructor var then [class "k"] else []
+    ,  if varIsTopLevel var then [class "nf"] else []
     ]
 
 ppVar : Var -> PP
-ppVar var = Reader.ask |> Reader.andThen (\env -> case H.varExternalLocalBinder var of
+ppVar var = Reader.ask |> Reader.andThen (\env -> case varExternalLocalBinder var of
     Just b -> ppVar (VarBinder b)
     Nothing -> emit <|
         a [class "no-style"]
@@ -157,41 +157,41 @@ ppVar var = Reader.ask |> Reader.andThen (\env -> case H.varExternalLocalBinder 
           ]
     )
 
-ppBinder : H.Binder -> PP
+ppBinder : Binder -> PP
 ppBinder = ppVar << VarBinder
 
-ppBinderT : H.BinderThunk -> PP
+ppBinderT : BinderThunk -> PP
 ppBinderT mb = case mb of
-    H.Found b -> ppVar (VarBinder b)
-    H.NotFound -> emitText "[!UKNOWN VARIABLE!]" 
-    H.Untouched -> emitText "[!I WAS NEVER TOUCHED!]"
+    Found b -> ppVar (VarBinder b)
+    NotFound -> emitText "[!UKNOWN VARIABLE!]" 
+    Untouched -> emitText "[!I WAS NEVER TOUCHED!]"
 
 uncurry3 : (a -> b -> c -> d) -> ((a,b,c) -> d)
 uncurry3 f = \(x,y,z) -> f x y z
 
-ppTopBindingInfo : H.TopBindingInfo -> PP
+ppTopBindingInfo : TopBindingInfo -> PP
 ppTopBindingInfo bi = ppBinding (VarTop bi, bi.topBindingRHS)
 
-ppTopBinding : H.TopBinding -> PP
+ppTopBinding : TopBinding -> PP
 ppTopBinding b = case b of
-    H.NonRecTopBinding bi -> ppTopBindingInfo bi
-    H.RecTopBinding bis -> 
+    NonRecTopBinding bi -> ppTopBindingInfo bi
+    RecTopBinding bis -> 
         ppSeq [ emitText "Rec {"
               , newline
               , indented <| ppSepped "\n\n" (List.map ppTopBindingInfo bis)
               , emitText "}"
               ]
 
-ppBinding_binder : (H.Binder, H.Expr) -> PP
+ppBinding_binder : (Binder, Expr) -> PP
 ppBinding_binder (b,e) = ppBinding (VarBinder b, e)
 
-ppBinding : (Var, H.Expr) -> PP
+ppBinding : (Var, Expr) -> PP
 ppBinding (var, e) = 
-    let (fe, bs) = H.leadingLambdas e
-        in ppSeq [ if H.varIsTopLevel var
+    let (fe, bs) = leadingLambdas e
+        in ppSeq [ if varIsTopLevel var
                    then ppSeq [ ppVar var
                               , emitText " :: "
-                              , ppType (H.varType var)
+                              , ppType (varType var)
                               , newline
                               ]
                    else emitText ""
@@ -200,39 +200,39 @@ ppBinding (var, e) =
                  , ppSepped " " (List.map ppBinder bs)
                  , emitText (if List.isEmpty bs then "" else " ")
                  , emitText "= "
-                 , if H.exprIsSmall e
+                 , if exprIsSmall e
                    then ppExpr fe
                    else indented (ppExpr fe)
                  ]
 
-ppUnique : H.Unique -> PP
-ppUnique (H.Unique _ i) = emitText (String.fromInt i)
+ppUnique : Unique -> PP
+ppUnique (Unique _ i) = emitText (String.fromInt i)
 
-ppExpr : H.Expr -> PP
+ppExpr : Expr -> PP
 ppExpr expr = case expr of
-    H.EVar (H.BinderId _ getBinder) -> ppBinderT (getBinder ())
-    H.EVarGlobal name -> ppVar (VarExternal name)
-    H.ELit lit -> ppLit lit
-    H.ETyLam b e -> ppExpr (H.ELam b e)
-    H.EApp f a -> 
-        if H.exprIsSmall (H.EApp f a)
+    EVar (BinderId _ getBinder) -> ppBinderT (getBinder ())
+    EVarGlobal name -> ppVar (VarExternal name)
+    ELit lit -> ppLit lit
+    ETyLam b e -> ppExpr (ELam b e)
+    EApp f a -> 
+        if exprIsSmall (EApp f a)
         then ppSeq [ppExpr f, emitText " ", parensExpr a]
         else ppSeq [ppExpr f, newline, parensExpr a]
-    H.ELam b e -> ppSeq [emitText "\\", ppBinder b, emitText " -> ", indented (ppExpr e)]
-    H.ELet bs e ->  ppSeq [ emitKeyword "let "
+    ELam b e -> ppSeq [emitText "\\", ppBinder b, emitText " -> ", indented (ppExpr e)]
+    ELet bs e ->  ppSeq [ emitKeyword "let "
                           , indented <| ppLines (List.map ppBinding_binder bs)
                           , newline
                           , emitKeyword " in ", ppExpr e
                           ]
-    H.ECase e b alts -> ppCase e b alts
-    H.EType t -> ppSeq [emitSpan "o" "@", parensType t]
-    H.ECoercion -> emitText "[Coercion]"
-    H.ETick _ e -> ppExpr e
-    H.EMarkDiff e -> Reader.ask |> Reader.andThen (\env -> emit (span [class "diff"] (prettyPrint env (ppExpr e))))
+    ECase e b alts -> ppCase e b alts
+    EType t -> ppSeq [emitSpan "o" "@", parensType t]
+    ECoercion -> emitText "[Coercion]"
+    ETick _ e -> ppExpr e
+    EMarkDiff e -> Reader.ask |> Reader.andThen (\env -> emit (span [class "diff"] (prettyPrint env (ppExpr e))))
 
-ppCase : H.Expr -> H.Binder -> List H.Alt -> PP
+ppCase : Expr -> Binder -> List Alt -> PP
 ppCase e b alts = ppSeq [ emitKeyword "case "
-                        , if H.exprIsSmall e
+                        , if exprIsSmall e
                           then ppExpr e
                           else indented <| ppExpr e
                         , emitKeyword " of {"
@@ -241,38 +241,38 @@ ppCase e b alts = ppSeq [ emitKeyword "case "
                         , emitText "}"
                         ]
 
-ppAlt : H.Binder -> H.Alt -> PP
+ppAlt : Binder -> Alt -> PP
 ppAlt b alt = ppSeq [ ppAltCon alt.altCon
                   , ppWhen (not (List.isEmpty alt.altBinders)) (emitText " ")
-                  , ppSepped " " (List.map ppBinder (if H.isDefaultAlt alt then [b] else alt.altBinders))
+                  , ppSepped " " (List.map ppBinder (if isDefaultAlt alt then [b] else alt.altBinders))
                   , emitText " -> "
                   , ppExpr alt.altRHS
                   ]
 
-ppAltCon : H.AltCon -> PP
+ppAltCon : AltCon -> PP
 ppAltCon con = case con of
-    H.AltDataCon s -> if H.isConstructorName s then emitKeyword s else emitText s
-    H.AltLit l -> ppLit l
-    H.AltDefault -> emitText ""
+    AltDataCon s -> if isConstructorName s then emitKeyword s else emitText s
+    AltLit l -> ppLit l
+    AltDefault -> emitText ""
 
-ppType : H.Type -> PP
+ppType : Type -> PP
 ppType type_ = case type_ of
-    H.VarTy (H.BinderId _ getBinder) -> case getBinder () of
-        H.Found x -> ppBinder x
-        H.NotFound -> emitText "[UKNOWN TYPEVAR]"
-        H.Untouched -> emitText "[TYPEVAR NEVER TRAVERSED]"
-    H.FunTy x y -> ppSeq [parensType x, emitText " -> ", ppType y]
-    H.TyConApp (H.TyCon con _) ts -> 
+    VarTy (BinderId _ getBinder) -> case getBinder () of
+        Found x -> ppBinder x
+        NotFound -> emitText "[UKNOWN TYPEVAR]"
+        Untouched -> emitText "[TYPEVAR NEVER TRAVERSED]"
+    FunTy x y -> ppSeq [parensType x, emitText " -> ", ppType y]
+    TyConApp (TyCon con _) ts -> 
         case ts of
             [] -> emitText con
             _ -> let tsStr = ppSeq (List.intersperse (emitText " ") (List.map ppType ts))
                  in case con of
                     "[]" -> ppSeq [emitText "[", tsStr, emitText "]"]
                     _    -> ppSeq [emitText (con ++ " "), tsStr]
-    H.AppTy x y -> ppSeq [ppType x, emitText " ", parensType y]
-    H.ForAllTy b t -> 
-        let (ft, bs) = H.leadingForalls t
+    AppTy x y -> ppSeq [ppType x, emitText " ", parensType y]
+    ForAllTy b t -> 
+        let (ft, bs) = leadingForalls t
             bndrsStr = ppSepped " " (List.map ppBinder (b::bs))
         in ppSeq [emitText "forall ", bndrsStr, emitText ". ", ppType ft]
-    H.LitTy -> emitText "[LitTy]"
-    H.CoercionTy -> emitText "[CoercionTy]"
+    LitTy -> emitText "[LitTy]"
+    CoercionTy -> emitText "[CoercionTy]"

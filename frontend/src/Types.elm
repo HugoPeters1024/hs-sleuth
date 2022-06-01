@@ -12,18 +12,17 @@ import Dict exposing (Dict)
 import Set exposing (Set)
 import Set.Any exposing (AnySet)
 
+import HsCore.Helpers exposing (..) 
+
 import ContextMenu exposing (ContextMenu)
 
 import Bootstrap.Dropdown  as Dropdown
-
-
-type Var = VarBinder Binder
-         | VarTop TopBindingInfo
-         | VarExternal ExternalName
+import Bootstrap.Modal as Modal
 
 
 type alias PhaseId = Int
 type alias TabId = Int
+type alias VarId = Int
 type alias Slug = String
 type alias ModuleName = String
 
@@ -33,6 +32,30 @@ type alias CodeTabModule =
     , phaseSlider : Slider.Model
     , topNames : List TopBindingInfo
     }
+
+type alias CodeTabRenameModal =
+    { visiblity : Modal.Visibility
+    , stagingText : String
+    , varId : VarId
+    }
+
+renameModalSetVis : Modal.Visibility -> CodeTabRenameModal -> CodeTabRenameModal
+renameModalSetVis v modal = { modal | visiblity = v }
+
+renameModalSetVarId : VarId -> CodeTabRenameModal -> CodeTabRenameModal
+renameModalSetVarId vid modal = { modal | varId = vid }
+
+renameModalClose : CodeTabRenameModal -> CodeTabRenameModal
+renameModalClose = renameModalSetVis Modal.hidden
+
+renameModalOpen : Var -> CodeTabRenameModal -> CodeTabRenameModal
+renameModalOpen var
+    =  renameModalSetVis Modal.shown 
+    << renameModalSetVarId (varToInt var)
+    << renameModalSetStaginText (varName False var)
+
+renameModalSetStaginText : String -> CodeTabRenameModal -> CodeTabRenameModal
+renameModalSetStaginText t modal = { modal | stagingText = t}
 
 type alias CodeTab = 
     { id : TabId
@@ -45,6 +68,8 @@ type alias CodeTab =
     , disambiguateVariables : Bool
     , showRecursiveGroups : Bool 
     , selectedTopLevels : List TopBindingInfo
+    , renameModal : CodeTabRenameModal
+    , varRenames : Dict Int String
     }
 
 type CodeTabMsg
@@ -57,9 +82,13 @@ type CodeTabMsg
     | CodeMsgModuleDropdown Dropdown.State
     | CodeMsgSlider Slug Slider.Msg
     | CodeMsgMarkTopLevel TopBindingInfo
-    
+    | CodeMsgRenameModalOpen Var
+    | CodeMsgRenameModalClose
+    | CodeMsgRenameModalStagingText String
+    | CodeMsgRenameModalCommit
+
 type CtxMenu =
-    OnTerm String
+    CtxCodeVar Var TabId
 
 type alias Model = 
     { pageTab : Tabs.Model
@@ -87,4 +116,3 @@ type Msg
     | MsgOpenCodeTab
     | MsgAdjustTimeZone Time.Zone
     | MsgCtxMenu (ContextMenu.Msg CtxMenu)
-    | MsgCtxMenuItem Int

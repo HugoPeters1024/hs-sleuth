@@ -462,7 +462,8 @@ topBindingInfoDecoder =
     Json.Decode.Pipeline.required "topBindingBinder" binderDecoder |>
     Json.Decode.Pipeline.required "topBindingCoreState" coreStatsDecoder |>
     Json.Decode.Pipeline.required "topBindingRHS" exprDecoder |>
-    Json.Decode.Pipeline.required "topBindingFromSource" Json.Decode.bool
+    Json.Decode.Pipeline.required "topBindingFromSource" Json.Decode.bool |>
+    Json.Decode.Pipeline.required "topBindingIdx" Json.Decode.int
 
 
 topBindingDecoder : Json.Decode.Decoder TopBinding

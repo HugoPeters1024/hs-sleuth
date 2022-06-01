@@ -2,7 +2,6 @@ module Pages.Code exposing (..)
 
 import ElmHelpers as EH
 
-import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -10,7 +9,7 @@ import HtmlHelpers exposing (..)
 import Dict exposing (Dict)
 import Generated.Types exposing (..)
 import Types exposing (..)
-import HsCore.Helpers as H
+import HsCore.Helpers exposing (..)
 import HsCore.Trafo.EraseTypes exposing (eraseTypesModule)
 import HsCore.Trafo.Diff as Diff
 import PrettyPrint as PP
@@ -28,9 +27,11 @@ import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Dropdown  as Dropdown
 import Bootstrap.Button  as Button
+import Bootstrap.Modal as Modal
+import Bootstrap.Form.Input as Input
 
-mkCodeMsg : CodeTabMsg -> TabId -> Msg
-mkCodeMsg msg id = MsgCodeMsg id msg
+mkCodeMsg : TabId -> CodeTabMsg -> Msg
+mkCodeMsg id msg = MsgCodeMsg id msg
 
 subscriptions : CodeTab -> Sub Msg
 subscriptions tab = Sub.map (MsgCodeMsg tab.id) (Dropdown.subscriptions tab.moduleDropdown CodeMsgModuleDropdown)
@@ -52,7 +53,7 @@ getMergedModuleNames tab = List.map Tuple.first (List.concatMap .captureModules 
 
 getMergedTopBinders : CodeTab -> List TopBindingInfo
 getMergedTopBinders tab = List.concatMap .topNames (Dict.values tab.modules)
-    |> EH.removeDuplicatesKey (H.binderName << .topBindingBinder)
+    |> EH.removeDuplicatesKey (binderName << .topBindingBinder)
 
 
 
@@ -72,6 +73,12 @@ makeCodeTab model captures =
       , disambiguateVariables = False
       , showRecursiveGroups = False
       , selectedTopLevels = []
+      , renameModal = 
+          { visiblity = Modal.hidden
+          , stagingText = ""
+          , varId = -1
+          }
+      , varRenames = Dict.empty
       }
     , Cmd.batch (List.map (\slug -> C.fetchCodePhase tabId slug "Main" 0) slugs)
     )
@@ -90,7 +97,7 @@ update msg tab = case msg of
         let updateModuleTab : CodeTabModule -> CodeTabModule 
             updateModuleTab tabmod = 
                 let mod = Loading.loadFromResult res
-                    topNames = Loading.withDefault [] (Loading.map H.getModuleTopBinders mod)
+                    topNames = Loading.withDefault [] (Loading.map getModuleTopBinders mod)
                 in {tabmod | mod = mod, topNames = topNames }
         in ({tab | modules = Dict.update slug (Maybe.map updateModuleTab) tab.modules}, Cmd.none)
     CodeMsgSelectVar var -> ({tab | selectedVar = Just var}, Cmd.none)
@@ -110,6 +117,13 @@ update msg tab = case msg of
                Just modtab -> Commands.fetchCodePhase tab.id slug tab.currentModule modtab.phaseSlider.value
            )
     CodeMsgMarkTopLevel ti -> ({tab | selectedTopLevels = ti::tab.selectedTopLevels }, Cmd.none)
+    CodeMsgRenameModalOpen var -> ({tab | renameModal = renameModalOpen var tab.renameModal}, Cmd.none)
+    CodeMsgRenameModalClose -> ({tab | renameModal = renameModalClose tab.renameModal}, Cmd.none)
+    CodeMsgRenameModalStagingText txt -> ({tab | renameModal = renameModalSetStaginText txt tab.renameModal}, Cmd.none)
+    CodeMsgRenameModalCommit -> 
+        let varRenames = Dict.insert tab.renameModal.varId tab.renameModal.stagingText tab.varRenames
+            modal = renameModalClose tab.renameModal
+        in ({tab | varRenames = varRenames, renameModal = modal}, Cmd.none)
 
 view : Model -> CodeTab -> Html Msg
 view model tab = 
@@ -120,13 +134,14 @@ view model tab =
                         (Fraction 4, viewCode model tab slug mod)
                     )
                     ++
-                    [ (Pixels 500, viewInfo model tab) ]
+                    [ (Pixels 500, Html.map (mkCodeMsg tab.id) (viewInfo model tab)) ]
                 )
+           , Html.map (mkCodeMsg tab.id) <| viewRenameModal tab
            ]
 
 
 selectedTermId : CodeTab -> Maybe Int
-selectedTermId tab = Maybe.map H.varToInt tab.selectedVar
+selectedTermId tab = Maybe.map varToInt tab.selectedVar
 
 
 viewHeader : Model -> CodeTab -> Html Msg
@@ -135,27 +150,60 @@ viewHeader _ tab =
         [ h3 []  [text tab.currentModule]
         , Dropdown.dropdown tab.moduleDropdown
             { options = []
-            , toggleMsg = \s -> mkCodeMsg (CodeMsgModuleDropdown s) tab.id
+            , toggleMsg = \s -> mkCodeMsg tab.id (CodeMsgModuleDropdown s)
             , toggleButton = Dropdown.toggle [Button.primary] [text "Module"]
             , items = List.map 
-                (\modname -> Dropdown.buttonItem [onClick (mkCodeMsg (CodeMsgSetModule modname 0) tab.id)] [text modname]) 
+                (\modname -> Dropdown.buttonItem [onClick (mkCodeMsg tab.id (CodeMsgSetModule modname 0))] [text modname]) 
                 (getMergedModuleNames tab)
             }
         ]
 
+viewRenameModal : CodeTab -> Html CodeTabMsg
+viewRenameModal tab = 
+    let msgOnClose = CodeMsgRenameModalClose
+        msgOnInput = CodeMsgRenameModalStagingText
 
+    in Modal.config msgOnClose
+        |> Modal.small
+        |> Modal.hideOnBackdropClick True
+        |> Modal.h3 [] [text "Rename Variable"]
+        |> Modal.body [] 
+            [ Input.text 
+                [ Input.value tab.renameModal.stagingText
+                , Input.attrs [onInput msgOnInput, autofocus True]
+                ]
+            ]
+        |> Modal.footer []
+            [ Button.button
+                [ Button.outlinePrimary
+                , Button.outlineSuccess
+                , Button.attrs [onClick CodeMsgRenameModalCommit]
+                ] [text "Apply"]
+            , Button.button
+                [ Button.outlinePrimary
+                , Button.attrs [onClick msgOnClose]
+                ] [text "Close"]
+            ]
+        |> Modal.view tab.renameModal.visiblity
+
+
+renderVarName : CodeTab -> Var -> String
+renderVarName tab var = case Dict.get (varToInt var) tab.varRenames of
+    Just name -> name
+    Nothing -> varName tab.disambiguateVariables var
 
 viewCode : Model -> CodeTab -> Slug -> CodeTabModule -> Html Msg
 viewCode model tab slug modtab = 
     let ppInfo = PP.defaultInfo tab.id
             |> \r1 -> {r1 | selectedVar = tab.selectedVar}
-            |> \r2 -> {r2 | renderVarAttributes = \var -> [ContextMenu.open MsgCtxMenu (OnTerm (H.varName False var))]}
+            |> \r2 -> {r2 | renderVarAttributes = \var -> [ContextMenu.open MsgCtxMenu (CtxCodeVar var tab.id)]}
+            |> \r3 -> {r3 | renderVarName = renderVarName tab}
             |> if tab.disambiguateVariables then PP.withFullNameBinder else identity
     in div []
         [ h4 [] [text slug]
         , Loading.renderLoading modtab.mod (\mod -> text mod.modulePhase)
         , Slider.config
-            { lift = \msg -> mkCodeMsg (CodeMsgSlider slug msg) tab.id
+            { lift = \msg -> mkCodeMsg tab.id (CodeMsgSlider slug msg)
             , mininum = 0
             , maximum = case EH.find (\(name,_) -> name == tab.currentModule) modtab.projectMeta.captureModules of
                 Just (_, nrPasses) -> nrPasses
@@ -168,7 +216,7 @@ viewCode model tab slug modtab =
                        (
                          processDiff tab mod
                          |> (if tab.hideTypes then eraseTypesModule else identity)
-                         |> (if tab.showRecursiveGroups then identity else \m -> {m | moduleTopBindings = H.removeRecursiveGroups m.moduleTopBindings})
+                         |> (if tab.showRecursiveGroups then identity else \m -> {m | moduleTopBindings = removeRecursiveGroups m.moduleTopBindings})
                          |> .moduleTopBindings
                          |> List.map PP.ppTopBinding
                          |> PP.ppSepped "\n\n"
@@ -179,20 +227,21 @@ viewCode model tab slug modtab =
             ]
         ]
 
+
 processDiff : CodeTab -> Module -> Module
 processDiff tab mod = case tab.selectedTopLevels of
     [lhs, rhs] -> 
         let go : TopBindingInfo -> TopBindingInfo
             go tb = 
-                if H.topBindingInfoToInt tb == H.topBindingInfoToInt lhs && H.binderPhaseId tb.topBindingBinder == H.binderPhaseId lhs.topBindingBinder
+                if topBindingInfoToInt tb == topBindingInfoToInt lhs && binderPhaseId tb.topBindingBinder == binderPhaseId lhs.topBindingBinder
                 then Tuple.first (Diff.anotateTopBindingInfo (lhs, rhs)) 
                 else (
-                    if H.topBindingInfoToInt tb == H.topBindingInfoToInt rhs && H.binderPhaseId tb.topBindingBinder == H.binderPhaseId rhs.topBindingBinder
+                    if topBindingInfoToInt tb == topBindingInfoToInt rhs && binderPhaseId tb.topBindingBinder == binderPhaseId rhs.topBindingBinder
                     then Tuple.second (Diff.anotateTopBindingInfo (lhs, rhs))
                     else tb
                 )
                     
-        in { mod | moduleTopBindings = List.map (H.topBindingMap go) mod.moduleTopBindings }
+        in { mod | moduleTopBindings = List.map (topBindingMap go) mod.moduleTopBindings }
     _          -> mod
 
 fromMaybe : a -> Maybe a -> a
@@ -200,7 +249,7 @@ fromMaybe def m = case m of
     Just x -> x
     Nothing -> def
 
-viewInfo : Model -> CodeTab -> Html Msg
+viewInfo : Model -> CodeTab -> Html CodeTabMsg
 viewInfo model tab = 
     Card.config []
     |> Card.headerH3 [] [text "Options"]
@@ -208,47 +257,47 @@ viewInfo model tab =
         [ Block.titleH4 [] [text "View Options"]
         , Block.custom <|
             HtmlHelpers.list 
-              [ checkbox tab.hideTypes (mkCodeMsg CodeMsgToggleHideTypes tab.id) "Hide Types"
-              , checkbox tab.disambiguateVariables (mkCodeMsg CodeMsgToggleDisambiguateVariables tab.id) "Disambiguate Variables Names"
-              , checkbox tab.showRecursiveGroups   (mkCodeMsg CodeMsgToggleShowRecursiveGroups   tab.id) "Show Recursive Groups"
+              [ checkbox tab.hideTypes CodeMsgToggleHideTypes "Hide Types"
+              , checkbox tab.disambiguateVariables CodeMsgToggleDisambiguateVariables "Disambiguate Variables Names"
+              , checkbox tab.showRecursiveGroups   CodeMsgToggleShowRecursiveGroups "Show Recursive Groups"
               , hr [] []
               , h4 [] [text "Selected Variable"]
               , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map (viewVarInfo tab) tab.selectedVar)
               , hr [] []
               , h4 [] [text "Toplevel functions"]
-              , HtmlHelpers.list (List.map (text << H.binderName << .topBindingBinder) (List.filter .topBindingFromSource (getMergedTopBinders tab)))
+              , HtmlHelpers.list (List.map (text << binderName << .topBindingBinder) (List.filter .topBindingFromSource (getMergedTopBinders tab)))
               ]
         ]
     |> Card.view
 
-viewVarInfo : CodeTab -> Var -> Html Msg
+viewVarInfo : CodeTab -> Var -> Html CodeTabMsg
 viewVarInfo tab term = case term of
     VarBinder b -> viewBinderInfo b
     VarTop tb -> viewTopInfo tab tb
     VarExternal e -> viewExternalInfo e
 
 
-viewBinderInfo : Binder -> Html Msg
+viewBinderInfo : Binder -> Html CodeTabMsg
 viewBinderInfo bndr = HtmlHelpers.list
-            [ text ("name: " ++ H.binderName bndr)
-            , text ("type: " ++ H.typeToString (H.binderType bndr))
-            , text ("span: " ++ Debug.toString (H.binderSpan bndr))
+            [ text ("name: " ++ binderName bndr)
+            , text ("type: " ++ typeToString (binderType bndr))
+            , text ("span: " ++ Debug.toString (binderSpan bndr))
             ]
 
-viewTopInfo : CodeTab -> TopBindingInfo -> Html Msg
+viewTopInfo : CodeTab -> TopBindingInfo -> Html CodeTabMsg
 viewTopInfo tab ti = div []
-    [ button [onClick (mkCodeMsg (CodeMsgMarkTopLevel ti) tab.id)] [text "Mark"]
+    [ button [onClick (CodeMsgMarkTopLevel ti)] [text "Mark"]
     , text ("#markers: " ++ String.fromInt (List.length tab.selectedTopLevels))
     , viewBinderInfo ti.topBindingBinder
     ]
 
-viewExternalInfo : ExternalName -> Html Msg
+viewExternalInfo : ExternalName -> Html CodeTabMsg
 viewExternalInfo ext = case ext of
     ForeignCall -> text ("[ForeignCall]")
     ExternalName e -> HtmlHelpers.list
         [ text ("name: " ++ e.externalName)
         , text ("module:"  ++ e.externalModuleName)
-        , text ("type: " ++ H.typeToString e.externalType)
+        , text ("type: " ++ typeToString e.externalType)
         ]
 
 

@@ -20,6 +20,8 @@ import Bootstrap.CDN as CDN
 import UI.Tabs as Tabs
 import ContextMenu
 
+import HsCore.Helpers exposing (..)
+
 main : Program () Model Msg
 main = Browser.document
         { init = init
@@ -75,8 +77,8 @@ viewCodeTabs model =
 
 getCtxMenuItems : CtxMenu -> List (List (ContextMenu.Item, Msg))
 getCtxMenuItems context = case context of
-    OnTerm name -> 
-        [ [ (ContextMenu.item ("Term: " ++ name), MsgCtxMenuItem 1)
+    CtxCodeVar var tabid -> 
+        [ [ (ContextMenu.item "Rename", Code.mkCodeMsg tabid (CodeMsgRenameModalOpen var))
           ] 
         ]
 
@@ -131,6 +133,5 @@ update msg model = case msg of
     MsgCtxMenu ctx -> 
         let (ctxMenu, cmd) = ContextMenu.update ctx model.ctxMenu
         in ({model | ctxMenu = ctxMenu}, Cmd.map MsgCtxMenu cmd) 
-    MsgCtxMenuItem item -> (model, Cmd.none)
 
 

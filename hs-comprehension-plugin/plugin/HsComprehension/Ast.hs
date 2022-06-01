@@ -164,6 +164,7 @@ data TopBindingInfo = TopBindingInfo
     , topBindingCoreState :: CoreStats
     , topBindingRHS :: Expr
     , topBindingFromSource :: Bool
+    , topBindingIdx :: Int
     }
     deriving (Generic, Serialise, Show)
 
