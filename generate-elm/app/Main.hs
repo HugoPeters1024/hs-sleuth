@@ -56,7 +56,9 @@ binderThunkDef = unlines [ ""
                          ]
 
 finalizeTypes :: String -> String
-finalizeTypes = replace "BinderId Unique" "BinderId Unique (() -> BinderThunk)"
+finalizeTypes = replace 
+                    "{ binderIdUnique : Unique, binderIdDeBruijn : Int }"
+                    "{ binderIdThunk : () -> BinderThunk, binderIdUnique : Unique, binderIdDeBruijn : Int }"
               . replace "externalType : Type }" "externalType : Type\n    , localBinder : () -> BinderThunk }"
               . replace "TopBinding(..)" "TopBinding(..)\n    , BinderThunk(..)"
               . (++ binderThunkDef)
@@ -65,8 +67,8 @@ finalizeDecoders :: String -> String
 finalizeDecoders = replace "import Json.Decode" "import Generated.Types exposing (..)\nimport Json.Decode"
                  . replace "externalUnique = d" "externalUnique = d\n            , localBinder = \\_ -> Untouched"
                  . replace 
-                    "    Json.Decode.map BinderId uniqueDecoder" 
-                    "    Json.Decode.map (\\u -> BinderId u (\\_ -> Untouched)) uniqueDecoder"
+                      "    Json.Decode.succeed BinderId |>"
+                      "    Json.Decode.succeed (BinderId (\\_ -> Untouched)) |>"
 
 main :: IO ()
 main = do

@@ -2,7 +2,7 @@ module Generated.Types exposing
     ( Capture
     , Unique(..)
     , ExternalName(..)
-    , BinderId(..)
+    , BinderId
     , Binder(..)
     , IdInfo
     , Unfolding(..)
@@ -45,8 +45,8 @@ type ExternalName
     | ForeignCall 
 
 
-type BinderId 
-    = BinderId Unique (() -> BinderThunk)
+type alias BinderId  =
+    { binderIdThunk : () -> BinderThunk, binderIdUnique : Unique, binderIdDeBruijn : Int }
 
 
 type Binder 

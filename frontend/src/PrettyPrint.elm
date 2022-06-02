@@ -149,13 +149,13 @@ getVarClasses env var = List.concat
     ]
 
 ppVar : Var -> PP
-ppVar var = Reader.ask |> Reader.andThen (\env -> case varExternalLocalBinder var of
-    Just b -> ppVar (VarBinder b)
-    Nothing -> emit <|
-        a [class "no-style"]
-          [ span (onClick (env.onClickBinder var)::(getVarClasses env var ++ env.renderVarAttributes var)) [text (env.renderVarName var)]
-          ]
-    )
+ppVar var = Reader.exec <| \env -> 
+    case varExternalLocalBinder var of
+        Just b -> ppVar (VarBinder b)
+        Nothing -> emit <|
+            a [class "no-style"]
+              [ span (onClick (env.onClickBinder var)::(getVarClasses env var ++ env.renderVarAttributes var)) [text (env.renderVarName var)]
+              ]
 
 ppBinder : Binder -> PP
 ppBinder = ppVar << VarBinder
@@ -210,7 +210,7 @@ ppUnique (Unique _ i) = emitText (String.fromInt i)
 
 ppExpr : Expr -> PP
 ppExpr expr = case expr of
-    EVar (BinderId _ getBinder) -> ppBinderT (getBinder ())
+    EVar var -> ppSeq [ppBinderT (var.binderIdThunk ()), emitText ("_" ++ String.fromInt var.binderIdDeBruijn)]
     EVarGlobal name -> ppVar (VarExternal name)
     ELit lit -> ppLit lit
     ETyLam b e -> ppExpr (ELam b e)
@@ -257,7 +257,7 @@ ppAltCon con = case con of
 
 ppType : Type -> PP
 ppType type_ = case type_ of
-    VarTy (BinderId _ getBinder) -> case getBinder () of
+    VarTy var -> case var.binderIdThunk () of
         Found x -> ppBinder x
         NotFound -> emitText "[UKNOWN TYPEVAR]"
         Untouched -> emitText "[TYPEVAR NEVER TRAVERSED]"

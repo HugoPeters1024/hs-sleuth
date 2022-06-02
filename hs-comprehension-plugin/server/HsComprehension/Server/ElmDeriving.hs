@@ -119,7 +119,6 @@ deriving via IdDetailsElm instance Aeson.ToJSON IdDetails
 deriving via IdDetailsElm instance HasElmType IdDetails
 deriving via IdDetailsElm instance HasElmDecoder Aeson.Value IdDetails
 
-deriving instance Generic BinderId
 deriving instance SOP.Generic BinderId
 deriving instance SOP.HasDatatypeInfo BinderId
 type BinderIdElm = ElmType "Generated.TODO.BinderId" BinderId

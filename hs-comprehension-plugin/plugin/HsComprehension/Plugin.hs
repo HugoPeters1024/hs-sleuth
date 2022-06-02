@@ -45,6 +45,7 @@ currentPosixMillis = millisSinceEpoch <$> getPOSIXTime
 cvtGhcModule :: DynFlags -> Int -> String -> GHC.Plugins.ModGuts -> HsComprehension.Ast.Module
 cvtGhcModule dflags phaseId phase = 
     let cvtEnv = Cvt.CvtEnv { Cvt.cvtEnvPhaseId = phaseId
+                            , Cvt.cvtEnvBinders = []
                             }
     in Cvt.cvtModule cvtEnv . GhcDump.Convert.cvtModule dflags phaseId phase
 

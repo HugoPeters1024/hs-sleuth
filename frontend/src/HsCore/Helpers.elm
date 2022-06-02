@@ -79,7 +79,9 @@ binderPhaseId binder = case binder of
     TyBinder b -> b.binderPhaseId
 
 binderUnique : Binder -> Unique
-binderUnique b = let (BinderId u _) = binderId b in u
+binderUnique binder = case binder of
+    Binder b -> b.binderId.binderIdUnique
+    TyBinder b -> b.binderId.binderIdUnique
 
 binderUniqueStr : Binder -> String
 binderUniqueStr = uniqueToStr << binderUnique
@@ -98,7 +100,7 @@ binderToInt : Binder -> Int
 binderToInt = binderIdToInt << binderId
 
 binderIdToInt : BinderId -> Int
-binderIdToInt (BinderId u _) = uniqueToInt u
+binderIdToInt binderid = uniqueToInt binderid.binderIdUnique
 
 uniqueToInt : Unique -> Int
 uniqueToInt (Unique _ i) = i
@@ -127,7 +129,7 @@ isTyBinder b = case b of
     TyBinder _ -> True
 
 isTyBinderId : BinderId -> Bool
-isTyBinderId (BinderId _ getBinder) = case getBinder () of
+isTyBinderId binderid = case binderid.binderIdThunk () of
     Found b -> isTyBinder b
     _       -> False
 
@@ -194,7 +196,7 @@ typeToStringParens type_ = case type_ of
 
 typeToString : Type -> String
 typeToString type_ = case type_ of
-    VarTy (BinderId _ getBinder) -> case getBinder () of
+    VarTy binderid -> case binderid.binderIdThunk () of
         Found x -> binderName x
         NotFound -> "[UKNOWN TYPEVAR]"
         Untouched -> "[TYPEVAR NEVER TRAVERSED]"

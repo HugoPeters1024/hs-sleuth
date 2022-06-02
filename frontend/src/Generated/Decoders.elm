@@ -74,7 +74,9 @@ externalNameDecoder =
 
 binderIdDecoder : Json.Decode.Decoder BinderId
 binderIdDecoder =
-    Json.Decode.map (\u -> BinderId u (\_ -> Untouched)) uniqueDecoder
+    Json.Decode.succeed (BinderId (\_ -> Untouched)) |>
+    Json.Decode.Pipeline.required "binderIdUnique" uniqueDecoder |>
+    Json.Decode.Pipeline.required "binderIdDeBruijn" Json.Decode.int
 
 
 binderDecoder : Json.Decode.Decoder Binder

@@ -35,7 +35,7 @@ import qualified Data.Text as T
 import qualified Data.ByteString as BS
 import Codec.Serialise (Serialise)
 
-import GhcDump.Ast (Unique(..), IdDetails(..), BinderId(..), TyCon(..), SrcSpan(..), LineCol(..), OccInfo(..), Tick(..), CoreStats(..))
+import GhcDump.Ast (Unique(..), IdDetails(..), TyCon(..), SrcSpan(..), LineCol(..), OccInfo(..), Tick(..), CoreStats(..))
 
 data Capture = Capture 
     { captureName :: Text
@@ -52,6 +52,11 @@ data ExternalName = ExternalName
     }
     | ForeignCall
     deriving (Generic, Serialise, Show)
+
+data BinderId = BinderId
+    { binderIdUnique :: Unique
+    , binderIdDeBruijn :: Int
+    } deriving (Generic, Serialise, Show)
 
 data Binder = Binder
     { binderName :: Text

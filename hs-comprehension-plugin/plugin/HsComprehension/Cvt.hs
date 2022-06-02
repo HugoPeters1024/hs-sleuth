@@ -13,7 +13,25 @@ import qualified GhcDump.Ast as GHCD
 
 data CvtEnv = CvtEnv 
     { cvtEnvPhaseId :: Int
+    , cvtEnvBinders :: [Unique]
     }
+
+binderUnique :: Binder -> Unique
+binderUnique (Binder {..}) = binderIdUnique binderId
+binderUnique (TyBinder {..}) = binderIdUnique binderId
+
+envFindDeBruijn :: CvtEnv -> Unique -> Int
+envFindDeBruijn env target =
+    let go n [] = -1;
+        go n (x:xs) = if x == target then n else go (n+1) xs
+    in go 0 (cvtEnvBinders env)
+
+envInsertBinderN :: [Unique] -> CvtEnv -> CvtEnv
+envInsertBinderN [] env = env
+envInsertBinderN (b:bs) env = envInsertBinderN bs $ env { cvtEnvBinders = b:(cvtEnvBinders env)}
+
+envInsertBinder :: Unique -> CvtEnv -> CvtEnv
+envInsertBinder x = envInsertBinderN [x]
 
 showText :: Show a => a -> Text
 showText = T.pack . show
@@ -33,15 +51,23 @@ cvtBinder :: CvtEnv -> GHCD.SBinder -> Binder
 cvtBinder env sbndr = case GHCD.unSBndr sbndr of
     GHCD.Binder {..} -> Binder
         { binderIdInfo = cvtIdInfo env binderIdInfo
+        , binderId = cvtBinderId env binderId
         , binderType = cvtType env binderType
         , binderPhaseId = cvtEnvPhaseId env
         , ..
         }
     GHCD.TyBinder {..} -> TyBinder
         { binderKind = cvtType env binderKind
+        , binderId = cvtBinderId env binderId
         , binderPhaseId = cvtEnvPhaseId env
         , ..
         }
+
+cvtBinderId :: CvtEnv -> GHCD.BinderId -> BinderId
+cvtBinderId env (GHCD.BinderId unique) = BinderId
+    { binderIdUnique = unique
+    , binderIdDeBruijn = envFindDeBruijn env unique
+    }
 
 cvtIdInfo :: CvtEnv -> GHCD.IdInfo GHCD.SBinder GHCD.BinderId -> IdInfo
 cvtIdInfo env GHCD.IdInfo {..} = IdInfo
@@ -60,16 +86,24 @@ cvtUnfolding env GHCD.CoreUnfolding {..} = CoreUnfolding
     }
 
 cvtExpr :: CvtEnv -> GHCD.SExpr -> Expr
-cvtExpr env (GHCD.EVar id) = EVar id
+cvtExpr env (GHCD.EVar id) = EVar (cvtBinderId env id)
 cvtExpr env (GHCD.EVarGlobal name) = EVarGlobal (cvtExternalName env name)
 cvtExpr env (GHCD.ELit lit) = ELit (cvtLit lit)
 cvtExpr env (GHCD.EApp f a) = EApp (cvtExpr env f) (cvtExpr env a)
 cvtExpr env (GHCD.ETyLam bndr expr) = ETyLam (cvtBinder env bndr) (cvtExpr env expr)
-cvtExpr env (GHCD.ELam bndr expr) = ELam (cvtBinder env bndr) (cvtExpr env expr)
+cvtExpr env (GHCD.ELam bndr expr) = 
+    let cvtedBinder = cvtBinder env bndr
+        env' = envInsertBinder (binderUnique cvtedBinder) env
+     in ELam cvtedBinder (cvtExpr env' expr)
 cvtExpr env (GHCD.ELet bs body) = 
-    let cvtPair (bndr, expr) = (cvtBinder env bndr, cvtExpr env expr)
-    in ELet (map cvtPair bs) (cvtExpr env body)
-cvtExpr env (GHCD.ECase expr bndr alts) = ECase (cvtExpr env expr) (cvtBinder env bndr) (map (cvtAlt env) alts)
+    let uniques = map ((\(GHCD.BinderId u) -> u) . GHCD.binderId . GHCD.unSBndr . fst) bs
+        env' = envInsertBinderN uniques env
+        cvtPair (bndr, expr) = (cvtBinder env' bndr, cvtExpr env' expr)
+    in ELet (map cvtPair bs) (cvtExpr env' body)
+cvtExpr env (GHCD.ECase expr bndr alts) = let
+    cvtedBinder = cvtBinder env bndr
+    env' = envInsertBinder (binderUnique cvtedBinder) env
+   in ECase (cvtExpr env' expr) cvtedBinder (map (cvtAlt env') alts)
 cvtExpr env (GHCD.ETick t expr) = ETick t (cvtExpr env expr)
 cvtExpr env (GHCD.EType t) = EType (cvtType env t)
 cvtExpr env GHCD.ECoercion = ECoercion
@@ -90,11 +124,14 @@ cvtLit (GHCD.LitNatural n) = LitNatural (showText n)
 cvtLit (GHCD.LitRubbish) = LitRubbish
 
 cvtAlt :: CvtEnv -> GHCD.SAlt -> Alt
-cvtAlt env GHCD.Alt {..} = Alt
-    { altCon = cvtAltCon altCon
-    , altBinders = map (cvtBinder env) altBinders
-    , altRHS = cvtExpr env altRHS
-    }
+cvtAlt env GHCD.Alt {..} = 
+    let cvtedBinders = map (cvtBinder env) altBinders
+        env' = envInsertBinderN (map binderUnique cvtedBinders) env
+    in Alt
+        { altCon = cvtAltCon altCon
+        , altBinders = cvtedBinders
+        , altRHS = cvtExpr env' altRHS
+        }
 
 cvtAltCon :: GHCD.AltCon -> AltCon
 cvtAltCon (GHCD.AltDataCon t) = AltDataCon t
@@ -102,7 +139,7 @@ cvtAltCon (GHCD.AltLit lit) = AltLit (cvtLit lit)
 cvtAltCon (GHCD.AltDefault) = AltDefault
 
 cvtType :: CvtEnv -> GHCD.SType -> Type
-cvtType env (GHCD.VarTy id) = VarTy id
+cvtType env (GHCD.VarTy id) = VarTy (cvtBinderId env id)
 cvtType env (GHCD.FunTy f a) = FunTy (cvtType env f) (cvtType env a)
 cvtType env (GHCD.TyConApp con ts) = TyConApp con (map (cvtType env) ts)
 cvtType env (GHCD.AppTy f a) = AppTy (cvtType env f) (cvtType env a)
