@@ -49,7 +49,11 @@ reconBinder env binder = case binder of
 
 reconExpr : Env -> Expr -> Expr
 reconExpr env expr = case expr of
-    EVar varid -> EVar {varid | binderIdThunk = lookupBinder env varid.binderIdUnique}
+    EVar binderid -> 
+        let thunk = \_ -> case lookupBinder env binderid.binderIdUnique () of
+                Found x -> Found (H.binderUpdateId (\id -> { id | binderIdDeBruijn = binderid.binderIdDeBruijn}) x)
+                e       -> e
+        in (EVar {binderid | binderIdThunk = thunk})
     EVarGlobal n -> EVarGlobal (reconExternalName env n)
     ELit l -> ELit l
     EApp f a -> EApp (reconExpr env f) (reconExpr env a)
@@ -89,7 +93,11 @@ reconAlt env alt = case alt.altBinders of
 
 reconType : Env -> Type -> Type
 reconType env type_ = case type_ of
-    VarTy binderid -> VarTy {binderid | binderIdThunk = lookupBinder env binderid.binderIdUnique}
+    VarTy binderid -> 
+        let thunk = \_ -> case lookupBinder env binderid.binderIdUnique () of
+                Found x -> Found (H.binderUpdateId (\_ -> binderid) x)
+                e       -> e
+        in (VarTy {binderid | binderIdThunk = thunk})
     FunTy a b -> FunTy (reconType env a) (reconType env b)
     TyConApp con ts -> TyConApp con (List.map (reconType env) ts)
     AppTy f a -> AppTy (reconType env f) (reconType env a)

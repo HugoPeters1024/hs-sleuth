@@ -3,4 +3,5 @@ packages: .
         , ../hs-comprehension-plugin/server
         , ../ghc-dump/ghc-dump-core
         , ../ghc-dump/ghc-dump-util
+        , ./stream-fusion
 allow-newer: all

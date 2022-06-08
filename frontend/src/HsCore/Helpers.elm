@@ -73,6 +73,12 @@ binderId binder = case binder of
     Binder b -> b.binderId
     TyBinder b -> b.binderId
 
+binderUpdateId : (BinderId -> BinderId) -> Binder -> Binder
+binderUpdateId f binder = case binder of
+    Binder b -> Binder {b | binderId = f b.binderId}
+    TyBinder b -> TyBinder {b | binderId  = f b.binderId}
+
+
 binderPhaseId : Binder -> Int
 binderPhaseId binder = case binder of
     Binder b -> b.binderPhaseId
@@ -147,7 +153,6 @@ leadingLambdas : Expr -> (Expr, List Binder)
 leadingLambdas expr = case expr of
     ELam b e -> let (fe, bs) = leadingLambdas e in (fe, b::bs)
     ETyLam b e -> let (fe, bs) = leadingLambdas e in (fe, b::bs)
-    EMarkDiff e -> leadingLambdas e
     _ -> (expr, [])
 
 leadingForalls : Type -> (Type, List Binder)

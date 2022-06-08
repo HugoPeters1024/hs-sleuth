@@ -188,9 +188,16 @@ viewRenameModal tab =
 
 
 renderVarName : CodeTab -> Var -> String
-renderVarName tab var = case Dict.get (varToInt var) tab.varRenames of
+renderVarName tab var = 
+    let postfix : String
+        postfix = case var of
+            VarBinder b -> 
+                let debruijn = (binderId b).binderIdDeBruijn
+                in if debruijn == -1 then "" else "_" ++ String.fromInt debruijn
+            _ -> ""
+    in case Dict.get (varToInt var) tab.varRenames of
     Just name -> name
-    Nothing -> varName tab.disambiguateVariables var
+    Nothing -> (varName tab.disambiguateVariables var) ++ postfix
 
 viewCode : Model -> CodeTab -> Slug -> CodeTabModule -> Html Msg
 viewCode model tab slug modtab = 
@@ -288,6 +295,7 @@ viewTopInfo : CodeTab -> TopBindingInfo -> Html CodeTabMsg
 viewTopInfo tab ti = div []
     [ button [onClick (CodeMsgMarkTopLevel ti)] [text "Mark"]
     , text ("#markers: " ++ String.fromInt (List.length tab.selectedTopLevels))
+    , text ("topID: " ++ String.fromInt ti.topBindingIdx)
     , viewBinderInfo ti.topBindingBinder
     ]
 

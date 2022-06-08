@@ -5,7 +5,7 @@ import ElmHelpers as EH
 
 annotateExpr : (Expr, Expr) -> (Expr, Expr)
 annotateExpr inp = case inp of
-    (EVar _, EVar _) -> inp
+    (EVar lhs, EVar rhs) -> if lhs.binderIdDeBruijn == rhs.binderIdDeBruijn then inp else mark inp
     (EVarGlobal _, EVarGlobal _) -> inp
     (ELit lhs, ELit rhs) -> if lhs == rhs then inp else mark inp
     (EApp f_lhs a_lhs, EApp f_rhs a_rhs) ->

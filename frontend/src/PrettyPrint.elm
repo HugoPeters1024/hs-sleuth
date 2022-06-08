@@ -210,7 +210,7 @@ ppUnique (Unique _ i) = emitText (String.fromInt i)
 
 ppExpr : Expr -> PP
 ppExpr expr = case expr of
-    EVar var -> ppSeq [ppBinderT (var.binderIdThunk ()), emitText ("_" ++ String.fromInt var.binderIdDeBruijn)]
+    EVar var -> ppBinderT (var.binderIdThunk ())
     EVarGlobal name -> ppVar (VarExternal name)
     ELit lit -> ppLit lit
     ETyLam b e -> ppExpr (ELam b e)

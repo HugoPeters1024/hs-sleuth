@@ -1,0 +1,33 @@
+                          Stream fusible lists
+
+Faster lists using stream fusion.
+
+The abstract from the paper:
+
+    This paper presents an automatic deforestation system, \emph{stream
+    fusion}, based on equational transformations, that fuses a wider
+    range of functions than existing short-cut fusion systems. In
+    particular, stream fusion is able to fuse zips, left folds and
+    functions over nested lists, including list comprehensions. A
+    distinguishing feature of the framework is its simplicity: by
+    transforming list functions to expose their structure, intermediate
+    values are eliminated by general purpose compiler optimisations.
+
+    We have reimplemented the Haskell standard List library on top of
+    our framework, providing stream fusion for Haskell lists. By
+    allowing a wider range of functions to fuse, we see an increase in
+    the number of occurrences of fusion in typical Haskell programs. We
+    present benchmarks documenting time and space improvements.
+
+Building:
+
+  $ runhaskell Setup.lhs configure --prefix=/home/dons
+  $ runhaskell Setup.lhs build
+  $ runhaskell Setup.lhs install
+
+Use:
+
+  import Data.List.Stream
+
+and use as you would for normal lists.
+Compile with ghc -O2 for best results.

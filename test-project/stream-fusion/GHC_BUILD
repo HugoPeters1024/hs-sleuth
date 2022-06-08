@@ -1,0 +1,113 @@
+
+
+            Build instructions for nobench + ghc with stream fusion
+            --------------------------------------------------------
+
+* Grab a current ghc tree (we have a local cache):
+
+    $ scp -r /home/chakcvs/darcs/streams/ghc .
+
+* Install our base fork into the tree:
+
+    $ cd ghc/libraries
+
+    $ darcs get /home/chakcvs/darcs/streams/base
+    Copying patch 1730 of 1730... done!
+    Finished getting.
+
+    $ cd ../..
+
+* Build as normal
+
+    $ cat /home/dons/streams/build.mk 
+    SRC_HC_OPTS     = -H64m -O -fasm
+    GhcStage1HcOpts = -O -fasm
+    GhcStage2HcOpts = -O2 -fasm
+    GhcLibHcOpts    = -O2 -fasm
+    GhcLibWays      =
+    SplitObjs       = NO
+
+    $ cp /home/dons/streams/build.mk ./mk/
+
+    $ autoreconf
+    $ ./configure
+    $ make -j2
+
+* Get nobench:
+
+    $ cd /tmp/
+    $ darcs get http://www.cse.unsw.edu.au/~dons/code/nobench
+    $ cd nobench  
+    $ make boot
+
+    Note the report generator needs the xhtml package.
+
+* Edit the config files:
+
+    Just needs to point to the in-place GHC, and for ghc-old to be
+    your most recent non-stream ghc. Edit header.mk to have:
+
+        COMPILERS   = ghc ghc-old 
+
+        GHC         = /home/dons/streams/build/compiler/stage2/ghc-inplace
+        GHC_OLD     = ghc-6.7.20070224
+
+        GHC_OPTS     = -Rghc-timing -O2 -fasm -fliberate-case-threshold100 -fdicts-cheap -fno-method-sharing -ddump-simpl-stats
+
+* Run a test:
+    
+    $ cd spectral/calendar 
+    $ make
+
+    Test: calendar (Bird and Wadlers calendar program)
+    http://www.cse.unsw.edu.au/~dons/code/nobench//calendar
+    ghc                  3.79    seconds            (1.0 x)
+    ghc-old              3.91    seconds            (1.0 x)
+
+* Run just the ghc test:
+
+    $ env ONLY=ghc make just
+    Updating results database with 1 new entries.
+
+    Test: calendar (Bird and Wadlers calendar program)
+    http://www.cse.unsw.edu.au/~dons/code/nobench/spectral/calendar
+    ghc                  3.84    seconds            (1.0 x)
+    ghc-old              3.91    seconds            (1.0 x)
+
+Compilation logs are kept in the 'ghc.compile' and 'ghc-old.compile' files.
+You can also just run the tests by hand:
+
+    $ /home/dons/streams/build/compiler/stage2/ghc-inplace -no-recomp
+    -Rghc-timing -O2 -fasm -fliberate-case-threshold100 -fdicts-cheap
+    -fno-method-sharing -ddump-simpl-stats  --make -o calendar
+    calendar.hs
+    [1 of 1] Compiling Main             ( calendar.hs, calendar.o )
+
+    4 SC:$wloop_length0
+    6 SC:$wloop_length1
+    9 SC:$wloop_length2
+    2 SC:$wloop_length3
+    3 SC:$wunfold_unstream6
+    2 SC:$wunfold_unstream7
+    2 SC:$wunfold_unstream8
+    19 SC:unfold_unstream0
+    17 SC:unfold_unstream1
+    2 SC:unfold_unstream10
+    18 SC:unfold_unstream2
+    6 SC:unfold_unstream3
+    2 SC:unfold_unstream5
+    6 SC:unfold_unstream8
+    2 SC:unfold_unstream9
+    18 STREAM stream/unstream fusion
+
+    ...
+
+To run a whole class of tests, cd into the directory and type 'make':
+
+    cd spectral
+    make
+
+make at the top level runs everything.
+
+-- Don
+

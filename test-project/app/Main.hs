@@ -9,5 +9,5 @@ import Tail
 import Quicksort
 
 main :: IO ()
-main = print TextExt.msg
+main = print (tupleFirst (fac2 5) "lol")
 

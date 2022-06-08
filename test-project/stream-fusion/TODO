@@ -1,0 +1,170 @@
+
+Functions that don't yet fuse:
+
+    transpose   :: [[a]] -> [[a]]
+    partition    :: (a -> Bool) -> [a] -> ([a], [a])
+
+*   scanr       :: (a -> b -> b) -> b -> [a] -> [b]
+*   scanr1      :: (a -> a -> a) -> [a] -> [a]
+
+*?  mapAccumL   :: (acc -> x -> (acc, y)) -> acc -> [x] -> (acc, [y])
+*?  mapAccumR   :: (acc -> x -> (acc, y)) -> acc -> [x] -> (acc, [y])
+    span        :: (a -> Bool) -> [a] -> ([a], [a])
+    inits       :: [a] -> [[a]]
+    tails       :: [a] -> [[a]]
+    isSuffixOf  :: Eq a => [a] -> [a] -> Bool
+*   isInfixOf   :: Eq a => [a] -> [a] -> Bool
+
+    words        :: String -> [String]
+    unwords      :: [String] -> String
+
+*   nub          :: Eq a => [a] -> [a]
+*   delete       :: Eq a => a -> [a] -> [a]
+
+*   nubBy        :: (a -> a -> Bool) -> [a] -> [a]
+*   deleteBy     :: (a -> a -> Bool) -> a -> [a] -> [a]
+
+    sort         :: Ord a => [a] -> [a]
+    union        :: Eq a => [a] -> [a] -> [a]
+    intersect    :: Eq a => [a] -> [a] -> [a]
+    group        :: Eq a => [a] -> [[a]]
+
+    unionBy      :: (a -> a -> Bool) -> [a] -> [a] -> [a]
+    groupBy      :: (a -> a -> Bool) -> [a] -> [[a]]
+    intersectBy  :: (a -> a -> Bool) -> [a] -> [a] -> [a]
+    sortBy
+
+
+Internal GHC:
+
+    * List comprehensions desugaring
+
+Think about scanl:
+
+    "scanl -> fusible"  [~1] forall f z xs.
+        scanl f z xs = unstream (Stream.scanl f z (stream (xs ++ [bottom])))
+
+------------------------------------------------------------------------
+
+Ideas at the Warren View, Sun Mar 18 19:37:09 EST 2007
+
+    * SPECCONSTR pragma (sent to spj)
+
+    * rules with strictness annotations:
+            - pick between foldl foldl' based on strictness info
+
+    * rules matching on constraints:
+            - so pick representation types for rules, e.g.
+                     * bucketsort for Word8
+                     * IntMap/Map for nub on Ord
+
+    * undefineds in QuickCheck
+
+
+------------------------------------------------------------------------
+
+TODO:
+
+    * strict on any state we control.
+    * strict pairs expose constructors to SpecConstr, removing redundant
+      arguments.
+
+-- DeepSeq context on existentials.
+-- All external values that are used in state, wrapped in Lazy
+-- State strict by default.
+
+-- add test case for bottom streams.
+
+------------------------------------------------------------------------
+
+instance (Eq a) => Eq [a] -- Defined in GHC.Base
+instance Functor [] -- Defined in GHC.Base
+instance (Ord a) => Ord [a] -- Defined in GHC.Base
+
+Enum
+list comprehension desugaring
+
+------------------------------------------------------------------------
+
+Queries about the H98 List spec:
+
+* intersperse (and therefore intercalate) are too strict.
+
+* unwords is too strict.
+
+* (genericTake :: Int -> [a] -> [a]) /= take
+    perhaps it should. In particular:
+
+    genericTake _|_ [] = []
+           take _|_ [] = _|_
+
+    genericTake 0 _|_ = _|_
+           take 0 _|_ = []
+
+    genericTake (-1) xs = _|_
+           take (-1) xs = []
+
+  It looks like the Spec is wrong here, genericTake is inconsistent
+  with take, genericDrop and genericSplitAt it has the initial clauses
+  this way round:
+    genericTake _ []        =  []
+    genericTake 0 _         =  []
+  when they should be the other way around, as they are for the other
+  functions.
+
+* Data.List.partition is too strict or perhaps the spec is too lazy
+    H98 says: partition p _|_ = (_|_, _|_)
+    Data.List.partition p _|_ = _|_
+
+* Data.List.splitAt is too strict or perhaps the spec is too lazy
+    H98 says: splitAt _|_ _|_ = (_|_, _|_)
+    Data.List.splitAt _|_ _|_ = _|_
+
+------------------------------------------------------------------------
+
+If we had strictness info available in rules we could say:
+
+forall (f :: [[Char!]] -> b) xs. f (lines xs) = f (stricterLines xs)
+erm that is if we're consuming lines an consuming each string in a
+spine-strict way then we can use a more efficient lines implementation.
+Same goes for words.
+
+Note how you can't easily talk about structural strictness properties by
+putting annotations on types since that structure isn't fully exposed in
+the type.
+
+------------------------------------------------------------------------
+
+More stuff to stick in the paper:
+
+Limits on fusion. We conjecture that whenever an implementation relies
+on sharing that it's realy not fusible, or when you 'fuse' it anyway you
+get no performance advantage since it has to allocate internally anyway.
+The best that could be done is if in the internal allocation used to get
+sharing is more eficient. Eg with sort we might use a heap as the internal
+state and stream into it and out of it.
+
+What does build/foldr do about sharing?
+
+* Binary sizes, fusion opportunties v foldr/build
+
+* Currently list comprehensions compile to build/foldr stuff.
+  -- this hurts us, since that no longer fuses. We could keep
+  build/foldr fusion for list comprehensions I guess?
+ -- e.g. paraffins
+
+------------------------------------------------------------------------
+
+* imaginary/wheel_sieve1 : looks like a missing list comprehension fuse.
+
+* spectral/atom:             some list comprehensions./e
+
+* calendar: a lot of fusion here. should be faster.
+    Still L constructors being left behind.
+
+* circsim, same story. Either's being left behind.
+
+* k-nucleotide, some different loops being generated.
+
+* primes,     9 foldr/app
+* sorting, some list comprehensions
