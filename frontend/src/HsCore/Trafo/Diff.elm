@@ -30,8 +30,6 @@ annotateExpr inp = case inp of
     ( lhs, ETick _ rhs ) -> annotateExpr (lhs, rhs)
     ( EType lhs, EType rhs ) -> (EType lhs, EType rhs)
     ( ECoercion, ECoercion ) -> (ECoercion, ECoercion)
-    --( EMarkDiff _, _ ) ->
-    --                    Debug.todo "branch '( EMarkDiff _, _ )' not implemented"
     (_,_)              -> mark inp
 
 annotateAlt : (Alt, Alt) -> (Alt, Alt)

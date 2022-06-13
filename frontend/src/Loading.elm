@@ -26,7 +26,7 @@ debugLoading name load f = case load of
     Ready x -> f x
     Loading (Just x) -> f x
     Loading Nothing -> text ("Loading " ++ name)
-    Error e -> text ("Error loading " ++ name ++ ": " ++ Debug.toString e)
+    Error _ -> text ("Error loading " ++ name)
     NotRequested -> text ("Not yet started loading " ++ name)
 
 renderLoading : Loading a -> (a -> Html msg) -> Html msg

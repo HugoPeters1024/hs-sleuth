@@ -150,7 +150,7 @@ type Expr
     | EApp Expr Expr
     | ETyLam Binder Expr
     | ELam Binder Expr
-    | ELet (List (Binder , Expr)) Expr
+    | ELet (List (Binder, Expr)) Expr
     | ECase Expr Binder (List Alt)
     | ETick Tick Expr
     | EType Type

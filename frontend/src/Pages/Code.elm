@@ -12,12 +12,13 @@ import Types exposing (..)
 import HsCore.Helpers exposing (..)
 import HsCore.Trafo.EraseTypes exposing (eraseTypesModule)
 import HsCore.Trafo.Diff as Diff
-import PrettyPrint as PP
+
+import Ppr
+import PprRender as Ppr
+
 import Commands as C
 import Loading exposing (Loading(..))
 import Commands
-
-import ContextMenu
 
 import Set exposing (Set)
 
@@ -201,11 +202,12 @@ renderVarName tab var =
 
 viewCode : Model -> CodeTab -> Slug -> CodeTabModule -> Html Msg
 viewCode model tab slug modtab = 
-    let ppInfo = PP.defaultInfo tab.id
-            |> \r1 -> {r1 | selectedVar = tab.selectedVar}
-            |> \r2 -> {r2 | renderVarAttributes = \var -> [ContextMenu.open MsgCtxMenu (CtxCodeVar var tab.id)]}
-            |> \r3 -> {r3 | renderVarName = renderVarName tab}
-            |> if tab.disambiguateVariables then PP.withFullNameBinder else identity
+    let pprEnv : Ppr.PprRenderEnv
+        pprEnv = 
+            { codeTabId = tab.id
+            , selectedVar = tab.selectedVar
+            , renameDict = tab.varRenames
+            }
     in div []
         [ h4 [] [text slug]
         , Loading.renderLoading modtab.mod (\mod -> text mod.modulePhase)
@@ -224,11 +226,8 @@ viewCode model tab slug modtab =
                          processDiff tab mod
                          |> (if tab.hideTypes then eraseTypesModule else identity)
                          |> (if tab.showRecursiveGroups then identity else \m -> {m | moduleTopBindings = removeRecursiveGroups m.moduleTopBindings})
-                         |> .moduleTopBindings
-                         |> List.map PP.ppTopBinding
-                         |> PP.ppSepped "\n\n"
-                         |> PP.prettyPrint ppInfo
-                         |> \x -> div [] x
+                         |> Ppr.pprModule
+                         |> Ppr.renderHtml pprEnv
                        )
                    ]
             ]
@@ -288,7 +287,7 @@ viewBinderInfo : Binder -> Html CodeTabMsg
 viewBinderInfo bndr = HtmlHelpers.list
             [ text ("name: " ++ binderName bndr)
             , text ("type: " ++ typeToString (binderType bndr))
-            , text ("span: " ++ Debug.toString (binderSpan bndr))
+         --   , text ("span: " ++ Debug.toString (binderSpan bndr))
             ]
 
 viewTopInfo : CodeTab -> TopBindingInfo -> Html CodeTabMsg

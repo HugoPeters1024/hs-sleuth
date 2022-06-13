@@ -17,6 +17,7 @@
             "folkertdev/elm-state": "3.0.1",
             "jinjor/elm-contextmenu": "2.0.0",
             "rundis/elm-bootstrap": "5.2.0",
+            "the-sett/elm-pretty-printer": "3.0.0",
             "toastal/either": "3.6.3",
             "turboMaCk/any-set": "1.5.0"
         },
@@ -25,6 +26,7 @@
             "elm/bytes": "1.0.8",
             "elm/file": "1.0.5",
             "elm/virtual-dom": "1.0.2",
+            "elm-community/basics-extra": "4.1.0",
             "turboMaCk/any-dict": "2.6.0"
         }
     },

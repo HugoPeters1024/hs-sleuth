@@ -160,6 +160,12 @@ leadingForalls type_ = case type_ of
     ForAllTy b t -> let (ft, bs) = leadingForalls t in (ft, b::bs)
     _            -> (type_, [])
 
+leadingApps : Expr -> List Expr
+leadingApps expr = case expr of
+    EApp f a -> f::leadingApps a
+    EMarkDiff e -> leadingApps e
+    e -> [e]
+
 
 getModuleTopBinders : Module -> List TopBindingInfo
 getModuleTopBinders mod = List.concatMap getTopLevelBinders mod.moduleTopBindings
@@ -227,21 +233,6 @@ topBindingMap f top = case top of
     NonRecTopBinding b -> NonRecTopBinding (f b)
     RecTopBinding bs -> RecTopBinding (List.map f bs)
 
-exprIsAtom : Expr -> Bool
-exprIsAtom expr = case expr of
-    EVar _ -> True
-    EVarGlobal _ -> True
-    ELit _ -> True
-    EApp _ _ -> False
-    ETyLam _ _ -> False
-    ELam _ _ -> False
-    ELet _ _ -> False
-    ECase _ _ _ -> False
-    ETick _ e -> exprIsAtom e
-    EType _ -> True
-    ECoercion -> True
-    EMarkDiff e -> exprIsAtom e
-
 exprTerms : Expr -> Int
 exprTerms expr = case expr of
     EVar _ -> 1
@@ -257,6 +248,13 @@ exprTerms expr = case expr of
     ECoercion -> 1
     EMarkDiff e -> exprTerms e
 
-exprIsSmall : Expr -> Bool
-exprIsSmall e = exprTerms e <= 4
+exprIsAtom : Expr -> Bool
+exprIsAtom expr = case expr of
+    EVar _ -> True
+    EVarGlobal _ -> True
+    ELit _ -> True
+    ETick _ e -> exprIsAtom e
+    EType _ -> True
+    EMarkDiff e -> exprIsAtom e
+    _ -> False
 

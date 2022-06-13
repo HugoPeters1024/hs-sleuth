@@ -43,16 +43,6 @@ defaultInfo tid =
 withFullNameBinder : PPEnv -> PPEnv
 withFullNameBinder env = { env | renderVarName = varName True }
 
-varHighlightClass : PPEnv -> Var -> String
-varHighlightClass env o = case env.selectedVar of
-    Nothing -> ""
-    Just v -> 
-        if varToInt v == varToInt o
-        then ( if varPhaseId v == varPhaseId o
-               then "highlight-exact"  
-               else "highlight-approx"
-             )
-        else ""
 
 ppWhen : Bool -> PP -> PP
 ppWhen b pp = if b then pp else Reader.pure identity
