@@ -49,6 +49,7 @@ htmlTagged env tag content next =
             TagLitString -> span [class "s"] [text content]
             TagLitNumber -> span [class "m"] [text content]
             TagKeyword -> span [class "k"] [text content]
+            TagComment -> span [class "c1"] [text content]
     in next ++ [htmlContent]
 
 htmlUntagged :  String -> List (Html Msg) -> List (Html Msg)
@@ -64,4 +65,4 @@ htmlRenderer env =
     }
 
 renderHtml : PprRenderEnv -> Pretty.Doc Tag -> Html Msg
-renderHtml env = Pretty.Renderer.pretty 160 (htmlRenderer env)
+renderHtml env = Pretty.Renderer.pretty 80 (htmlRenderer env)

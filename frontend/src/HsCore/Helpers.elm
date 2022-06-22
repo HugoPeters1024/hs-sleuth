@@ -31,7 +31,7 @@ varPhaseId var = case var of
     VarExternal _ -> -1
 
 topBindingInfoToInt : TopBindingInfo -> Int
-topBindingInfoToInt = .topBindingIdx
+topBindingInfoToInt = binderToInt << .topBindingBinder
 
 varIsConstructor : Var -> Bool
 varIsConstructor = isConstructorName << varName False
@@ -258,3 +258,7 @@ exprIsAtom expr = case expr of
     EMarkDiff e -> exprIsAtom e
     _ -> False
 
+ruleName : Rule -> String
+ruleName rule = case rule of
+    Rule r -> r.ruleName
+    BuiltinRule r -> r.ruleName

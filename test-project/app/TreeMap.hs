@@ -5,8 +5,8 @@ data Tree a = Leaf a
             deriving Show
 
 {-# Rules
-   "mapTree/mapTree"   forall f g.   mapTree f . mapTree g    = mapTree (f. g)   ;
-   "mapTree/mapTree2"  forall t f g. mapTree f (mapTree g t)  = mapTree (f. g) t ;
+   "mapTree mapTree"   forall f g.   mapTree f . mapTree g    = mapTree (f. g)   ;
+   "mapTree mapTree2"  forall t f g. mapTree f (mapTree g t)  = mapTree (f. g) t ;
    "mapTree/id"                      mapTree id               = id               ;
 #-}
 

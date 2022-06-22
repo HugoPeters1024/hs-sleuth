@@ -12,6 +12,7 @@ type Tag
     | TagLitString
     | TagLitNumber
     | TagKeyword
+    | TagComment
 
 type alias PP = Doc Tag
 
@@ -33,6 +34,14 @@ pprModule mod
     |> a (keyword "where")
     |> a doubleline
     |> a (join doubleline (List.map pprTopBinding mod.moduleTopBindings))
+    |> a doubleline
+    |> a (string ("Rules fired:"))
+    |> a line
+    |> a (pprCommentBlock ("    " ++ String.join "\n    " (List.map .firedRuleName mod.moduleFiredRules)))
+
+pprCommentBlock : String -> PP
+pprCommentBlock s =
+    taggedString ("{-\n" ++ s ++ "\n-}") TagComment
 
 pprTopBinding : TopBinding -> PP
 pprTopBinding topb = case topb of
@@ -46,21 +55,24 @@ pprTopBinding topb = case topb of
 
 pprTopBindingInfo : TopBindingInfo -> PP
 pprTopBindingInfo tb = combine 
-    [ words [pprBinder tb.topBindingBinder, string "::", pprType (binderType tb.topBindingBinder)]
+    [ words [pprVar (VarTop tb), string "::", pprType (binderType tb.topBindingBinder)]
     , line
-    , pprBinding (tb.topBindingBinder, tb.topBindingRHS)
+    , pprBinding_ (VarTop tb, tb.topBindingRHS)
     ]
 
-pprBinding : (Binder, Expr) -> PP
-pprBinding (bndr, expr) = 
+pprBinding_ : (Var, Expr) -> PP
+pprBinding_ (var, expr) = 
     let (fexpr, bs) = leadingLambdas expr
     in nest 4 <| combine
-        [ words (List.map pprVar (List.map VarBinder (bndr::bs))) 
+        [ words (List.map pprVar (var :: List.map VarBinder bs)) 
         , string " = "
         , combine
             [ pprExpr fexpr
             ]
         ]
+
+pprBinding : (Binder, Expr) -> PP
+pprBinding (bndr, expr) = pprBinding_ (VarBinder bndr, expr)
 
 
 pprBinder : Binder -> PP
@@ -75,14 +87,17 @@ pprExpr expr = case expr of
     EVar varid -> pprBinderThunk (varid.binderIdThunk ())
     EVarGlobal ename -> pprVar (VarExternal ename)
     ELit lit -> pprLit lit
-    EApp f a -> align <| combine [pprExpr f, softline, group (pprExprParens a)]
+    EApp f a -> combine [pprExpr f, softline, pprExprParens a]
     ETyLam b e -> pprExpr (ELam b e)
-    ELam b e -> combine
-        [ string "\\"
-        , pprBinder b
-        , string " -> "
-        , pprExpr e
-        ]
+    ELam b e -> 
+        let (fe, bs) = leadingLambdas e
+        in combine
+            [ string "\\"
+            , join space (List.map pprBinder (b::bs))
+            , string " ->"
+            , softline
+            , pprExpr fe
+            ]
     ELet bs e -> combine
         [ combine 
             [ tightline
@@ -111,7 +126,7 @@ pprExpr expr = case expr of
     ETick _ _ -> string "tick"
     EType t -> pprType t
     ECoercion -> string "coercion"
-    EMarkDiff _ -> string "diffmarker"
+    EMarkDiff e -> pprExpr e
 
 pprAlt : Binder -> Alt -> PP
 pprAlt b alt = nest 4 <| combine
@@ -190,3 +205,6 @@ pprTypeParens type_ = case type_ of
     VarTy t -> pprType (VarTy t)
     TyConApp con xs -> pprType (TyConApp con xs)
     _ -> parens (pprType type_)
+
+pprRule : Rule -> PP
+pprRule = string << ruleName

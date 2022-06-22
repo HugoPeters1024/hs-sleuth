@@ -284,11 +284,15 @@ viewVarInfo tab term = case term of
 
 
 viewBinderInfo : Binder -> Html CodeTabMsg
-viewBinderInfo bndr = HtmlHelpers.list
-            [ text ("name: " ++ binderName bndr)
-            , text ("type: " ++ typeToString (binderType bndr))
+viewBinderInfo bndr = case bndr of
+    Binder b -> HtmlHelpers.list
+            [ text ("name: " ++ b.binderName)
+            , text ("type: " ++ typeToString b.binderType)
+            , text ("rules:")
+            , HtmlHelpers.list (List.map (text << ruleName) b.binderIdInfo.idiRules)
          --   , text ("span: " ++ Debug.toString (binderSpan bndr))
             ]
+    TyBinder b -> text "TODO: TyBinder"
 
 viewTopInfo : CodeTab -> TopBindingInfo -> Html CodeTabMsg
 viewTopInfo tab ti = div []

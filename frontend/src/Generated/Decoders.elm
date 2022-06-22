@@ -11,6 +11,7 @@ module Generated.Decoders exposing
     , litDecoder
     , tyConDecoder
     , typeDecoder
+    , firedRuleDecoder
     , moduleDecoder
     , exprDecoder
     , altDecoder
@@ -21,6 +22,7 @@ module Generated.Decoders exposing
     , topBindingInfoDecoder
     , topBindingDecoder
     , coreStatsDecoder
+    , ruleDecoder
     )
 
 import Generated.Types exposing (..)
@@ -123,7 +125,8 @@ idInfoDecoder =
     Json.Decode.Pipeline.required "idiOccInfo" occInfoDecoder |>
     Json.Decode.Pipeline.required "idiStrictnessSig" Json.Decode.string |>
     Json.Decode.Pipeline.required "idiDemandSig" Json.Decode.string |>
-    Json.Decode.Pipeline.required "idiCallArity" Json.Decode.int
+    Json.Decode.Pipeline.required "idiCallArity" Json.Decode.int |>
+    Json.Decode.Pipeline.required "idiRules" (Json.Decode.list ruleDecoder)
 
 
 unfoldingDecoder : Json.Decode.Decoder Unfolding
@@ -328,13 +331,23 @@ typeDecoder =
             Json.Decode.fail "No matching constructor")
 
 
+firedRuleDecoder : Json.Decode.Decoder FiredRule
+firedRuleDecoder =
+    Json.Decode.succeed FiredRule |>
+    Json.Decode.Pipeline.required "firedRuleName" Json.Decode.string |>
+    Json.Decode.Pipeline.required "firedRuleModule" Json.Decode.string |>
+    Json.Decode.Pipeline.required "firedRulePhase" Json.Decode.int
+
+
 moduleDecoder : Json.Decode.Decoder Module
 moduleDecoder =
     Json.Decode.succeed Module |>
     Json.Decode.Pipeline.required "moduleName" Json.Decode.string |>
     Json.Decode.Pipeline.required "modulePhase" Json.Decode.string |>
     Json.Decode.Pipeline.required "modulePhaseId" Json.Decode.int |>
-    Json.Decode.Pipeline.required "moduleTopBindings" (Json.Decode.list topBindingDecoder)
+    Json.Decode.Pipeline.required "moduleTopBindings" (Json.Decode.list topBindingDecoder) |>
+    Json.Decode.Pipeline.required "moduleRules" (Json.Decode.list ruleDecoder) |>
+    Json.Decode.Pipeline.required "moduleFiredRules" (Json.Decode.list firedRuleDecoder)
 
 
 exprDecoder : Json.Decode.Decoder Expr
@@ -492,3 +505,27 @@ coreStatsDecoder =
     Json.Decode.Pipeline.required "csCoercions" Json.Decode.int |>
     Json.Decode.Pipeline.required "csValBinds" Json.Decode.int |>
     Json.Decode.Pipeline.required "csJoinBinds" Json.Decode.int
+
+
+ruleDecoder : Json.Decode.Decoder Rule
+ruleDecoder =
+    Json.Decode.field "tag" Json.Decode.string |>
+    Json.Decode.andThen (\a -> case a of
+        "Rule" ->
+            Json.Decode.map Rule (Json.Decode.succeed (\b c d e -> { ruleName = b
+            , ruleBinders = c
+            , ruleRHS = d
+            , ruleAuto = e }) |>
+            Json.Decode.Pipeline.required "ruleName" Json.Decode.string |>
+            Json.Decode.Pipeline.required "ruleBinders" (Json.Decode.list binderDecoder) |>
+            Json.Decode.Pipeline.required "ruleRHS" exprDecoder |>
+            Json.Decode.Pipeline.required "ruleAuto" Json.Decode.bool)
+
+        "BuiltinRule" ->
+            Json.Decode.map BuiltinRule (Json.Decode.succeed (\b c -> { ruleName = b
+            , ruleNArgs = c }) |>
+            Json.Decode.Pipeline.required "ruleName" Json.Decode.string |>
+            Json.Decode.Pipeline.required "ruleNArgs" Json.Decode.int)
+
+        _ ->
+            Json.Decode.fail "No matching constructor")

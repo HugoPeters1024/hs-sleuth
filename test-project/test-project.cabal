@@ -36,4 +36,4 @@ executable hs-plugin-test
                     , stream-fusion
     hs-source-dirs:   app
     default-language: Haskell2010
-    ghc-options: -ddump-ds -O2 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:OptO2
+    ghc-options: -O1 -ddump-rule-firings -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:Baseline

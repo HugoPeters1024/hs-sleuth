@@ -11,6 +11,7 @@ module Generated.Types exposing
     , Lit(..)
     , TyCon(..)
     , Type(..)
+    , FiredRule
     , Module
     , Expr(..)
     , Alt
@@ -22,6 +23,7 @@ module Generated.Types exposing
     , TopBinding(..)
     , BinderThunk(..)
     , CoreStats
+    , Rule(..)
     )
 
 
@@ -71,7 +73,8 @@ type alias IdInfo  =
     , idiOccInfo : OccInfo
     , idiStrictnessSig : String
     , idiDemandSig : String
-    , idiCallArity : Int }
+    , idiCallArity : Int
+    , idiRules : List Rule }
 
 
 type Unfolding 
@@ -136,11 +139,17 @@ type Type
     | CoercionTy 
 
 
+type alias FiredRule  =
+    { firedRuleName : String, firedRuleModule : String, firedRulePhase : Int }
+
+
 type alias Module  =
     { moduleName : String
     , modulePhase : String
     , modulePhaseId : Int
-    , moduleTopBindings : List TopBinding }
+    , moduleTopBindings : List TopBinding
+    , moduleRules : List Rule
+    , moduleFiredRules : List FiredRule }
 
 
 type Expr 
@@ -150,7 +159,7 @@ type Expr
     | EApp Expr Expr
     | ETyLam Binder Expr
     | ELam Binder Expr
-    | ELet (List (Binder, Expr)) Expr
+    | ELet (List (Binder , Expr)) Expr
     | ECase Expr Binder (List Alt)
     | ETick Tick Expr
     | EType Type
@@ -200,4 +209,12 @@ type alias CoreStats  =
     , csCoercions : Int
     , csValBinds : Int
     , csJoinBinds : Int }
+
+
+type Rule 
+    = Rule { ruleName : String
+    , ruleBinders : List Binder
+    , ruleRHS : Expr
+    , ruleAuto : Bool }
+    | BuiltinRule { ruleName : String, ruleNArgs : Int }
 type BinderThunk = Found Binder | NotFound | Untouched
