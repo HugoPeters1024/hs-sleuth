@@ -24,6 +24,7 @@ import qualified Data.Text as T
 import Servant.API
 import Servant
 import Network.Wai
+import Network.Wai.Middleware.Gzip (gzip, def)
 
 type CapturesAPI = "captures" :> Get '[JSON] [Ast.Capture]
 
@@ -57,12 +58,12 @@ handler =
 addAllOriginsMiddleware :: Application -> Application
 addAllOriginsMiddleware baseApp = \req responseFunc -> baseApp req (responseFunc . addOriginsAllowed)
     where addOriginsAllowed :: Response -> Response
-          addOriginsAllowed = mapResponseHeaders $ (:) ("Access-Control-Allow-Origin", "*")
+          addOriginsAllowed = mapResponseHeaders $ (("Access-Control-Allow-Origin", "*"):)
 
 app :: IO Application
 app = do
     putStrLn "Serving..."
-    pure $ addAllOriginsMiddleware $ serve (Proxy @API) handler
+    pure $ gzip def $ addAllOriginsMiddleware $ serve (Proxy @API) handler
 
 
 

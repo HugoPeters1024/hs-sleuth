@@ -29,6 +29,7 @@ library
     build-depends:    base
                     , hs-comprehension-plugin
                     , wai
+                    , wai-extra
                     , http-types
                     , text
                     , bytestring
@@ -53,6 +54,7 @@ executable hs-comprehension-server
                     , hs-comprehension-server
                     , hs-comprehension-plugin
                     , wai
+                    , wai-extra
                     , warp
                     , generics-sop
                     , haskell-to-elm
