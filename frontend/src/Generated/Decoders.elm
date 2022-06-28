@@ -22,7 +22,6 @@ module Generated.Decoders exposing
     , topBindingInfoDecoder
     , topBindingDecoder
     , coreStatsDecoder
-    , ruleDecoder
     )
 
 import Generated.Types exposing (..)
@@ -125,8 +124,7 @@ idInfoDecoder =
     Json.Decode.Pipeline.required "idiOccInfo" occInfoDecoder |>
     Json.Decode.Pipeline.required "idiStrictnessSig" Json.Decode.string |>
     Json.Decode.Pipeline.required "idiDemandSig" Json.Decode.string |>
-    Json.Decode.Pipeline.required "idiCallArity" Json.Decode.int |>
-    Json.Decode.Pipeline.required "idiRules" (Json.Decode.list ruleDecoder)
+    Json.Decode.Pipeline.required "idiCallArity" Json.Decode.int
 
 
 unfoldingDecoder : Json.Decode.Decoder Unfolding
@@ -346,7 +344,6 @@ moduleDecoder =
     Json.Decode.Pipeline.required "modulePhase" Json.Decode.string |>
     Json.Decode.Pipeline.required "modulePhaseId" Json.Decode.int |>
     Json.Decode.Pipeline.required "moduleTopBindings" (Json.Decode.list topBindingDecoder) |>
-    Json.Decode.Pipeline.required "moduleRules" (Json.Decode.list ruleDecoder) |>
     Json.Decode.Pipeline.required "moduleFiredRules" (Json.Decode.list firedRuleDecoder)
 
 
@@ -505,27 +502,3 @@ coreStatsDecoder =
     Json.Decode.Pipeline.required "csCoercions" Json.Decode.int |>
     Json.Decode.Pipeline.required "csValBinds" Json.Decode.int |>
     Json.Decode.Pipeline.required "csJoinBinds" Json.Decode.int
-
-
-ruleDecoder : Json.Decode.Decoder Rule
-ruleDecoder =
-    Json.Decode.field "tag" Json.Decode.string |>
-    Json.Decode.andThen (\a -> case a of
-        "Rule" ->
-            Json.Decode.map Rule (Json.Decode.succeed (\b c d e -> { ruleName = b
-            , ruleBinders = c
-            , ruleRHS = d
-            , ruleAuto = e }) |>
-            Json.Decode.Pipeline.required "ruleName" Json.Decode.string |>
-            Json.Decode.Pipeline.required "ruleBinders" (Json.Decode.list binderDecoder) |>
-            Json.Decode.Pipeline.required "ruleRHS" exprDecoder |>
-            Json.Decode.Pipeline.required "ruleAuto" Json.Decode.bool)
-
-        "BuiltinRule" ->
-            Json.Decode.map BuiltinRule (Json.Decode.succeed (\b c -> { ruleName = b
-            , ruleNArgs = c }) |>
-            Json.Decode.Pipeline.required "ruleName" Json.Decode.string |>
-            Json.Decode.Pipeline.required "ruleNArgs" Json.Decode.int)
-
-        _ ->
-            Json.Decode.fail "No matching constructor")

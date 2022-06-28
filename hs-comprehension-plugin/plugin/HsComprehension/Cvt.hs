@@ -72,7 +72,6 @@ cvtBinderId env (GHCD.BinderId unique) = BinderId
 cvtIdInfo :: CvtEnv -> GHCD.IdInfo GHCD.SBinder GHCD.BinderId -> IdInfo
 cvtIdInfo env GHCD.IdInfo {..} = IdInfo
     { idiUnfolding = cvtUnfolding env idiUnfolding
-    , idiRules = map (cvtRule env) idiRules
     , ..
     }
 
@@ -172,16 +171,6 @@ cvtModule env GHCD.Module {..} =
     in Module 
     { moduleName = modName
     , moduleTopBindings = map (cvtTopBinding modName env) moduleTopBindings
-    , moduleRules = map (cvtRule env) moduleRules
     , moduleFiredRules = []
     , ..
     }
-
-cvtRule :: CvtEnv -> GHCD.Rule' GHCD.SBinder GHCD.BinderId -> Rule
-cvtRule env r@(GHCD.Rule {..}) = Rule
-    { ruleBinders = map (cvtBinder env) ruleBinders
-    , ruleRHS = cvtExpr env ruleRHS
-    , ..
-    }
-cvtRule env r@(GHCD.BuiltinRule {..}) = BuiltinRule
-    {..}

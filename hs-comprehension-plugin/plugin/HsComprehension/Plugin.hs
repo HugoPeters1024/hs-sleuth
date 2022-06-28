@@ -71,7 +71,7 @@ ruleParser p = Ast.FiredRule
                  <$ Parsec.string "Rule fired: "
                  <*> (T.pack <$> Parsec.manyTill Parsec.anyChar (Parsec.try (Parsec.string " (")))
                  <*> (T.pack <$> Parsec.manyTill Parsec.anyChar (Parsec.try (Parsec.char ')')))
-                 <*> (pure p)
+                 <*> (pure (p+1))
 
 parseStdout :: String -> [Ast.FiredRule]
 parseStdout inp = reverse $ fst $ P.foldl go ([], 0) (lines inp)

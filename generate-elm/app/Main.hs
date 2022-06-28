@@ -43,7 +43,6 @@ elmDefsFor = (,) <$> elmDefinition @a <*> elmDecoderDefinition @Aeson.Value @a
     , elmDefsFor @TopBindingInfo
     , elmDefsFor @TopBinding 
     , elmDefsFor @CoreStats 
-    , elmDefsFor @Rule
     ]
 
 renderDefs :: String -> [Definition] -> String

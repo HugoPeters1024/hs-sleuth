@@ -1,6 +1,7 @@
 module Fusion where
 
 import Prelude hiding (sum, scanl, zip3, zipWith3, map)
+import Data.Stream
 import Data.List.Stream
 
 --data User = User
@@ -18,7 +19,10 @@ import Data.List.Stream
 --users = zipWith3 User firstNames lastNames ages
 
 addThree :: [Int] -> [Int]
-addThree = map (+1) . map(+2)
+addThree = Data.List.Stream.map (+1) . Data.List.Stream.map(+2)
+
+addThree2 :: [Int] -> [Int]
+addThree2 xs = Data.Stream.unstream (Data.Stream.map (+3) (Data.Stream.stream xs))
 
 --totalPrefixSum :: [Int] -> Int
 --totalPrefixSum = sum . scanl (+) 0

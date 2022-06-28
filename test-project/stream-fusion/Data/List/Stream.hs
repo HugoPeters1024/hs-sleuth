@@ -471,8 +471,8 @@ length xs0 = len xs0 0#
 {-# RULES
 "length -> fusible" [~1] forall xs.
     length xs = Stream.length (stream xs)
---"length -> unfused" [1] forall xs.
---    Stream.length (stream xs) = length xs
+"length -> unfused" [1] forall xs.
+    Stream.length (stream xs) = length xs
   #-}
 
 -- ---------------------------------------------------------------------
@@ -500,8 +500,8 @@ map f (x:xs) = f x : map f xs
 {-# RULES
 "map -> fusible" [~1] forall f xs.
     map f xs = unstream (Stream.map f (stream xs))
---"map -> unfused" [1] forall f xs.
---    unstream (Stream.map f (stream xs)) = map f xs
+"map -> unfused" [1] forall f xs.
+    unstream (Stream.map f (stream xs)) = map f xs
   #-}
 
 -- | /O(n)/, /fusion/. 'reverse' @xs@ returns the elements of @xs@ in reverse order.

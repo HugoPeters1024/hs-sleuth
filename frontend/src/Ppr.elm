@@ -13,6 +13,7 @@ type Tag
     | TagLitNumber
     | TagKeyword
     | TagComment
+    | TagOperator
 
 type alias PP = Doc Tag
 
@@ -35,13 +36,20 @@ pprModule mod
     |> a doubleline
     |> a (join doubleline (List.map pprTopBinding mod.moduleTopBindings))
     |> a doubleline
-    |> a (string ("Rules fired:"))
-    |> a line
-    |> a (pprCommentBlock ("    " ++ String.join "\n    " (List.map .firedRuleName mod.moduleFiredRules)))
+    |> a (pprFiredRules mod)
 
-pprCommentBlock : String -> PP
-pprCommentBlock s =
-    taggedString ("{-\n" ++ s ++ "\n-}") TagComment
+pprFiredRules : Module -> PP
+pprFiredRules mod = pprComment <|
+    ( String.join "\n    " 
+        <| List.concat
+            [ ["{-", "RULES FIRED:"]
+            , List.map (\r -> r.firedRuleName ++ " (" ++ r.firedRuleModule ++ ")") mod.moduleFiredRules
+            ]
+    )
+    ++ "\n-}"
+
+pprComment : String -> PP
+pprComment s = taggedString s TagComment
 
 pprTopBinding : TopBinding -> PP
 pprTopBinding topb = case topb of
@@ -124,7 +132,9 @@ pprExpr expr = case expr of
             ]
         ]
     ETick _ _ -> string "tick"
-    EType t -> pprType t
+    EType t -> 
+        taggedString "@" TagOperator
+        |> a (pprType t)
     ECoercion -> string "coercion"
     EMarkDiff e -> pprExpr e
 
@@ -175,7 +185,15 @@ pprBinderThunk thunk = case thunk of
 
 
 pprVar : Var -> Doc Tag
-pprVar var = taggedString (varName False var) (TagVar var)
+pprVar var = 
+    let cname = varName True var
+        tag = TagVar var
+    in case var of
+        VarBinder bndr ->
+            if HsCore.Helpers.binderIsUnused bndr
+            then taggedString "_" tag
+            else taggedString cname tag
+        _ -> taggedString cname tag
 
 
 pprType : Type -> PP
@@ -206,5 +224,3 @@ pprTypeParens type_ = case type_ of
     TyConApp con xs -> pprType (TyConApp con xs)
     _ -> parens (pprType type_)
 
-pprRule : Rule -> PP
-pprRule = string << ruleName

@@ -102,6 +102,15 @@ binderSpan bind = case bind of
     Binder b -> b.binderSrcSpan
     _        -> NoSpan
 
+binderIsUnused : Binder -> Bool
+binderIsUnused bndr = case bndr of
+    TyBinder _ -> False
+    Binder b -> case b.binderIdInfo.idiOccInfo of
+        OccDead -> True
+        _       -> case b.binderIdInfo.idiDemandSig of
+            "A" -> True
+            _   -> False
+
 binderToInt : Binder -> Int
 binderToInt = binderIdToInt << binderId
 
@@ -257,8 +266,3 @@ exprIsAtom expr = case expr of
     EType _ -> True
     EMarkDiff e -> exprIsAtom e
     _ -> False
-
-ruleName : Rule -> String
-ruleName rule = case rule of
-    Rule r -> r.ruleName
-    BuiltinRule r -> r.ruleName

@@ -50,6 +50,7 @@ htmlTagged env tag content next =
             TagLitNumber -> span [class "m"] [text content]
             TagKeyword -> span [class "k"] [text content]
             TagComment -> span [class "c1"] [text content]
+            TagOperator -> span [class "o"] [text content]
     in next ++ [htmlContent]
 
 htmlUntagged :  String -> List (Html Msg) -> List (Html Msg)

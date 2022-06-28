@@ -174,10 +174,3 @@ type CoreStatsElm = ElmType "Generated.TODO.CoreStats" CoreStats
 deriving via CoreStatsElm instance Aeson.ToJSON CoreStats
 deriving via CoreStatsElm instance HasElmType CoreStats
 deriving via CoreStatsElm instance HasElmDecoder Aeson.Value CoreStats
-
-deriving instance SOP.Generic Rule
-deriving instance SOP.HasDatatypeInfo Rule
-type RuleElm = ElmType "Generated.TODO.Rule" Rule
-deriving via RuleElm instance Aeson.ToJSON Rule
-deriving via RuleElm instance HasElmType Rule
-deriving via RuleElm instance HasElmDecoder Aeson.Value Rule

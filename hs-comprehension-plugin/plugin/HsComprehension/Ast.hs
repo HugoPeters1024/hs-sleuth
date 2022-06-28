@@ -26,7 +26,6 @@ module HsComprehension.Ast
     , OccInfo (..)
     , Tick (..)
     , CoreStats (..)
-    , Rule(..)
     ) where
 
 import GHC.Generics
@@ -87,7 +86,6 @@ data IdInfo = IdInfo
     , idiStrictnessSig :: !T.Text
     , idiDemandSig     :: !T.Text
     , idiCallArity     :: !Int
-    , idiRules         :: [Rule]
     }
     deriving (Generic, Serialise, Show)
 
@@ -141,7 +139,6 @@ data Module = Module
     , modulePhase :: Text
     , modulePhaseId :: Int
     , moduleTopBindings :: [TopBinding]
-    , moduleRules :: [Rule]
     , moduleFiredRules :: [FiredRule]
     }
     deriving (Generic, Serialise, Show)
@@ -188,15 +185,3 @@ data TopBinding
     = NonRecTopBinding TopBindingInfo
     | RecTopBinding [TopBindingInfo]
     deriving (Generic, Serialise, Show)
-
-data Rule
-    = Rule { ruleName :: T.Text
-           , ruleBinders :: [Binder]
-           , ruleRHS :: Expr
-           , ruleAuto :: Bool
-           }
-    | BuiltinRule { ruleName :: T.Text
-                  , ruleNArgs :: Int
-                  }
-        deriving (Generic, Serialise, Show)
-

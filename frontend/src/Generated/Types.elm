@@ -23,7 +23,6 @@ module Generated.Types exposing
     , TopBinding(..)
     , BinderThunk(..)
     , CoreStats
-    , Rule(..)
     )
 
 
@@ -73,8 +72,7 @@ type alias IdInfo  =
     , idiOccInfo : OccInfo
     , idiStrictnessSig : String
     , idiDemandSig : String
-    , idiCallArity : Int
-    , idiRules : List Rule }
+    , idiCallArity : Int }
 
 
 type Unfolding 
@@ -148,7 +146,6 @@ type alias Module  =
     , modulePhase : String
     , modulePhaseId : Int
     , moduleTopBindings : List TopBinding
-    , moduleRules : List Rule
     , moduleFiredRules : List FiredRule }
 
 
@@ -209,12 +206,4 @@ type alias CoreStats  =
     , csCoercions : Int
     , csValBinds : Int
     , csJoinBinds : Int }
-
-
-type Rule 
-    = Rule { ruleName : String
-    , ruleBinders : List Binder
-    , ruleRHS : Expr
-    , ruleAuto : Bool }
-    | BuiltinRule { ruleName : String, ruleNArgs : Int }
 type BinderThunk = Found Binder | NotFound | Untouched

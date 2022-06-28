@@ -288,9 +288,7 @@ viewBinderInfo bndr = case bndr of
     Binder b -> HtmlHelpers.list
             [ text ("name: " ++ b.binderName)
             , text ("type: " ++ typeToString b.binderType)
-            , text ("rules:")
-            , HtmlHelpers.list (List.map (text << ruleName) b.binderIdInfo.idiRules)
-         --   , text ("span: " ++ Debug.toString (binderSpan bndr))
+            , text ("span: " ++ Debug.toString (b.binderIdInfo))
             ]
     TyBinder b -> text "TODO: TyBinder"
 

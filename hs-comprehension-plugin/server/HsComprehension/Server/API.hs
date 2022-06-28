@@ -62,6 +62,7 @@ addAllOriginsMiddleware baseApp = \req responseFunc -> baseApp req (responseFunc
 app :: IO Application
 app = do
     captures <- collectCaptures
+    putStrLn "Serving..."
     pure $ addAllOriginsMiddleware $ serve (Proxy @API) (handler captures)
 
 
