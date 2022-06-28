@@ -147,8 +147,8 @@ cvtType env (GHCD.ForAllTy bndr t) = ForAllTy (cvtBinder env bndr) (cvtType env 
 cvtType env (GHCD.LitTy) = LitTy
 cvtType env (GHCD.CoercionTy) = CoercionTy
 
-cvtTopBinding :: Text -> CvtEnv -> GHCD.STopBinding -> TopBinding
-cvtTopBinding modname env tb = 
+cvtTopBinding :: CvtEnv -> GHCD.STopBinding -> TopBinding
+cvtTopBinding env tb = 
     let cvtInfo :: (GHCD.SBinder, CoreStats, GHCD.SExpr) -> TopBindingInfo
         cvtInfo (bndr, stats, expr) =
             let cvtedBinder = cvtBinder env bndr
@@ -159,18 +159,15 @@ cvtTopBinding modname env tb =
                 , topBindingCoreState = stats
                 , topBindingRHS = cvtExpr env expr
                 , topBindingFromSource = False
-                , topBindingIdx = Hash.hash (bndrName, modname)
                 }
     in case tb of
          GHCD.NonRecTopBinding bndr stats expr -> NonRecTopBinding (cvtInfo (bndr, stats, expr))
          GHCD.RecTopBinding bs -> RecTopBinding (map cvtInfo bs)
 
-cvtModule :: CvtEnv -> GHCD.SModule -> Module
-cvtModule env GHCD.Module {..} = 
-    let modName = GHCD.getModuleName moduleName
-    in Module 
-    { moduleName = modName
-    , moduleTopBindings = map (cvtTopBinding modName env) moduleTopBindings
-    , moduleFiredRules = []
-    , ..
+cvtPhase :: CvtEnv -> GHCD.SModule -> Phase
+cvtPhase env GHCD.Module {..} = Phase 
+    { phaseName = modulePhase
+    , phaseTopBindings = map (cvtTopBinding env) moduleTopBindings
+    , phaseFiredRules = []
+    , phaseId = modulePhaseId
     }

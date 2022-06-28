@@ -31,6 +31,7 @@ import qualified Data.Map as M
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.List (isPrefixOf, splitAt)
+import Data.Traversable (for)
 
 import Text.Parsec as Parsec
 import Text.Parsec.Number as Parsec
@@ -92,12 +93,12 @@ millisSinceEpoch =
 currentPosixMillis :: IO Int
 currentPosixMillis = millisSinceEpoch <$> getPOSIXTime
 
-cvtGhcModule :: DynFlags -> Int -> String -> GHC.Plugins.ModGuts -> Ast.Module
-cvtGhcModule dflags phaseId phase = 
+cvtGhcPhase :: DynFlags -> Int -> String -> GHC.Plugins.ModGuts -> Ast.Phase
+cvtGhcPhase dflags phaseId phase = 
     let cvtEnv = Cvt.CvtEnv { Cvt.cvtEnvPhaseId = phaseId
                             , Cvt.cvtEnvBinders = []
                             }
-    in Cvt.cvtModule cvtEnv . GhcDump.Convert.cvtModule dflags phaseId phase
+    in Cvt.cvtPhase cvtEnv . GhcDump.Convert.cvtModule dflags phaseId phase
 
 projectState :: IORef (StdThief, Capture)
 projectState =  do
@@ -136,9 +137,9 @@ install options todo = do
         )
 
     ms_ref <- liftIO $ newIORef []
-    let dumpPasses = zipWith (dumpPass ms_ref slug) [1..] (map getPhase todo)
-    let firstPass = dumpPass ms_ref slug 0 "Desugared"
-    pure $ firstPass : (P.concat $ zipWith (\x y -> [x,y]) todo dumpPasses) ++ [finalPass ms_ref]
+    let dumpPasses = zipWith (dumpPass ms_ref) [1..] (map getPhase todo)
+    let firstPass = dumpPass ms_ref 0 "Desugared"
+    pure $ firstPass : (P.concat $ zipWith (\x y -> [x,y]) todo dumpPasses) ++ [finalPass ms_ref (slug, modName)]
 
 getPhase :: CoreToDo -> String
 getPhase todo = showSDocUnsafe (ppr todo) ++ " " ++ showSDocUnsafe (pprPassDetails todo)
@@ -152,8 +153,8 @@ coreDumpBaseDir = "./dist-newstyle/"
 coreDumpDir :: String -> FilePath
 coreDumpDir pid = coreDumpBaseDir ++ "coredump-" ++ pid ++ "/"
 
-coreDumpFile :: String -> String -> Int -> FilePath
-coreDumpFile pid mod id = coreDumpDir pid ++ mod ++ "." ++ show id ++ ".zstd"
+coreDumpFile :: String -> String -> FilePath
+coreDumpFile pid mod = coreDumpDir pid ++ mod ++ ".zstd"
 
 captureFile :: String -> FilePath
 captureFile pid = coreDumpDir pid ++ "capture.zstd"
@@ -166,33 +167,36 @@ readFromFile :: Serialise a => FilePath -> IO a
 readFromFile fname = do
     Ser.deserialise . Zstd.decompress <$> BSL.readFile fname
 
-dumpPass :: IORef [(String, Ast.Module)] -> String -> Int -> String -> CoreToDo
-dumpPass ms_ref slug n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
+dumpPass :: IORef [Ast.Phase] -> Int -> String -> CoreToDo
+dumpPass ms_ref n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
     guts <- liftIO $ Uniqify.uniqueModule in_guts
 
     dflags <- getDynFlags
     let prefix :: String = showSDocUnsafe (ppr (mg_module guts))
-    let fname = coreDumpFile slug prefix n
     liftIO $ do
         putStrLn $ "__PHASE_MARKER " ++ show n
-        putStrLn fname
-        let mod = cvtGhcModule dflags n phase guts
-        modifyIORef ms_ref ((fname, mod):)
+        let mod = cvtGhcPhase dflags n phase guts
+        modifyIORef ms_ref (mod:)
     pure guts
 
-finalPass :: IORef [(String, Ast.Module)] -> CoreToDo
-finalPass ms_ref = CoreDoPluginPass "Finalize dump" $ \guts -> do
+finalPass :: IORef [Ast.Phase] -> (String, String) -> CoreToDo
+finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts -> do
     liftIO $ do
         (thief, capture) <- readIORef projectState 
-        in_modules <- readIORef ms_ref
-
+        in_phases <- readIORef ms_ref
         r <- readStdoutThief thief
         let ruleFirings = parseStdout r
-        forM_ (zip [0..] (reverse in_modules)) $ \(n, (fname, in_module)) -> do
-            let mod = in_module { moduleFiredRules = filter ((==n) . firedRulePhase) ruleFirings }
-            putStrLn fname
-            writeToFile fname mod
-
         putStrLn r
+
+        let phases = map (\(n, p) -> p { phaseFiredRules = filter ((==n) . firedRulePhase) ruleFirings }) $ zip [0..] (reverse in_phases)
+
+        let mod = Ast.Module { 
+              Ast.moduleName = T.pack modName
+            , Ast.modulePhases = phases
+            }
+
+        let fname = coreDumpFile slug modName
+        writeToFile fname mod
+
         writeToFile (captureFile (T.unpack (captureName capture))) capture
     pure guts

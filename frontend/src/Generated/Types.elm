@@ -12,6 +12,7 @@ module Generated.Types exposing
     , TyCon(..)
     , Type(..)
     , FiredRule
+    , Phase
     , Module
     , Expr(..)
     , Alt
@@ -141,12 +142,15 @@ type alias FiredRule  =
     { firedRuleName : String, firedRuleModule : String, firedRulePhase : Int }
 
 
+type alias Phase  =
+    { phaseName : String
+    , phaseId : Int
+    , phaseTopBindings : List TopBinding
+    , phaseFiredRules : List FiredRule }
+
+
 type alias Module  =
-    { moduleName : String
-    , modulePhase : String
-    , modulePhaseId : Int
-    , moduleTopBindings : List TopBinding
-    , moduleFiredRules : List FiredRule }
+    { moduleName : String, modulePhases : List Phase }
 
 
 type Expr 
@@ -191,8 +195,7 @@ type alias TopBindingInfo  =
     { topBindingBinder : Binder
     , topBindingCoreState : CoreStats
     , topBindingRHS : Expr
-    , topBindingFromSource : Bool
-    , topBindingIdx : Int }
+    , topBindingFromSource : Bool }
 
 
 type TopBinding 

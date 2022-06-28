@@ -10,6 +10,7 @@ module HsComprehension.Ast
     , Lit (..)
     , Type (..)
     , FiredRule (..)
+    , Phase (..)
     , Module (..)
     , Expr (..)
     , Alt (..)
@@ -136,10 +137,14 @@ data FiredRule = FiredRule
 
 data Module = Module
     { moduleName :: Text
-    , modulePhase :: Text
-    , modulePhaseId :: Int
-    , moduleTopBindings :: [TopBinding]
-    , moduleFiredRules :: [FiredRule]
+    , modulePhases :: [Phase]
+    } deriving (Generic, Serialise, Show)
+
+data Phase = Phase
+    { phaseName :: Text
+    , phaseId :: Int
+    , phaseTopBindings :: [TopBinding]
+    , phaseFiredRules :: [FiredRule]
     }
     deriving (Generic, Serialise, Show)
 
@@ -177,7 +182,6 @@ data TopBindingInfo = TopBindingInfo
     , topBindingCoreState :: CoreStats
     , topBindingRHS :: Expr
     , topBindingFromSource :: Bool
-    , topBindingIdx :: Int
     }
     deriving (Generic, Serialise, Show)
 

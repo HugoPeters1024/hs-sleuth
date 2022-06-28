@@ -176,8 +176,8 @@ leadingApps expr = case expr of
     e -> [e]
 
 
-getModuleTopBinders : Module -> List TopBindingInfo
-getModuleTopBinders mod = List.concatMap getTopLevelBinders mod.moduleTopBindings
+getPhaseTopBinders : Phase -> List TopBindingInfo
+getPhaseTopBinders mod = List.concatMap getTopLevelBinders mod.phaseTopBindings
 
 unzip3 : List (a,b,c) -> (List a, List b, List c)
 unzip3 xs = case xs of

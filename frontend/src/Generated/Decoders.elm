@@ -12,6 +12,7 @@ module Generated.Decoders exposing
     , tyConDecoder
     , typeDecoder
     , firedRuleDecoder
+    , phaseDecoder
     , moduleDecoder
     , exprDecoder
     , altDecoder
@@ -337,14 +338,20 @@ firedRuleDecoder =
     Json.Decode.Pipeline.required "firedRulePhase" Json.Decode.int
 
 
+phaseDecoder : Json.Decode.Decoder Phase
+phaseDecoder =
+    Json.Decode.succeed Phase |>
+    Json.Decode.Pipeline.required "phaseName" Json.Decode.string |>
+    Json.Decode.Pipeline.required "phaseId" Json.Decode.int |>
+    Json.Decode.Pipeline.required "phaseTopBindings" (Json.Decode.list topBindingDecoder) |>
+    Json.Decode.Pipeline.required "phaseFiredRules" (Json.Decode.list firedRuleDecoder)
+
+
 moduleDecoder : Json.Decode.Decoder Module
 moduleDecoder =
     Json.Decode.succeed Module |>
     Json.Decode.Pipeline.required "moduleName" Json.Decode.string |>
-    Json.Decode.Pipeline.required "modulePhase" Json.Decode.string |>
-    Json.Decode.Pipeline.required "modulePhaseId" Json.Decode.int |>
-    Json.Decode.Pipeline.required "moduleTopBindings" (Json.Decode.list topBindingDecoder) |>
-    Json.Decode.Pipeline.required "moduleFiredRules" (Json.Decode.list firedRuleDecoder)
+    Json.Decode.Pipeline.required "modulePhases" (Json.Decode.list phaseDecoder)
 
 
 exprDecoder : Json.Decode.Decoder Expr
@@ -474,8 +481,7 @@ topBindingInfoDecoder =
     Json.Decode.Pipeline.required "topBindingBinder" binderDecoder |>
     Json.Decode.Pipeline.required "topBindingCoreState" coreStatsDecoder |>
     Json.Decode.Pipeline.required "topBindingRHS" exprDecoder |>
-    Json.Decode.Pipeline.required "topBindingFromSource" Json.Decode.bool |>
-    Json.Decode.Pipeline.required "topBindingIdx" Json.Decode.int
+    Json.Decode.Pipeline.required "topBindingFromSource" Json.Decode.bool
 
 
 topBindingDecoder : Json.Decode.Decoder TopBinding

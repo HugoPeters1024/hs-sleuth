@@ -27,8 +27,8 @@ import Network.Wai
 
 type CapturesAPI = "captures" :> Get '[JSON] [Ast.Capture]
 
-serveCapturesApi :: [Ast.Capture] -> Handler [Ast.Capture]
-serveCapturesApi = pure
+serveCapturesApi :: Handler [Ast.Capture]
+serveCapturesApi = liftIO collectCaptures
 
 type CaptureAPI = "capture" :> Capture "slug" String :> Get '[JSON] Ast.Capture
 
@@ -36,22 +36,22 @@ serveCaptureApi :: String -> Handler Ast.Capture
 serveCaptureApi slug = liftIO $ readFromFile (captureFile slug) 
 
 
-type CoreAPI = "core" :> Capture "slug" String :> Capture "modname" String :> Capture "phaseId" Int :> Get '[JSON] Module
+type ModuleAPI = "module" :> Capture "slug" String :> Capture "modname" String :> Get '[JSON] Module
 
-serveCoreApi :: String -> String -> Int -> Handler Module
-serveCoreApi slug modname phase = liftIO $ readFromFile $ coreDumpFile slug modname phase
+serveModuleApi :: String -> String -> Handler Module
+serveModuleApi slug modname = liftIO $ readFromFile $ coreDumpFile slug modname
 
 
 type API = CapturesAPI
       :<|> CaptureAPI
-      :<|> CoreAPI
+      :<|> ModuleAPI
 
 
-handler :: [Ast.Capture] -> Server API
-handler captures = 
-    (serveCapturesApi captures)
+handler :: Server API
+handler = 
+    serveCapturesApi
   :<|> serveCaptureApi
-  :<|> serveCoreApi
+  :<|> serveModuleApi
 
 
 addAllOriginsMiddleware :: Application -> Application
@@ -61,9 +61,8 @@ addAllOriginsMiddleware baseApp = \req responseFunc -> baseApp req (responseFunc
 
 app :: IO Application
 app = do
-    captures <- collectCaptures
     putStrLn "Serving..."
-    pure $ addAllOriginsMiddleware $ serve (Proxy @API) (handler captures)
+    pure $ addAllOriginsMiddleware $ serve (Proxy @API) handler
 
 
 

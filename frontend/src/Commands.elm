@@ -10,13 +10,13 @@ import HsCore.Trafo.Reconstruct as TR
 import Json.Decode
 
 
-fetchCodePhase : TabId -> Slug -> String -> Int -> Cmd Msg
-fetchCodePhase tid slug mod id = 
-    Http.get { url = "http://localhost:8080/core/" ++ slug ++ "/" ++ mod ++ "/" ++ String.fromInt id
+fetchModule : TabId -> Slug -> String -> Cmd Msg
+fetchModule tid slug mod = 
+    Http.get { url = "http://localhost:8080/module/" ++ slug ++ "/" ++ mod
              , expect = Http.expectJson (MsgCodeMsg tid << CodeMsgGotModule slug) (Json.Decode.map TR.reconModule HE.moduleDecoder)
              }
 
-fetchSessionMeta : Cmd Msg
-fetchSessionMeta = Http.get { url = "http://localhost:8080/captures"
-                            , expect = Http.expectJson MsgGotCaptures (Json.Decode.list HE.captureDecoder)
-                            }
+fetchCaptures : Cmd Msg
+fetchCaptures = Http.get { url = "http://localhost:8080/captures"
+                         , expect = Http.expectJson MsgGotCaptures (Json.Decode.list HE.captureDecoder)
+                         }

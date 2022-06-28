@@ -15,7 +15,7 @@ import Bootstrap.Table as Table
 import Bootstrap.Button as Button
 
 init : Cmd Msg
-init = Commands.fetchSessionMeta
+init = Commands.fetchCaptures
 
 update : OverviewMsg -> OverviewTab -> (OverviewTab, Cmd Msg)
 update msg tab = case msg of

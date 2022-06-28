@@ -10,7 +10,7 @@ import Dict exposing (Dict)
 import Generated.Types exposing (..)
 import Types exposing (..)
 import HsCore.Helpers exposing (..)
-import HsCore.Trafo.EraseTypes exposing (eraseTypesModule)
+import HsCore.Trafo.EraseTypes exposing (eraseTypesPhase)
 import HsCore.Trafo.Diff as Diff
 
 import Ppr
@@ -37,24 +37,19 @@ mkCodeMsg id msg = MsgCodeMsg id msg
 subscriptions : CodeTab -> Sub Msg
 subscriptions tab = Sub.map (MsgCodeMsg tab.id) (Dropdown.subscriptions tab.moduleDropdown CodeMsgModuleDropdown)
 
-initCodeTabModule : Capture -> CodeTabModule
-initCodeTabModule meta = 
+initCodeTabCapture : Capture -> CodeTabCapture
+initCodeTabCapture capture = 
     { mod = Loading Nothing
-    , projectMeta = meta
+    , capture = capture
     , phaseSlider = Slider.init 0
-    , topNames = []
     }
 
 getCaptures : CodeTab -> List Capture
-getCaptures tab = List.map .projectMeta (Dict.values tab.modules)
+getCaptures tab = List.map .capture (Dict.values tab.captureSlots)
 
 getMergedModuleNames : CodeTab -> List String
 getMergedModuleNames tab = List.map Tuple.first (List.concatMap .captureModules (getCaptures tab))
     |> EH.removeDuplicates
-
-getMergedTopBinders : CodeTab -> List TopBindingInfo
-getMergedTopBinders tab = List.concatMap .topNames (Dict.values tab.modules)
-    |> EH.removeDuplicatesKey (binderName << .topBindingBinder)
 
 
 
@@ -66,7 +61,7 @@ makeCodeTab model captures =
     ( { model | idGen = model.idGen + 1 }
     , { id = tabId
       , name = "Code-" ++ String.fromInt tabId
-      , modules = Dict.fromList (List.map (\m -> (m.captureName, initCodeTabModule m)) captures)
+      , captureSlots = Dict.fromList (List.map (\m -> (m.captureName, initCodeTabCapture m)) captures)
       , currentModule = "Main"
       , selectedVar = Nothing
       , moduleDropdown = Dropdown.initialState
@@ -81,42 +76,37 @@ makeCodeTab model captures =
           }
       , varRenames = Dict.empty
       }
-    , Cmd.batch (List.map (\slug -> C.fetchCodePhase tabId slug "Main" 0) slugs)
+    , Cmd.batch (List.map (\slug -> C.fetchModule tabId slug "Main") slugs)
     )
+
 
 update : CodeTabMsg -> CodeTab -> (CodeTab, Cmd Msg)
 update msg tab = case msg of
-    CodeMsgSetModule modname phaseid -> 
-        ( {tab | currentModule = modname }
+    CodeMsgSetModule modname -> 
+        let resetCapture : CodeTabCapture -> CodeTabCapture
+            resetCapture x = { x | phaseSlider = Slider.init 0, mod = Loading Nothing }
+        in
+        ( {tab | currentModule = modname, captureSlots = Dict.map (\_ -> resetCapture) tab.captureSlots }
         , Cmd.batch 
             ( List.map
-             (\slug -> Commands.fetchCodePhase tab.id slug modname phaseid)
-             (Dict.keys tab.modules)
+             (\slug -> Commands.fetchModule tab.id slug modname)
+             (Dict.keys tab.captureSlots)
             )
         )
     CodeMsgGotModule slug res -> 
-        let updateModuleTab : CodeTabModule -> CodeTabModule 
-            updateModuleTab tabmod = 
-                let mod = Loading.loadFromResult res
-                    topNames = Loading.withDefault [] (Loading.map getModuleTopBinders mod)
-                in {tabmod | mod = mod, topNames = topNames }
-        in ({tab | modules = Dict.update slug (Maybe.map updateModuleTab) tab.modules}, Cmd.none)
+        let updateCaptureTab : CodeTabCapture -> CodeTabCapture
+            updateCaptureTab tabmod = {tabmod | mod = Loading.loadFromResult res }
+        in ({tab | captureSlots = Dict.update slug (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
     CodeMsgSelectVar var -> ({tab | selectedVar = Just var}, Cmd.none)
     CodeMsgToggleHideTypes -> ({tab | hideTypes = not tab.hideTypes}, Cmd.none)
     CodeMsgToggleDisambiguateVariables -> ({tab | disambiguateVariables = not tab.disambiguateVariables}, Cmd.none)
     CodeMsgToggleShowRecursiveGroups -> ({tab | showRecursiveGroups = not tab.showRecursiveGroups}, Cmd.none)
     CodeMsgModuleDropdown state -> ({tab | moduleDropdown = state}, Cmd.none)
     CodeMsgSlider slug slidermsg ->
-        let updateModuleTab : CodeTabModule -> CodeTabModule
-            updateModuleTab tabmod = {tabmod | phaseSlider = Slider.update slidermsg tabmod.phaseSlider }
+        let updateCaptureTab : CodeTabCapture -> CodeTabCapture
+            updateCaptureTab tabmod = {tabmod | phaseSlider = Slider.update slidermsg tabmod.phaseSlider }
 
-            newtab : CodeTab
-            newtab = {tab | modules = Dict.update slug (Maybe.map updateModuleTab) tab.modules}
-        in ( newtab
-           , case Dict.get slug newtab.modules of
-               Nothing -> Cmd.none
-               Just modtab -> Commands.fetchCodePhase tab.id slug tab.currentModule modtab.phaseSlider.value
-           )
+        in ({tab | captureSlots = Dict.update slug (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
     CodeMsgMarkTopLevel ti -> ({tab | selectedTopLevels = ti::tab.selectedTopLevels }, Cmd.none)
     CodeMsgRenameModalOpen var -> ({tab | renameModal = renameModalOpen var tab.renameModal}, Cmd.none)
     CodeMsgRenameModalClose -> ({tab | renameModal = renameModalClose tab.renameModal}, Cmd.none)
@@ -131,7 +121,7 @@ view model tab =
     div [] [ viewHeader model tab
            , panel
                 (
-                    (foreach (Dict.toList tab.modules) <| \(slug, mod) ->
+                    (foreach (Dict.toList tab.captureSlots) <| \(slug, mod) ->
                         (Fraction 4, viewCode model tab slug mod)
                     )
                     ++
@@ -154,7 +144,7 @@ viewHeader _ tab =
             , toggleMsg = \s -> mkCodeMsg tab.id (CodeMsgModuleDropdown s)
             , toggleButton = Dropdown.toggle [Button.primary] [text "Module"]
             , items = List.map 
-                (\modname -> Dropdown.buttonItem [onClick (mkCodeMsg tab.id (CodeMsgSetModule modname 0))] [text modname]) 
+                (\modname -> Dropdown.buttonItem [onClick (mkCodeMsg tab.id (CodeMsgSetModule modname))] [text modname]) 
                 (getMergedModuleNames tab)
             }
         ]
@@ -200,7 +190,7 @@ renderVarName tab var =
     Just name -> name
     Nothing -> (varName tab.disambiguateVariables var) ++ postfix
 
-viewCode : Model -> CodeTab -> Slug -> CodeTabModule -> Html Msg
+viewCode : Model -> CodeTab -> Slug -> CodeTabCapture -> Html Msg
 viewCode model tab slug modtab = 
     let pprEnv : Ppr.PprRenderEnv
         pprEnv = 
@@ -210,32 +200,32 @@ viewCode model tab slug modtab =
             }
     in div []
         [ h4 [] [text slug]
-        , Loading.renderLoading modtab.mod (\mod -> text mod.modulePhase)
-        , Slider.config
-            { lift = \msg -> mkCodeMsg tab.id (CodeMsgSlider slug msg)
-            , mininum = 0
-            , maximum = case EH.find (\(name,_) -> name == tab.currentModule) modtab.projectMeta.captureModules of
-                Just (_, nrPasses) -> nrPasses
-                Nothing -> 0
-            }
-            |> Slider.view modtab.phaseSlider
-        , pre [class "dark"] 
-            [ code [] 
-                   [Loading.renderLoading modtab.mod <| \mod ->
-                       (
-                         processDiff tab mod
-                         |> (if tab.hideTypes then eraseTypesModule else identity)
-                         |> (if tab.showRecursiveGroups then identity else \m -> {m | moduleTopBindings = removeRecursiveGroups m.moduleTopBindings})
-                         |> Ppr.pprModule
-                         |> Ppr.renderHtml pprEnv
-                       )
-                   ]
-            ]
+        , Loading.renderLoading modtab.mod <| \mod -> 
+            case EH.indexList modtab.phaseSlider.value mod.modulePhases of
+                Nothing -> text "Invalid Phase Index"
+                Just phase -> div []
+                    [ text phase.phaseName
+                    , Slider.config
+                        { lift = \msg -> mkCodeMsg tab.id (CodeMsgSlider slug msg)
+                        , mininum = 0
+                        , maximum = List.length mod.modulePhases - 1
+                        }
+                        |> Slider.view modtab.phaseSlider
+                    , pre [class "dark"] 
+                        [ code [] 
+                               [ processDiff tab phase
+                                 |> (if tab.hideTypes then eraseTypesPhase else identity)
+                                 |> (if tab.showRecursiveGroups then identity else \p -> {p | phaseTopBindings = removeRecursiveGroups p.phaseTopBindings})
+                                 |> Ppr.pprPhase mod.moduleName
+                                 |> Ppr.renderHtml pprEnv
+                               ]
+                        ]
+                    ]
         ]
 
 
-processDiff : CodeTab -> Module -> Module
-processDiff tab mod = case tab.selectedTopLevels of
+processDiff : CodeTab -> Phase -> Phase
+processDiff tab phase = case tab.selectedTopLevels of
     [lhs, rhs] -> 
         let go : TopBindingInfo -> TopBindingInfo
             go tb = 
@@ -247,8 +237,8 @@ processDiff tab mod = case tab.selectedTopLevels of
                     else tb
                 )
                     
-        in { mod | moduleTopBindings = List.map (topBindingMap go) mod.moduleTopBindings }
-    _          -> mod
+        in { phase | phaseTopBindings = List.map (topBindingMap go) phase.phaseTopBindings }
+    _          -> phase
 
 fromMaybe : a -> Maybe a -> a
 fromMaybe def m = case m of
@@ -271,7 +261,6 @@ viewInfo model tab =
               , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map (viewVarInfo tab) tab.selectedVar)
               , hr [] []
               , h4 [] [text "Toplevel functions"]
-              , HtmlHelpers.list (List.map (text << binderName << .topBindingBinder) (List.filter .topBindingFromSource (getMergedTopBinders tab)))
               ]
         ]
     |> Card.view
@@ -296,7 +285,6 @@ viewTopInfo : CodeTab -> TopBindingInfo -> Html CodeTabMsg
 viewTopInfo tab ti = div []
     [ button [onClick (CodeMsgMarkTopLevel ti)] [text "Mark"]
     , text ("#markers: " ++ String.fromInt (List.length tab.selectedTopLevels))
-    , text ("topID: " ++ String.fromInt ti.topBindingIdx)
     , viewBinderInfo ti.topBindingBinder
     ]
 

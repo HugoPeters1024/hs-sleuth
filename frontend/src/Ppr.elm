@@ -26,24 +26,24 @@ doubleline = append line line
 combine : List PP -> PP
 combine = Pretty.fold a
 
-pprModule : Module -> PP
-pprModule mod
+pprPhase : String -> Phase -> PP
+pprPhase modname phase 
     =  keyword "module"
     |> a space
-    |> a (string mod.moduleName)
+    |> a (string modname)
     |> a space
     |> a (keyword "where")
     |> a doubleline
-    |> a (join doubleline (List.map pprTopBinding mod.moduleTopBindings))
+    |> a (join doubleline (List.map pprTopBinding phase.phaseTopBindings))
     |> a doubleline
-    |> a (pprFiredRules mod)
+    |> a (pprFiredRules phase)
 
-pprFiredRules : Module -> PP
-pprFiredRules mod = pprComment <|
+pprFiredRules : Phase -> PP
+pprFiredRules phase = pprComment <|
     ( String.join "\n    " 
         <| List.concat
             [ ["{-", "RULES FIRED:"]
-            , List.map (\r -> r.firedRuleName ++ " (" ++ r.firedRuleModule ++ ")") mod.moduleFiredRules
+            , List.map (\r -> r.firedRuleName ++ " (" ++ r.firedRuleModule ++ ")") phase.phaseFiredRules
             ]
     )
     ++ "\n-}"

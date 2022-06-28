@@ -1,10 +1,10 @@
-module HsCore.Trafo.EraseTypes exposing (eraseTypesModule, eraseTypesTopBinding)
+module HsCore.Trafo.EraseTypes exposing (eraseTypesPhase, eraseTypesTopBinding)
 
 import Generated.Types exposing (..)
 import HsCore.Helpers as H
 
-eraseTypesModule : Module -> Module
-eraseTypesModule mod = {mod | moduleTopBindings = List.map eraseTypesTopBinding mod.moduleTopBindings}
+eraseTypesPhase : Phase -> Phase
+eraseTypesPhase mod = {mod | phaseTopBindings = List.map eraseTypesTopBinding mod.phaseTopBindings}
 
 eraseTypesTopBinding : TopBinding -> TopBinding
 eraseTypesTopBinding tp = 

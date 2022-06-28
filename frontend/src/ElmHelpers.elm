@@ -30,6 +30,10 @@ mapMaybe f list = case list of
         Nothing -> mapMaybe f xs
     []    -> []
 
+indexList : Int -> List a -> Maybe a
+indexList n xs = List.head (List.drop n xs)
+
+
 
 removeDuplicatesKey : (a -> comparable) -> List a -> List a
 removeDuplicatesKey f = Set.Any.toList << Set.Any.fromList f

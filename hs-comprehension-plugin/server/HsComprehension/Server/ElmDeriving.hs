@@ -70,6 +70,13 @@ deriving via FiredRuleElm instance Aeson.ToJSON FiredRule
 deriving via FiredRuleElm instance HasElmType FiredRule
 deriving via FiredRuleElm instance HasElmDecoder Aeson.Value FiredRule
 
+deriving instance SOP.Generic Phase
+deriving instance SOP.HasDatatypeInfo Phase
+type PhaseElm = ElmType "Generated.TODO.Phase" Phase
+deriving via PhaseElm instance Aeson.ToJSON Phase
+deriving via PhaseElm instance HasElmType Phase
+deriving via PhaseElm instance HasElmDecoder Aeson.Value Phase
+
 deriving instance SOP.Generic Module
 deriving instance SOP.HasDatatypeInfo Module
 type ModuleElm = ElmType "Generated.TODO.Module" Module

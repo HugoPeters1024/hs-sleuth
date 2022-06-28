@@ -26,11 +26,10 @@ type alias VarId = Int
 type alias Slug = String
 type alias ModuleName = String
 
-type alias CodeTabModule =
+type alias CodeTabCapture =
     { mod : Loading Module
-    , projectMeta : Capture
+    , capture : Capture
     , phaseSlider : Slider.Model
-    , topNames : List TopBindingInfo
     }
 
 type alias CodeTabRenameModal =
@@ -60,7 +59,7 @@ renameModalSetStaginText t modal = { modal | stagingText = t}
 type alias CodeTab = 
     { id : TabId
     , name : String
-    , modules : Dict Slug CodeTabModule
+    , captureSlots : Dict Slug CodeTabCapture
     , currentModule : ModuleName
     , moduleDropdown : Dropdown.State
     , selectedVar : Maybe Var
@@ -73,7 +72,7 @@ type alias CodeTab =
     }
 
 type CodeTabMsg
-    = CodeMsgSetModule ModuleName Int
+    = CodeMsgSetModule ModuleName
     | CodeMsgGotModule Slug (Result Http.Error Module)
     | CodeMsgSelectVar Var
     | CodeMsgToggleHideTypes

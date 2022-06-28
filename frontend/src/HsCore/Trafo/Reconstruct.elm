@@ -19,11 +19,14 @@ lookupBinder env u = \_ -> case Dict.get (H.uniqueToInt u) env of
     Nothing -> NotFound
 
 reconModule : Module -> Module
-reconModule mod = 
-    let initialenv = withBindingN (List.map .topBindingBinder (H.getModuleTopBinders mod)) Dict.empty
-        newbinders = List.map (reconTopBinding initialenv) mod.moduleTopBindings
+reconModule mod = { mod | modulePhases = List.map reconPhase mod.modulePhases }
+
+reconPhase : Phase -> Phase
+reconPhase mod = 
+    let initialenv = withBindingN (List.map .topBindingBinder (H.getPhaseTopBinders mod)) Dict.empty
+        newbinders = List.map (reconTopBinding initialenv) mod.phaseTopBindings
         env = withBindingN (List.concatMap (List.map .topBindingBinder << H.getTopLevelBinders) newbinders) initialenv
-    in { mod | moduleTopBindings = List.map (reconTopBinding env) mod.moduleTopBindings }
+    in { mod | phaseTopBindings = List.map (reconTopBinding env) mod.phaseTopBindings }
 
 reconExternalName : Env -> ExternalName -> ExternalName
 reconExternalName env ename = case ename of
