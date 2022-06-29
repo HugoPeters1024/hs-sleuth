@@ -54,6 +54,7 @@ cvtBinder env sbndr = case GHCD.unSBndr sbndr of
         , binderId = cvtBinderId env binderId
         , binderType = cvtType env binderType
         , binderPhaseId = cvtEnvPhaseId env
+        , binderCreatedPhaseId = 0
         , ..
         }
     GHCD.TyBinder {..} -> TyBinder

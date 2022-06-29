@@ -8,6 +8,7 @@ import GHC.Plugins
 import HsComprehension.Uniqify as Uniqify
 import HsComprehension.Ast as Ast
 import qualified HsComprehension.Cvt as Cvt
+import HsComprehension.DefAnalysis
 
 import Control.Monad.IO.Class
 import Control.Monad
@@ -188,7 +189,7 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
         let ruleFirings = parseStdout r
         putStrLn r
 
-        let phases = map (\(n, p) -> p { phaseFiredRules = filter ((==n) . firedRulePhase) ruleFirings }) $ zip [0..] (reverse in_phases)
+        let phases = defAnalysis $ map (\(n, p) -> p { phaseFiredRules = filter ((==n) . firedRulePhase) ruleFirings }) $ zip [0..] (reverse in_phases)
 
         let mod = Ast.Module { 
               Ast.moduleName = T.pack modName

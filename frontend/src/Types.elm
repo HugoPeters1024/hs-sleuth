@@ -74,6 +74,7 @@ type alias CodeTab =
 type CodeTabMsg
     = CodeMsgSetModule ModuleName
     | CodeMsgGotModule Slug (Result Http.Error Module)
+    | CodeMsgSetPhase Slug Int
     | CodeMsgSelectVar Var
     | CodeMsgToggleHideTypes
     | CodeMsgToggleDisambiguateVariables
@@ -87,7 +88,7 @@ type CodeTabMsg
     | CodeMsgRenameModalCommit
 
 type CtxMenu =
-    CtxCodeVar Var TabId
+    CtxCodeVar Slug Var TabId
 
 type alias Model = 
     { pageTab : Tabs.Model

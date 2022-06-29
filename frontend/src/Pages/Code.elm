@@ -93,6 +93,10 @@ update msg tab = case msg of
              (Dict.keys tab.captureSlots)
             )
         )
+    CodeMsgSetPhase slug phase -> 
+        let setSlider : CodeTabCapture -> CodeTabCapture
+            setSlider tabmod = { tabmod | phaseSlider = Slider.init phase }
+        in ({ tab | captureSlots = Dict.update slug (Maybe.map setSlider) tab.captureSlots }, Cmd.none)
     CodeMsgGotModule slug res -> 
         let updateCaptureTab : CodeTabCapture -> CodeTabCapture
             updateCaptureTab tabmod = {tabmod | mod = Loading.loadFromResult res }
@@ -197,6 +201,7 @@ viewCode model tab slug modtab =
             { codeTabId = tab.id
             , selectedVar = tab.selectedVar
             , renameDict = tab.varRenames
+            , slug = slug
             }
     in div []
         [ h4 [] [text slug]
@@ -277,6 +282,7 @@ viewBinderInfo bndr = case bndr of
     Binder b -> HtmlHelpers.list
             [ text ("name: " ++ b.binderName)
             , text ("type: " ++ typeToString b.binderType)
+            , text ("first seen in phase: " ++ String.fromInt b.binderCreatedPhaseId)
             , text ("span: " ++ Debug.toString (b.binderIdInfo))
             ]
     TyBinder b -> text "TODO: TyBinder"

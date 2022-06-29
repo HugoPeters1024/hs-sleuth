@@ -60,6 +60,12 @@ data BinderId = BinderId
     , binderIdDeBruijn :: Int
     } deriving (Generic, Serialise, Show)
 
+instance Eq BinderId where
+    lhs == rhs = (binderIdUnique lhs) == (binderIdUnique rhs)
+
+instance Ord BinderId where
+    compare lhs rhs = compare (binderIdUnique lhs) (binderIdUnique rhs)
+
 data Binder = Binder
     { binderName :: Text
     , binderId :: BinderId
@@ -68,6 +74,7 @@ data Binder = Binder
     , binderType :: Type
     , binderSrcSpan :: SrcSpan
     , binderPhaseId :: Int
+    , binderCreatedPhaseId :: Int
     } 
     |
     TyBinder { binderName :: Text

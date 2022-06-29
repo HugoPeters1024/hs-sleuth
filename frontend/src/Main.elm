@@ -7,6 +7,8 @@ import Browser exposing (Document)
 import Url exposing (Url)
 import Loading exposing (..)
 
+import Generated.Types exposing (..)
+
 import Time
 import Task
 import Dict exposing (Dict)
@@ -77,10 +79,17 @@ viewCodeTabs model =
 
 getCtxMenuItems : CtxMenu -> List (List (ContextMenu.Item, Msg))
 getCtxMenuItems context = case context of
-    CtxCodeVar var tabid -> 
-        [ [ (ContextMenu.item "Rename", Code.mkCodeMsg tabid (CodeMsgRenameModalOpen var))
-          ] 
-        ]
+    CtxCodeVar slug var tabid -> 
+        let always = [(ContextMenu.item "Rename", Code.mkCodeMsg tabid (CodeMsgRenameModalOpen var))]
+            onBinder = 
+                let wBinder bndr = case bndr of
+                        Binder b -> [(ContextMenu.item "Jump to First Occurrance", Code.mkCodeMsg tabid (CodeMsgSetPhase slug b.binderCreatedPhaseId))]
+                        _        -> []
+                in case var of
+                    VarBinder bndr -> wBinder bndr
+                    VarTop t -> wBinder t.topBindingBinder
+                    _ -> []
+        in [always ++ onBinder]
 
 view : Model -> Document Msg
 view m = 

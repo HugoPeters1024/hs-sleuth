@@ -86,20 +86,22 @@ binderDecoder =
     Json.Decode.field "tag" Json.Decode.string |>
     Json.Decode.andThen (\a -> case a of
         "Binder" ->
-            Json.Decode.map Binder (Json.Decode.succeed (\b c d e f g h -> { binderName = b
+            Json.Decode.map Binder (Json.Decode.succeed (\b c d e f g h i -> { binderName = b
             , binderId = c
             , binderIdInfo = d
             , binderIdDetails = e
             , binderType = f
             , binderSrcSpan = g
-            , binderPhaseId = h }) |>
+            , binderPhaseId = h
+            , binderCreatedPhaseId = i }) |>
             Json.Decode.Pipeline.required "binderName" Json.Decode.string |>
             Json.Decode.Pipeline.required "binderId" binderIdDecoder |>
             Json.Decode.Pipeline.required "binderIdInfo" idInfoDecoder |>
             Json.Decode.Pipeline.required "binderIdDetails" idDetailsDecoder |>
             Json.Decode.Pipeline.required "binderType" typeDecoder |>
             Json.Decode.Pipeline.required "binderSrcSpan" srcSpanDecoder |>
-            Json.Decode.Pipeline.required "binderPhaseId" Json.Decode.int)
+            Json.Decode.Pipeline.required "binderPhaseId" Json.Decode.int |>
+            Json.Decode.Pipeline.required "binderCreatedPhaseId" Json.Decode.int)
 
         "TyBinder" ->
             Json.Decode.map TyBinder (Json.Decode.succeed (\b c d e -> { binderName = b

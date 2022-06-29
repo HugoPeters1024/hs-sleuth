@@ -23,6 +23,7 @@ library
                     , HsComprehension.Ast
                     , HsComprehension.Cvt
                     , HsComprehension.Uniqify
+                    , HsComprehension.DefAnalysis
 
     -- Modules included in this library but not exported.
     other-modules: 

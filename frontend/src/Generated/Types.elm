@@ -58,7 +58,8 @@ type Binder
     , binderIdDetails : IdDetails
     , binderType : Type
     , binderSrcSpan : SrcSpan
-    , binderPhaseId : Int }
+    , binderPhaseId : Int
+    , binderCreatedPhaseId : Int }
     | TyBinder { binderName : String
     , binderId : BinderId
     , binderKind : Type

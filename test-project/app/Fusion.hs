@@ -18,11 +18,62 @@ import Data.List.Stream
 --users :: [User]
 --users = zipWith3 User firstNames lastNames ages
 
-addThree :: [Int] -> [Int]
-addThree = Data.List.Stream.map (+1) . Data.List.Stream.map(+2)
+--addThree :: [Int] -> [Int]
+--addThree = Data.List.Stream.map (+1) . Data.List.Stream.map(+2)
+--
+--addThree2 :: [Int] -> [Int]
+--addThree2 xs = Data.Stream.unstream (Data.Stream.map (+3) (Data.Stream.stream xs))
 
-addThree2 :: [Int] -> [Int]
-addThree2 xs = Data.Stream.unstream (Data.Stream.map (+3) (Data.Stream.stream xs))
+addMany :: [Int] -> [Int]
+addMany 
+  = Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
+  . Data.List.Stream.map (+1)
 
 --totalPrefixSum :: [Int] -> Int
 --totalPrefixSum = sum . scanl (+) 0

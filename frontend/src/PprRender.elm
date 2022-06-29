@@ -19,6 +19,7 @@ type alias PprRenderEnv =
     { codeTabId : TabId
     , selectedVar : Maybe Var
     , renameDict : Dict Int String
+    , slug : String
     }
 
 varHighlightClass : PprRenderEnv -> Var -> String
@@ -35,7 +36,7 @@ varHighlightClass env o = case env.selectedVar of
 renderVar : PprRenderEnv -> String -> Var -> Html Msg
 renderVar env content var = 
     let className = if varIsConstructor var then "k" else ""
-        ctxMenu = ContextMenu.open MsgCtxMenu (CtxCodeVar var env.codeTabId)
+        ctxMenu = ContextMenu.open MsgCtxMenu (CtxCodeVar env.slug var env.codeTabId)
         varName = case Dict.get (varToInt var) env.renameDict of
             Just x -> x
             Nothing -> content
