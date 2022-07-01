@@ -1,5 +1,6 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeApplications #-}
-module HsComprehension.Uniqify 
+module HsComprehension.Uniqify
     ( uniqueModule
     ) where
 
@@ -20,7 +21,7 @@ type UniqEnv = (Map Int Int, Set Int)
 type Uniq a = StateT UniqEnv IO a
 
 uniqueModule :: ModGuts -> IO ModGuts
-uniqueModule (guts@ModGuts { mg_binds = mg_binds }) = do
+uniqueModule guts@ModGuts { mg_binds = mg_binds } = do
     (nbinds, (scope, nset)) <- runStateT (mapM uniqBind mg_binds) (M.empty, S.empty)
     pure $ guts { mg_binds = nbinds }
 
@@ -42,7 +43,7 @@ uniqVar var = do
     let (tag, uid) = unpkUnique (getUnique var)
     case M.lookup uid scope of
       Just i -> pure $ setVarUnique var (mkUnique tag i)
-      Nothing -> pure $ var
+      Nothing -> pure var
 
 uniqBndr :: CoreBndr -> Uniq Var
 uniqBndr var = do
@@ -51,9 +52,9 @@ uniqBndr var = do
        else do
         (scope, gl) <- get
         let (tag, uid) = unpkUnique (getUnique var)
-        if S.member uid gl 
+        if S.member uid gl
            then do
-              idx <- (\x -> x `mod` 10000000) <$> randomIO @Int
+              idx <- (`mod` 10000000) <$> randomIO @Int
               let nscope = M.insert uid idx scope
               let ngl = S.insert idx gl
               put (nscope, ngl)
@@ -87,4 +88,8 @@ uniqExpr (Type t) = pure $ Type t
 uniqExpr (Coercion c) = pure $ Coercion c
 
 uniqAlt :: CoreAlt -> Uniq CoreAlt
+#if MIN_VERSION_ghc(9,2,0)
 uniqAlt (Alt con bs e) = limitScope $ Alt con <$> mapM uniqBndr bs <*> uniqExpr e
+#else
+uniqAlt (con, bs, e) = limitScope $ (,,) con <$> mapM uniqBndr bs <*> uniqExpr e
+#endif

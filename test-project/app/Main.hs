@@ -9,5 +9,5 @@ import Tail
 import Quicksort
 
 main :: IO ()
-main = print (tupleFirst (fac2 5) "lol")
+main = let in print (tupleFirst (fac2 5) "lol")
 

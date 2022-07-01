@@ -69,11 +69,11 @@ phaseMarkerParser :: Parsec.Parsec String () Int
 phaseMarkerParser = id <$ Parsec.string "__PHASE_MARKER " <*> Parsec.int
 
 ruleParser :: Int -> Parsec.Parsec String () Ast.FiredRule
-ruleParser p = Ast.FiredRule 
+ruleParser p = Ast.FiredRule
                  <$ Parsec.string "Rule fired: "
                  <*> (T.pack <$> Parsec.manyTill Parsec.anyChar (Parsec.try (Parsec.string " (")))
                  <*> (T.pack <$> Parsec.manyTill Parsec.anyChar (Parsec.try (Parsec.char ')')))
-                 <*> (pure (p+1))
+                 <*> pure (p+1)
 
 parseStdout :: String -> [Ast.FiredRule]
 parseStdout inp = reverse $ fst $ P.foldl go ([], 0) (lines inp)
@@ -95,7 +95,7 @@ currentPosixMillis :: IO Int
 currentPosixMillis = millisSinceEpoch <$> getPOSIXTime
 
 cvtGhcPhase :: DynFlags -> Int -> String -> GHC.Plugins.ModGuts -> Ast.Phase
-cvtGhcPhase dflags phaseId phase = 
+cvtGhcPhase dflags phaseId phase =
     let cvtEnv = Cvt.CvtEnv { Cvt.cvtEnvPhaseId = phaseId
                             , Cvt.cvtEnvBinders = []
                             }
@@ -103,7 +103,7 @@ cvtGhcPhase dflags phaseId phase =
 
 projectState :: IORef (StdThief, Capture)
 projectState =  do
-    let capture = 
+    let capture =
             Capture { captureName = T.empty
                     , captureDate = 0
                     , captureModules = []
@@ -128,11 +128,12 @@ install options todo = do
                     _      -> error "provide a slug for the dump as exactly 1 argument"
     liftIO $ print options
     liftIO $ FP.createDirectoryIfMissing True (coreDumpDir slug)
-    modName <- showPprUnsafe <$> getModule
-    liftIO $ modifyIORef projectState $ \(thief, capture) -> 
+    dflags <- getDynFlags
+    modName <- showSDoc dflags . ppr <$> getModule
+    liftIO $ modifyIORef projectState $ \(thief, capture) ->
         ( thief
-        , capture 
-            { captureModules = (T.pack modName, length todo) : captureModules capture 
+        , capture
+            { captureModules = (T.pack modName, length todo) : captureModules capture
             , captureName = T.pack slug
             }
         )
@@ -183,7 +184,7 @@ dumpPass ms_ref n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
 finalPass :: IORef [Ast.Phase] -> (String, String) -> CoreToDo
 finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts -> do
     liftIO $ do
-        (thief, capture) <- readIORef projectState 
+        (thief, capture) <- readIORef projectState
         in_phases <- readIORef ms_ref
         r <- readStdoutThief thief
         let ruleFirings = parseStdout r
@@ -191,7 +192,7 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
 
         let phases = defAnalysis $ map (\(n, p) -> p { phaseFiredRules = filter ((==n) . firedRulePhase) ruleFirings }) $ zip [0..] (reverse in_phases)
 
-        let mod = Ast.Module { 
+        let mod = Ast.Module {
               Ast.moduleName = T.pack modName
             , Ast.modulePhases = phases
             }

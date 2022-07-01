@@ -10,10 +10,10 @@ import HsCore.Trafo.Reconstruct as TR
 import Json.Decode
 
 
-fetchModule : TabId -> Slug -> String -> Cmd Msg
-fetchModule tid slug mod = 
+fetchModule : TabId -> SlotId -> Slug -> String -> Cmd Msg
+fetchModule tid slot slug mod = 
     Http.get { url = "http://localhost:8080/module/" ++ slug ++ "/" ++ mod
-             , expect = Http.expectJson (MsgCodeMsg tid << CodeMsgGotModule slug) (Json.Decode.map TR.reconModule HE.moduleDecoder)
+             , expect = Http.expectJson (MsgCodeMsg tid << CodeMsgGotModule slot) (Json.Decode.map TR.reconModule HE.moduleDecoder)
              }
 
 fetchCaptures : Cmd Msg

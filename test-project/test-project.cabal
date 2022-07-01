@@ -28,6 +28,7 @@ executable hs-plugin-test
     other-modules:    TextExt
                     , Fusion
                     , Records
+                    , LargeRecords
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -35,6 +36,7 @@ executable hs-plugin-test
                     , hs-comprehension-plugin
                     , text
                     , stream-fusion
+                    , large-records
     hs-source-dirs:   app
     default-language: Haskell2010
     ghc-options: -O2 -ddump-rule-firings -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:Baseline

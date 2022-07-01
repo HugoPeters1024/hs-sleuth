@@ -7,6 +7,19 @@ zip lhs rhs = case (lhs, rhs) of
     (x::xs, y::ys) -> (x,y) :: zip xs ys
     _              -> []
 
+range : Int -> List Int
+range = 
+    let go : Int -> List Int
+        go num = case num of
+            0 -> [0]
+            n -> n::(go (n - 1))
+    in List.reverse << go
+
+
+enumerate : List a -> List (Int, a)
+enumerate xs = zip (range (List.length xs)) xs
+
+
 zipWith : (a -> b -> c) -> List a -> List b -> List c
 zipWith f lhs rhs = List.map (\(x, y) -> f x y) <| zip lhs rhs
 

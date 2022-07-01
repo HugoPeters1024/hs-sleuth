@@ -8,26 +8,30 @@ import Loading exposing (Loading)
 import Commands
 import HsCore.Helpers as H
 
-import Set.Any exposing (AnySet)
 import Time
 
 import Bootstrap.Table as Table
 import Bootstrap.Button as Button
+
+lift : OverviewMsg -> Msg
+lift = Types.MsgOverViewTab
 
 init : Cmd Msg
 init = Commands.fetchCaptures
 
 update : OverviewMsg -> OverviewTab -> (OverviewTab, Cmd Msg)
 update msg tab = case msg of
-    OverviewMsgToggleProject project -> ({tab | enabledProjects = Set.Any.toggle project tab.enabledProjects}, Cmd.none)
+    OverviewMsgStageProject project -> ({tab | stagedProjects = tab.stagedProjects ++ [project]}, Cmd.none)
 
 view : Model -> Html Msg
 view m = 
     let
         mkRow project = 
-            Table.tr [Table.rowAttr (onClick (MsgOverViewTab (OverviewMsgToggleProject project)))] 
-                [ Table.td [] [ checkboxSimple
-                                (Set.Any.member project m.overviewTab.enabledProjects) 
+            Table.tr [Table.rowAttr (onClick (MsgOverViewTab (OverviewMsgStageProject project)))] 
+                [ Table.td [] [ Button.button 
+                                    [ Button.secondary
+                                    ] 
+                                    [ text "+" ] 
                               ]
                 , Table.td [] [text project.captureName]
                 , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix project.captureDate))]
@@ -35,18 +39,24 @@ view m =
     in Loading.debugLoading "SessionMeta" m.capturesLoading <| \captures ->
             div []
                 [ h1 [] [text "Overview"]
+                , hr [] []
+                , h2 [] [text "Captures"]
                 , Table.table
                     { options = [Table.striped, Table.hover]
                     , thead = Table.simpleThead
-                        [ Table.th [] [text "selected"]
+                        [ Table.th [] [text "Stage"]
                         , Table.th [] [text "Capture Slug"]
                         , Table.th [] [text "Captured at"]
                         ]
                     , tbody = Table.tbody [] (List.map mkRow captures)
                     }
+                , hr [] []
+                , HtmlHelpers.list (List.map (text << .captureName) m.overviewTab.stagedProjects)
+                , h2 [] [text "Staged"]
+                , hr [] []
                 , Button.button 
                     [ Button.primary
-                    , Button.disabled (Set.Any.isEmpty m.overviewTab.enabledProjects)
+                    , Button.disabled (List.isEmpty m.overviewTab.stagedProjects)
                     , Button.attrs [onClick MsgOpenCodeTab]
                     ] 
                     [text "Open Tab"]

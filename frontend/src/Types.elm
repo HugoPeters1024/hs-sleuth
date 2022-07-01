@@ -22,6 +22,7 @@ import Bootstrap.Modal as Modal
 
 type alias PhaseId = Int
 type alias TabId = Int
+type alias SlotId = Int
 type alias VarId = Int
 type alias Slug = String
 type alias ModuleName = String
@@ -30,6 +31,7 @@ type alias CodeTabCapture =
     { mod : Loading Module
     , capture : Capture
     , phaseSlider : Slider.Model
+    , slot : Int
     }
 
 type alias CodeTabRenameModal =
@@ -59,7 +61,7 @@ renameModalSetStaginText t modal = { modal | stagingText = t}
 type alias CodeTab = 
     { id : TabId
     , name : String
-    , captureSlots : Dict Slug CodeTabCapture
+    , captureSlots : Dict Int CodeTabCapture
     , currentModule : ModuleName
     , moduleDropdown : Dropdown.State
     , selectedVar : Maybe Var
@@ -73,14 +75,14 @@ type alias CodeTab =
 
 type CodeTabMsg
     = CodeMsgSetModule ModuleName
-    | CodeMsgGotModule Slug (Result Http.Error Module)
-    | CodeMsgSetPhase Slug Int
+    | CodeMsgGotModule SlotId (Result Http.Error Module)
+    | CodeMsgSetPhase SlotId Int
     | CodeMsgSelectVar Var
     | CodeMsgToggleHideTypes
     | CodeMsgToggleDisambiguateVariables
     | CodeMsgToggleShowRecursiveGroups
     | CodeMsgModuleDropdown Dropdown.State
-    | CodeMsgSlider Slug Slider.Msg
+    | CodeMsgSlider SlotId Slider.Msg
     | CodeMsgMarkTopLevel TopBindingInfo
     | CodeMsgRenameModalOpen Var
     | CodeMsgRenameModalClose
@@ -88,7 +90,7 @@ type CodeTabMsg
     | CodeMsgRenameModalCommit
 
 type CtxMenu =
-    CtxCodeVar Slug Var TabId
+    CtxCodeVar TabId SlotId Var
 
 type alias Model = 
     { pageTab : Tabs.Model
@@ -101,11 +103,11 @@ type alias Model =
     }
 
 type alias OverviewTab =
-    { enabledProjects : AnySet Slug Capture
+    { stagedProjects : List Capture
     }
 
 type OverviewMsg
-    = OverviewMsgToggleProject Capture
+    = OverviewMsgStageProject Capture
 
 
 type Msg 

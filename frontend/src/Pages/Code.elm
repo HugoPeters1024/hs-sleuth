@@ -37,11 +37,12 @@ mkCodeMsg id msg = MsgCodeMsg id msg
 subscriptions : CodeTab -> Sub Msg
 subscriptions tab = Sub.map (MsgCodeMsg tab.id) (Dropdown.subscriptions tab.moduleDropdown CodeMsgModuleDropdown)
 
-initCodeTabCapture : Capture -> CodeTabCapture
-initCodeTabCapture capture = 
+initCodeTabCapture : Int -> Capture -> CodeTabCapture
+initCodeTabCapture slot capture = 
     { mod = Loading Nothing
     , capture = capture
     , phaseSlider = Slider.init 0
+    , slot = slot
     }
 
 getCaptures : CodeTab -> List Capture
@@ -56,27 +57,28 @@ getMergedModuleNames tab = List.map Tuple.first (List.concatMap .captureModules 
 makeCodeTab : Model -> List Capture -> (Model, CodeTab, Cmd Msg)
 makeCodeTab model captures = 
     let tabId = model.idGen
-        slugs = List.map .captureName captures
+        tab =
+          { id = tabId
+          , name = "Code-" ++ String.fromInt tabId
+          , captureSlots = Dict.fromList (List.map (\(i, c) -> (i, initCodeTabCapture i c)) (EH.enumerate captures))
+          , currentModule = "Main"
+          , selectedVar = Nothing
+          , moduleDropdown = Dropdown.initialState
+          , hideTypes = False
+          , disambiguateVariables = False
+          , showRecursiveGroups = False
+          , selectedTopLevels = []
+          , renameModal = 
+              { visiblity = Modal.hidden
+              , stagingText = ""
+              , varId = -1
+              }
+          , varRenames = Dict.empty
+          }
     in
     ( { model | idGen = model.idGen + 1 }
-    , { id = tabId
-      , name = "Code-" ++ String.fromInt tabId
-      , captureSlots = Dict.fromList (List.map (\m -> (m.captureName, initCodeTabCapture m)) captures)
-      , currentModule = "Main"
-      , selectedVar = Nothing
-      , moduleDropdown = Dropdown.initialState
-      , hideTypes = False
-      , disambiguateVariables = False
-      , showRecursiveGroups = False
-      , selectedTopLevels = []
-      , renameModal = 
-          { visiblity = Modal.hidden
-          , stagingText = ""
-          , varId = -1
-          }
-      , varRenames = Dict.empty
-      }
-    , Cmd.batch (List.map (\slug -> C.fetchModule tabId slug "Main") slugs)
+      , tab
+      , Cmd.batch (List.map (\ct -> C.fetchModule tabId ct.slot ct.capture.captureName "Main") (Dict.values tab.captureSlots))
     )
 
 
@@ -89,28 +91,28 @@ update msg tab = case msg of
         ( {tab | currentModule = modname, captureSlots = Dict.map (\_ -> resetCapture) tab.captureSlots }
         , Cmd.batch 
             ( List.map
-             (\slug -> Commands.fetchModule tab.id slug modname)
-             (Dict.keys tab.captureSlots)
+             (\ct -> Commands.fetchModule tab.id ct.slot ct.capture.captureName modname)
+             (Dict.values tab.captureSlots)
             )
         )
-    CodeMsgSetPhase slug phase -> 
-        let setSlider : CodeTabCapture -> CodeTabCapture
-            setSlider tabmod = { tabmod | phaseSlider = Slider.init phase }
-        in ({ tab | captureSlots = Dict.update slug (Maybe.map setSlider) tab.captureSlots }, Cmd.none)
-    CodeMsgGotModule slug res -> 
+    CodeMsgGotModule slot res -> 
         let updateCaptureTab : CodeTabCapture -> CodeTabCapture
             updateCaptureTab tabmod = {tabmod | mod = Loading.loadFromResult res }
-        in ({tab | captureSlots = Dict.update slug (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
+        in ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
+    CodeMsgSetPhase slot phase -> 
+        let setSlider : CodeTabCapture -> CodeTabCapture
+            setSlider tabmod = { tabmod | phaseSlider = Slider.init phase }
+        in ({ tab | captureSlots = Dict.update slot (Maybe.map setSlider) tab.captureSlots }, Cmd.none)
     CodeMsgSelectVar var -> ({tab | selectedVar = Just var}, Cmd.none)
     CodeMsgToggleHideTypes -> ({tab | hideTypes = not tab.hideTypes}, Cmd.none)
     CodeMsgToggleDisambiguateVariables -> ({tab | disambiguateVariables = not tab.disambiguateVariables}, Cmd.none)
     CodeMsgToggleShowRecursiveGroups -> ({tab | showRecursiveGroups = not tab.showRecursiveGroups}, Cmd.none)
     CodeMsgModuleDropdown state -> ({tab | moduleDropdown = state}, Cmd.none)
-    CodeMsgSlider slug slidermsg ->
+    CodeMsgSlider slot slidermsg ->
         let updateCaptureTab : CodeTabCapture -> CodeTabCapture
             updateCaptureTab tabmod = {tabmod | phaseSlider = Slider.update slidermsg tabmod.phaseSlider }
 
-        in ({tab | captureSlots = Dict.update slug (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
+        in ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
     CodeMsgMarkTopLevel ti -> ({tab | selectedTopLevels = ti::tab.selectedTopLevels }, Cmd.none)
     CodeMsgRenameModalOpen var -> ({tab | renameModal = renameModalOpen var tab.renameModal}, Cmd.none)
     CodeMsgRenameModalClose -> ({tab | renameModal = renameModalClose tab.renameModal}, Cmd.none)
@@ -125,8 +127,8 @@ view model tab =
     div [] [ viewHeader model tab
            , panel
                 (
-                    (foreach (Dict.toList tab.captureSlots) <| \(slug, mod) ->
-                        (Fraction 4, viewCode model tab slug mod)
+                    (foreach (Dict.values tab.captureSlots) <| \mod ->
+                        (Fraction 4, viewCode model tab mod)
                     )
                     ++
                     [ (Pixels 500, Html.map (mkCodeMsg tab.id) (viewInfo model tab)) ]
@@ -194,24 +196,25 @@ renderVarName tab var =
     Just name -> name
     Nothing -> (varName tab.disambiguateVariables var) ++ postfix
 
-viewCode : Model -> CodeTab -> Slug -> CodeTabCapture -> Html Msg
-viewCode model tab slug modtab = 
+viewCode : Model -> CodeTab -> CodeTabCapture -> Html Msg
+viewCode model tab modtab = 
     let pprEnv : Ppr.PprRenderEnv
         pprEnv = 
             { codeTabId = tab.id
+            , codeTabSlotId = modtab.slot
             , selectedVar = tab.selectedVar
             , renameDict = tab.varRenames
-            , slug = slug
+            , slug = modtab.capture.captureName
             }
     in div []
-        [ h4 [] [text slug]
+        [ h4 [] [text modtab.capture.captureName]
         , Loading.renderLoading modtab.mod <| \mod -> 
             case EH.indexList modtab.phaseSlider.value mod.modulePhases of
                 Nothing -> text "Invalid Phase Index"
                 Just phase -> div []
                     [ text phase.phaseName
                     , Slider.config
-                        { lift = \msg -> mkCodeMsg tab.id (CodeMsgSlider slug msg)
+                        { lift = \msg -> mkCodeMsg tab.id (CodeMsgSlider modtab.slot msg)
                         , mininum = 0
                         , maximum = List.length mod.modulePhases - 1
                         }

@@ -40,7 +40,7 @@ init _ =
            , capturesLoading = Loading Nothing
            , timezone = Time.utc
            , overviewTab =
-               { enabledProjects = Set.Any.empty .captureName
+               { stagedProjects = []
                }
            , idGen = 0
            , codeTabs = Dict.empty
@@ -79,11 +79,11 @@ viewCodeTabs model =
 
 getCtxMenuItems : CtxMenu -> List (List (ContextMenu.Item, Msg))
 getCtxMenuItems context = case context of
-    CtxCodeVar slug var tabid -> 
+    CtxCodeVar tabid slot var -> 
         let always = [(ContextMenu.item "Rename", Code.mkCodeMsg tabid (CodeMsgRenameModalOpen var))]
             onBinder = 
                 let wBinder bndr = case bndr of
-                        Binder b -> [(ContextMenu.item "Jump to First Occurrance", Code.mkCodeMsg tabid (CodeMsgSetPhase slug b.binderCreatedPhaseId))]
+                        Binder b -> [(ContextMenu.item "Jump to First Occurrance", Code.mkCodeMsg tabid (CodeMsgSetPhase slot b.binderCreatedPhaseId))]
                         _        -> []
                 in case var of
                     VarBinder bndr -> wBinder bndr
@@ -134,10 +134,10 @@ update msg model = case msg of
         let (ntab, cmd) = Overview.update tabmsg model.overviewTab
         in ({model | overviewTab = ntab}, cmd)
     MsgOpenCodeTab -> 
-        if (Set.Any.isEmpty model.overviewTab.enabledProjects)
+        if (List.isEmpty model.overviewTab.stagedProjects)
         then (model, Cmd.none)
         else
-            let (nmodel, codeTab, cmd) = Code.makeCodeTab model (Set.Any.toList model.overviewTab.enabledProjects)
+            let (nmodel, codeTab, cmd) = Code.makeCodeTab model model.overviewTab.stagedProjects
             in (addCodeTab codeTab nmodel, cmd)
     MsgCtxMenu ctx -> 
         let (ctxMenu, cmd) = ContextMenu.update ctx model.ctxMenu
