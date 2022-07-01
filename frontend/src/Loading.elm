@@ -2,6 +2,7 @@ module Loading exposing (..)
 
 import Http
 import Html exposing (Html, text)
+import Html.Attributes as Attributes
 
 import Bootstrap.Spinner as Spinner
 
@@ -33,6 +34,7 @@ renderLoading : Loading a -> (a -> Html msg) -> Html msg
 renderLoading load f = case load of
     Ready x -> f x
     Loading (Just x) -> f x
+    Error _ -> Html.h1 [Attributes.style "color" "red"] [text "x"]
     _ -> Spinner.spinner [] []
 
 map : (a -> b) -> Loading a -> Loading b

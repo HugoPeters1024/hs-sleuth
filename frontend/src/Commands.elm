@@ -20,3 +20,8 @@ fetchCaptures : Cmd Msg
 fetchCaptures = Http.get { url = "http://localhost:8080/captures"
                          , expect = Http.expectJson MsgGotCaptures (Json.Decode.list HE.captureDecoder)
                          }
+
+deleteCapture : Capture -> Cmd Msg
+deleteCapture capture = Http.get { url = "http://localhost:8080/capture_delete/" ++ capture.captureName
+                                 , expect = Http.expectWhatever (\_ -> MsgOverViewTab OverViewMsgCaptureDeleted)
+                                 }

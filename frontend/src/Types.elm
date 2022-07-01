@@ -107,7 +107,9 @@ type alias OverviewTab =
     }
 
 type OverviewMsg
-    = OverviewMsgStageProject Capture
+    = OverviewMsgStageCapture Capture
+    | OverViewMsgDeleteCapture Capture
+    | OverViewMsgCaptureDeleted
 
 
 type Msg 

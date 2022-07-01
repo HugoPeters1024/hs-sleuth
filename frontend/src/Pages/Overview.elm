@@ -1,6 +1,7 @@
 module Pages.Overview exposing (view, init, update)
 
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import HtmlHelpers exposing (..)
 import Types exposing (..)
@@ -21,18 +22,27 @@ init = Commands.fetchCaptures
 
 update : OverviewMsg -> OverviewTab -> (OverviewTab, Cmd Msg)
 update msg tab = case msg of
-    OverviewMsgStageProject project -> ({tab | stagedProjects = tab.stagedProjects ++ [project]}, Cmd.none)
+    OverviewMsgStageCapture project -> ({tab | stagedProjects = tab.stagedProjects ++ [project]}, Cmd.none)
+    OverViewMsgDeleteCapture capture -> (tab, Commands.deleteCapture capture)
+    OverViewMsgCaptureDeleted -> (tab, init)
 
 view : Model -> Html Msg
 view m = 
     let
         mkRow project = 
-            Table.tr [Table.rowAttr (onClick (MsgOverViewTab (OverviewMsgStageProject project)))] 
-                [ Table.td [] [ Button.button 
-                                    [ Button.secondary
-                                    ] 
-                                    [ text "+" ] 
-                              ]
+            Table.tr []
+                [ Table.td [] 
+                    [ Button.button 
+                        [ Button.secondary
+                        , Button.success
+                        , Button.attrs [class "bi bi-arrow-bar-down", onClick (lift (OverviewMsgStageCapture project))]
+                        ] []
+                    , Button.button
+                        [ Button.secondary
+                        , Button.danger
+                        , Button.attrs [class "bi bi-trash", onClick (lift (OverViewMsgDeleteCapture project))]
+                        ] []
+                    ]
                 , Table.td [] [text project.captureName]
                 , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix project.captureDate))]
                 ] 
@@ -51,8 +61,8 @@ view m =
                     , tbody = Table.tbody [] (List.map mkRow captures)
                     }
                 , hr [] []
-                , HtmlHelpers.list (List.map (text << .captureName) m.overviewTab.stagedProjects)
                 , h2 [] [text "Staged"]
+                , HtmlHelpers.list (List.map (text << .captureName) m.overviewTab.stagedProjects)
                 , hr [] []
                 , Button.button 
                     [ Button.primary
