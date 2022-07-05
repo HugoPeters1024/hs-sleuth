@@ -43,6 +43,7 @@ initCodeTabCapture slot capture =
     , capture = capture
     , phaseSlider = Slider.init 0
     , slot = slot
+    , toplevelHides = Set.empty
     }
 
 getCaptures : CodeTab -> List Capture
@@ -74,7 +75,6 @@ makeCodeTab model captures =
               , varId = -1
               }
           , varRenames = Dict.empty
-          , toplevelHides = Set.empty
           }
     in
     ( { model | idGen = model.idGen + 1 }
@@ -122,6 +122,10 @@ update msg tab = case msg of
         let varRenames = Dict.insert tab.renameModal.varId tab.renameModal.stagingText tab.varRenames
             modal = renameModalClose tab.renameModal
         in ({tab | varRenames = varRenames, renameModal = modal}, Cmd.none)
+    CodeMsgHideToplevel slot ti -> 
+        let updateHideSet : CodeTabCapture -> CodeTabCapture
+            updateHideSet tabmod = {tabmod | toplevelHides = EH.toggleSet (topBindingInfoToInt ti) tabmod.toplevelHides}
+        in ({tab | captureSlots = Dict.update slot (Maybe.map updateHideSet) tab.captureSlots}, Cmd.none)
 
 view : Model -> CodeTab -> Html Msg
 view model tab = 
@@ -235,7 +239,7 @@ viewCode model tab modtab =
                     , pre [class "dark"] 
                         [ code [] 
                                [ processDiff tab phase
-                                 |> hideToplevels tab.toplevelHides
+                                 |> hideToplevels modtab.toplevelHides
                                  |> (if tab.hideTypes then eraseTypesPhase else identity)
                                  |> (if tab.showRecursiveGroups then identity else \p -> {p | phaseTopBindings = removeRecursiveGroups p.phaseTopBindings})
                                  |> Ppr.pprPhase mod.moduleName

@@ -1,6 +1,7 @@
 module ElmHelpers exposing (..)
 
 import Set.Any
+import Set exposing (Set)
 
 zip : List a -> List b -> List (a, b)
 zip lhs rhs = case (lhs, rhs) of
@@ -47,10 +48,11 @@ indexList : Int -> List a -> Maybe a
 indexList n xs = List.head (List.drop n xs)
 
 
-
 removeDuplicatesKey : (a -> comparable) -> List a -> List a
 removeDuplicatesKey f = Set.Any.toList << Set.Any.fromList f
 
 removeDuplicates : List comparable -> List comparable
 removeDuplicates = removeDuplicatesKey identity
 
+toggleSet : comparable -> Set comparable -> Set comparable
+toggleSet el set = if Set.member el set then Set.remove el set else Set.insert el set

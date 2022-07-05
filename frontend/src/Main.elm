@@ -89,7 +89,11 @@ getCtxMenuItems context = case context of
                     VarBinder bndr -> wBinder bndr
                     VarTop t -> wBinder t.topBindingBinder
                     _ -> []
-        in [always ++ onBinder]
+            onToplevel = case var of
+                VarTop t -> [(ContextMenu.item "Hide", Code.mkCodeMsg tabid (CodeMsgHideToplevel slot t))]
+                _        -> []
+
+        in [always ++ onBinder ++ onToplevel]
 
 view : Model -> Document Msg
 view m = 

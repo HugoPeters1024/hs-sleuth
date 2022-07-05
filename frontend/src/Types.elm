@@ -32,6 +32,7 @@ type alias CodeTabCapture =
     , capture : Capture
     , phaseSlider : Slider.Model
     , slot : Int
+    , toplevelHides : Set Int
     }
 
 type alias CodeTabRenameModal =
@@ -71,7 +72,6 @@ type alias CodeTab =
     , selectedTopLevels : List TopBindingInfo
     , renameModal : CodeTabRenameModal
     , varRenames : Dict Int String
-    , toplevelHides : Set Int
     }
 
 type CodeTabMsg
@@ -89,6 +89,7 @@ type CodeTabMsg
     | CodeMsgRenameModalClose
     | CodeMsgRenameModalStagingText String
     | CodeMsgRenameModalCommit
+    | CodeMsgHideToplevel SlotId TopBindingInfo
 
 type CtxMenu =
     CtxCodeVar TabId SlotId Var

@@ -78,6 +78,7 @@ That should be all!
 - A stress tested frontend with enormous modules along with an answer to the question if it is possible to provide a degraded feature set instead of none.
 - Click to go the module (for external names in the same project)
 - Qualify module names to reduce syntactical noise. 
+- Parse the strictness analysis of binders to present it more clearly
 
 ## Identified Limitations
 
