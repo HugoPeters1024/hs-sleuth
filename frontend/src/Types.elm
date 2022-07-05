@@ -71,6 +71,7 @@ type alias CodeTab =
     , selectedTopLevels : List TopBindingInfo
     , renameModal : CodeTabRenameModal
     , varRenames : Dict Int String
+    , toplevelHides : Set Int
     }
 
 type CodeTabMsg

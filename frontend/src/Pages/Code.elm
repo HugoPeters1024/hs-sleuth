@@ -74,6 +74,7 @@ makeCodeTab model captures =
               , varId = -1
               }
           , varRenames = Dict.empty
+          , toplevelHides = Set.empty
           }
     in
     ( { model | idGen = model.idGen + 1 }
@@ -196,6 +197,18 @@ renderVarName tab var =
     Just name -> name
     Nothing -> (varName tab.disambiguateVariables var) ++ postfix
 
+hideToplevels : Set Int -> Phase -> Phase
+hideToplevels hidden phase =
+    let q : TopBindingInfo -> Bool
+        q ti = Set.member (topBindingInfoToInt ti) hidden
+
+        go : TopBinding -> Maybe TopBinding
+        go tb = case tb of
+            NonRecTopBinding ti -> if q ti then Nothing else Just (NonRecTopBinding ti)
+            RecTopBinding tis -> Just (RecTopBinding (List.filter (not << q) tis))
+
+    in {phase | phaseTopBindings = List.filterMap go phase.phaseTopBindings}
+
 viewCode : Model -> CodeTab -> CodeTabCapture -> Html Msg
 viewCode model tab modtab = 
     let pprEnv : Ppr.PprRenderEnv
@@ -222,6 +235,7 @@ viewCode model tab modtab =
                     , pre [class "dark"] 
                         [ code [] 
                                [ processDiff tab phase
+                                 |> hideToplevels tab.toplevelHides
                                  |> (if tab.hideTypes then eraseTypesPhase else identity)
                                  |> (if tab.showRecursiveGroups then identity else \p -> {p | phaseTopBindings = removeRecursiveGroups p.phaseTopBindings})
                                  |> Ppr.pprPhase mod.moduleName
