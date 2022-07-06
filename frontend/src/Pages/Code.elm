@@ -304,7 +304,7 @@ viewBinderInfo bndr = case bndr of
             [ text ("name: " ++ b.binderName)
             , text ("type: " ++ typeToString b.binderType)
             , text ("first seen in phase: " ++ String.fromInt b.binderCreatedPhaseId)
-            , text ("span: " ++ Debug.toString (b.binderIdInfo))
+--            , text ("span: " ++ Debug.toString (b.binderIdInfo))
             ]
     TyBinder b -> text "TODO: TyBinder"
 

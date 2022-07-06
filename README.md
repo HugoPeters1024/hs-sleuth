@@ -74,17 +74,24 @@ That should be all!
     - The server binary contains libraries that generate elm code from record definitions and use advanced deriving strategies that make it extremely cost ineffective (if at all possible) to backport to < GHC 9.0. As such, the server will need to be provided as a prebuilt binary, or with a separate stack/nix/docker/?? build environment.
 - Capture the dflags used to configure the compiler
 - Productively explore the unfolding of a variable (it is currently not clear what that means)
+    - We need a use case/example for this feature
 - For the comparison of captures, hide toplevel definitions that are identical. A feature that could possible utilize an alpha-equivalent hashing scheme: https://simon.peytonjones.org/hashing-modulo-alpha/
 - A stress tested frontend with enormous modules along with an answer to the question if it is possible to provide a degraded feature set instead of none.
 - Click to go the module (for external names in the same project)
 - Qualify module names to reduce syntactical noise. 
 - Parse the strictness analysis of binders to present it more clearly
+- Trigger recompilation/recapture from the frontend whilst allowing changing compiler flags
+    - Can this be done on a per module basis?
 
 ## Identified Limitations
 
 - Getting more detailed information about rewrite rule firings (such as which ones are considered etc.) will require changes to GHC.
 
 
+## For the Final Thesis
+
+- What the contributions (making a tool to support haskell developers), and how can we verify that (ACM Emperical Evaluation Checklist?)
+    - Also conversations with the industry, Well Typed, Channable, Chordify?
 
 
 
