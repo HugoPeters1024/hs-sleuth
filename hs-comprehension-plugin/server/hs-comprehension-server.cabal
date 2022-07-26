@@ -51,6 +51,7 @@ executable hs-comprehension-server
     main-is:          Main.hs
 
     build-depends:    base
+                    , process
                     , hs-comprehension-server
                     , hs-comprehension-plugin
                     , wai

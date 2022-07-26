@@ -73,7 +73,6 @@ addMany
   . Data.List.Stream.map (+1)
   . Data.List.Stream.map (+1)
   . Data.List.Stream.map (+1)
-  . Data.List.Stream.map (+1)
 
 --totalPrefixSum :: [Int] -> Int
 --totalPrefixSum = sum . scanl (+) 0

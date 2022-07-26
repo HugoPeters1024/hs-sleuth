@@ -3,5 +3,5 @@ module Text where
 import Data.Text (Text)
 import qualified Data.Text as T
 
-upperLength :: Text -> Int
-upperLength = T.length . T.toUpper
+upperLength :: Text -> Text
+upperLength = T.take 3 . T.drop 4

@@ -34,17 +34,14 @@ topBindingInfoToInt : TopBindingInfo -> Int
 topBindingInfoToInt = binderToInt << .topBindingBinder
 
 varIsConstructor : Var -> Bool
-varIsConstructor = isConstructorName << varName False
+varIsConstructor = isConstructorName << varName
 
-varName : Bool -> Var -> String
-varName fullext var = case var of
+varName : Var -> String
+varName var = case var of
     VarBinder b -> binderName b
     VarTop tb -> binderName tb.topBindingBinder
     VarExternal ext -> case ext of
-        ExternalName e -> 
-            if fullext 
-            then e.externalModuleName ++ "." ++ e.externalName
-            else e.externalName
+        ExternalName e -> e.externalName
         _              -> "[ForeignCall]"
 
 -- external names can refer to module local bindings

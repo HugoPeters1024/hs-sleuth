@@ -54,7 +54,7 @@ renameModalOpen : Var -> CodeTabRenameModal -> CodeTabRenameModal
 renameModalOpen var
     =  renameModalSetVis Modal.shown 
     << renameModalSetVarId (varToInt var)
-    << renameModalSetStaginText (varName False var)
+    << renameModalSetStaginText (varName var)
 
 renameModalSetStaginText : String -> CodeTabRenameModal -> CodeTabRenameModal
 renameModalSetStaginText t modal = { modal | stagingText = t}

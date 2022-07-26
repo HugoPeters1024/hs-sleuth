@@ -1,5 +1,7 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Text
 import TextExt
 import Factorial
 import Records
@@ -9,5 +11,5 @@ import Tail
 import Quicksort
 
 main :: IO ()
-main = let in print (tupleFirst (fac2 5) "lol")
+main = print $ upperLength "1234567891"
 

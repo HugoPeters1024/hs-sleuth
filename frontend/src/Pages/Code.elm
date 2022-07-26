@@ -199,7 +199,7 @@ renderVarName tab var =
             _ -> ""
     in case Dict.get (varToInt var) tab.varRenames of
     Just name -> name
-    Nothing -> (varName tab.disambiguateVariables var) ++ postfix
+    Nothing -> (varName var) ++ postfix
 
 hideToplevels : Set Int -> Phase -> Phase
 hideToplevels hidden phase =

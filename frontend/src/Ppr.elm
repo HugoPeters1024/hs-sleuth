@@ -14,6 +14,7 @@ type Tag
     | TagKeyword
     | TagComment
     | TagOperator
+    | TagModule
 
 type alias PP = Doc Tag
 
@@ -95,7 +96,7 @@ pprExpr expr = case expr of
     EVar varid -> pprBinderThunk (varid.binderIdThunk ())
     EVarGlobal ename -> pprVar (VarExternal ename)
     ELit lit -> pprLit lit
-    EApp f a -> combine [pprExpr f, softline, pprExprParens a]
+    EApp f a -> hang 2 (combine [pprExpr f, line, pprExprParens a])
     ETyLam b e -> pprExpr (ELam b e)
     ELam b e -> 
         let (fe, bs) = leadingLambdas e
@@ -184,15 +185,16 @@ pprBinderThunk thunk = case thunk of
     Untouched -> string "[Binder Not Touched]"
 
 
-pprVar : Var -> Doc Tag
+pprVar : Var -> PP
 pprVar var = 
-    let cname = varName True var
+    let cname = varName var
         tag = TagVar var
     in case var of
         VarBinder bndr ->
             if HsCore.Helpers.binderIsUnused bndr
             then taggedString "_" tag
             else taggedString cname tag
+        VarExternal (ExternalName ext) -> combine [Pretty.taggedString (ext.externalModuleName ++ ".") TagModule, Pretty.taggedString cname tag]
         _ -> taggedString cname tag
 
 
