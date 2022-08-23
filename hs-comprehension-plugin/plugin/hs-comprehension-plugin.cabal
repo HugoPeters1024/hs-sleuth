@@ -24,6 +24,7 @@ library
                     , HsComprehension.Cvt
                     , HsComprehension.Uniqify
                     , HsComprehension.DefAnalysis
+                    , HsComprehension.Hash
 
     -- Modules included in this library but not exported.
     other-modules: 

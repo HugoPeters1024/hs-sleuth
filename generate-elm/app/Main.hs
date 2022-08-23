@@ -16,6 +16,9 @@ import Language.Elm.Definition (Definition)
 import qualified Language.Elm.Pretty as Pretty
 import qualified Language.Elm.Simplification as Simplification
 
+replace' :: String -> String -> String -> String
+replace' x y z = let r = replace x y z in if r == z then error "replace failed" else r
+
 elmDefsFor :: forall a. (HasElmType a, HasElmDecoder Aeson.Value a) => Maybe (Definition, Definition)
 elmDefsFor = (,) <$> elmDefinition @a <*> elmDecoderDefinition @Aeson.Value @a
 
@@ -49,7 +52,7 @@ elmDefsFor = (,) <$> elmDefinition @a <*> elmDecoderDefinition @Aeson.Value @a
 renderDefs :: String -> [Definition] -> String
 renderDefs name defs =
     let contents = show $ head $ map snd $ HashMap.toList $ Pretty.modules (map Simplification.simplifyDefinition defs)
-    in replace "TODO" name 
+    in replace' "TODO" name 
      $ contents
 
 binderThunkDef :: String
@@ -58,17 +61,17 @@ binderThunkDef = unlines [ ""
                          ]
 
 finalizeTypes :: String -> String
-finalizeTypes = replace 
-                    "{ binderIdUnique : Unique, binderIdDeBruijn : Int }"
-                    "{ binderIdThunk : () -> BinderThunk, binderIdUnique : Unique, binderIdDeBruijn : Int }"
-              . replace "externalType : Type }" "externalType : Type\n    , localBinder : () -> BinderThunk }"
-              . replace "TopBinding(..)" "TopBinding(..)\n    , BinderThunk(..)"
+finalizeTypes = replace
+                    "{ binderIdUnique : Unique"
+                    "{ binderIdThunk : () -> BinderThunk,\n    binderIdUnique : Unique"
+               . replace' "externalType : Type }" "externalType : Type\n    , localBinder : () -> BinderThunk }"
+               . replace' "TopBinding(..)" "TopBinding(..)\n    , BinderThunk(..)"
               . (++ binderThunkDef)
 
 finalizeDecoders :: String -> String
-finalizeDecoders = replace "import Json.Decode" "import Generated.Types exposing (..)\nimport Json.Decode"
-                 . replace "externalUnique = d" "externalUnique = d\n            , localBinder = \\_ -> Untouched"
-                 . replace 
+finalizeDecoders = replace' "import Json.Decode" "import Generated.Types exposing (..)\nimport Json.Decode"
+                 . replace' "externalUnique = d" "externalUnique = d\n            , localBinder = \\_ -> Untouched"
+                 . replace' 
                       "    Json.Decode.succeed BinderId |>"
                       "    Json.Decode.succeed (BinderId (\\_ -> Untouched)) |>"
 

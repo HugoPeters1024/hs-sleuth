@@ -13,7 +13,7 @@ type Loading a = NotRequested
 
 loadFromResult : Result Http.Error a -> Loading a
 loadFromResult res = case res of
-    Err x -> Error x
+    Err x -> Debug.log (Debug.toString x) (Error x)
     Ok x -> Ready x
 
 setLoading : Loading a -> Loading a

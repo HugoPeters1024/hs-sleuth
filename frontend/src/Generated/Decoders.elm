@@ -78,6 +78,7 @@ binderIdDecoder : Json.Decode.Decoder BinderId
 binderIdDecoder =
     Json.Decode.succeed (BinderId (\_ -> Untouched)) |>
     Json.Decode.Pipeline.required "binderIdUnique" uniqueDecoder |>
+    Json.Decode.Pipeline.required "binderIdRenderedUnique" Json.Decode.string |>
     Json.Decode.Pipeline.required "binderIdDeBruijn" Json.Decode.int
 
 
@@ -483,7 +484,8 @@ topBindingInfoDecoder =
     Json.Decode.Pipeline.required "topBindingBinder" binderDecoder |>
     Json.Decode.Pipeline.required "topBindingCoreState" coreStatsDecoder |>
     Json.Decode.Pipeline.required "topBindingRHS" exprDecoder |>
-    Json.Decode.Pipeline.required "topBindingFromSource" Json.Decode.bool
+    Json.Decode.Pipeline.required "topBindingFromSource" Json.Decode.bool |>
+    Json.Decode.Pipeline.required "topBindingHash" Json.Decode.int
 
 
 topBindingDecoder : Json.Decode.Decoder TopBinding

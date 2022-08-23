@@ -48,7 +48,10 @@ type ExternalName
 
 
 type alias BinderId  =
-    { binderIdThunk : () -> BinderThunk, binderIdUnique : Unique, binderIdDeBruijn : Int }
+    { binderIdThunk : () -> BinderThunk,
+    binderIdUnique : Unique
+    , binderIdRenderedUnique : String
+    , binderIdDeBruijn : Int }
 
 
 type Binder 
@@ -196,7 +199,8 @@ type alias TopBindingInfo  =
     { topBindingBinder : Binder
     , topBindingCoreState : CoreStats
     , topBindingRHS : Expr
-    , topBindingFromSource : Bool }
+    , topBindingFromSource : Bool
+    , topBindingHash : Int }
 
 
 type TopBinding 

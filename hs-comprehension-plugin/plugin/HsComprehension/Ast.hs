@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
 
-module HsComprehension.Ast 
+module HsComprehension.Ast
     ( Capture (..)
     , ExternalName (..)
     , Binder (..)
@@ -36,10 +36,11 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.ByteString as BS
 import Codec.Serialise (Serialise)
+import Data.Hashable
 
 import GhcDump.Ast (Unique(..), IdDetails(..), TyCon(..), SrcSpan(..), LineCol(..), OccInfo(..), Tick(..), CoreStats(..))
 
-data Capture = Capture 
+data Capture = Capture
     { captureName :: Text
     , captureDate :: Int
     , captureModules :: [(Text, Int)]
@@ -57,11 +58,12 @@ data ExternalName = ExternalName
 
 data BinderId = BinderId
     { binderIdUnique :: Unique
+    , binderIdRenderedUnique :: Text
     , binderIdDeBruijn :: Int
     } deriving (Generic, Serialise, Show)
 
 instance Eq BinderId where
-    lhs == rhs = (binderIdUnique lhs) == (binderIdUnique rhs)
+    lhs == rhs = binderIdUnique lhs == binderIdUnique rhs
 
 instance Ord BinderId where
     compare lhs rhs = compare (binderIdUnique lhs) (binderIdUnique rhs)
@@ -75,7 +77,7 @@ data Binder = Binder
     , binderSrcSpan :: SrcSpan
     , binderPhaseId :: Int
     , binderCreatedPhaseId :: Int
-    } 
+    }
     |
     TyBinder { binderName :: Text
              , binderId :: BinderId
@@ -85,7 +87,7 @@ data Binder = Binder
 
     deriving (Generic, Serialise, Show)
 
-data IdInfo = IdInfo 
+data IdInfo = IdInfo
     { idiArity         :: !Int
     , idiIsOneShot     :: Bool
     , idiUnfolding     :: Unfolding
@@ -110,7 +112,7 @@ data Unfolding
                     }
     deriving (Generic, Serialise, Show)
 
-data Lit 
+data Lit
     = MachChar Char
    | MachStr Text
    | MachNullAddr
@@ -124,7 +126,7 @@ data Lit
    | LitInteger Text
    | LitNatural Text
    | LitRubbish
-   deriving (Generic, Serialise, Show, Eq)
+   deriving (Generic, Serialise, Show, Eq, Hashable)
 
 data Type
     = VarTy BinderId
@@ -178,7 +180,7 @@ data Alt = Alt
     }
     deriving (Generic, Serialise, Show)
 
-data AltCon 
+data AltCon
     = AltDataCon !T.Text
     | AltLit Lit
     | AltDefault
@@ -189,6 +191,7 @@ data TopBindingInfo = TopBindingInfo
     , topBindingCoreState :: CoreStats
     , topBindingRHS :: Expr
     , topBindingFromSource :: Bool
+    , topBindingHash :: Int
     }
     deriving (Generic, Serialise, Show)
 

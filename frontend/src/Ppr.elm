@@ -58,7 +58,7 @@ pprTopBinding topb = case topb of
     RecTopBinding tinfos -> 
         string "Rec {"
         |> a line
-        |> a (indent 4 (join doubleline (List.map pprTopBindingInfo tinfos)))
+        |> a (indent 2 (join doubleline (List.map pprTopBindingInfo tinfos)))
         |> a line
         |> a (string "}")
 
@@ -72,7 +72,7 @@ pprTopBindingInfo tb = combine
 pprBinding_ : (Var, Expr) -> PP
 pprBinding_ (var, expr) = 
     let (fexpr, bs) = leadingLambdas expr
-    in nest 4 <| combine
+    in nest 2 <| combine
         [ words (List.map pprVar (var :: List.map VarBinder bs)) 
         , string " = "
         , combine
@@ -140,7 +140,7 @@ pprExpr expr = case expr of
     EMarkDiff e -> pprExpr e
 
 pprAlt : Binder -> Alt -> PP
-pprAlt b alt = nest 4 <| combine
+pprAlt b alt = nest 2 <| combine
     [ pprAltCon b alt.altCon
     , if List.isEmpty alt.altBinders
       then empty

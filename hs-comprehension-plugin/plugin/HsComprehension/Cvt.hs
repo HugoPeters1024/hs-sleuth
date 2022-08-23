@@ -10,8 +10,9 @@ import qualified Data.Text as T
 import Data.Hashable as Hash
 
 import qualified GhcDump.Ast as GHCD
+import HsComprehension.Hash (hashExprModAlpha)
 
-data CvtEnv = CvtEnv 
+data CvtEnv = CvtEnv
     { cvtEnvPhaseId :: Int
     , cvtEnvBinders :: [Unique]
     }
@@ -27,8 +28,9 @@ envFindDeBruijn env target =
     in go 0 (cvtEnvBinders env)
 
 envInsertBinderN :: [Unique] -> CvtEnv -> CvtEnv
-envInsertBinderN [] env = env
-envInsertBinderN (b:bs) env = envInsertBinderN bs $ env { cvtEnvBinders = b:(cvtEnvBinders env)}
+envInsertBinderN bs env
+  = foldl
+      (\ env b -> env {cvtEnvBinders = b : cvtEnvBinders env}) env bs
 
 envInsertBinder :: Unique -> CvtEnv -> CvtEnv
 envInsertBinder x = envInsertBinderN [x]
@@ -41,11 +43,12 @@ getBinderName Binder {..} = binderName
 getBinderName TyBinder {..} = binderName
 
 cvtExternalName :: CvtEnv -> GHCD.SExternalName -> ExternalName
-cvtExternalName env GHCD.ExternalName {..} = ExternalName 
+cvtExternalName env GHCD.ExternalName {..} = ExternalName
     { externalModuleName = GHCD.getModuleName externalModuleName
     , externalType = cvtType env externalType
-    , .. 
+    , ..
     }
+cvtExternalName env GHCD.ForeignCall = ForeignCall
 
 cvtBinder :: CvtEnv -> GHCD.SBinder -> Binder
 cvtBinder env sbndr = case GHCD.unSBndr sbndr of
@@ -67,6 +70,7 @@ cvtBinder env sbndr = case GHCD.unSBndr sbndr of
 cvtBinderId :: CvtEnv -> GHCD.BinderId -> BinderId
 cvtBinderId env (GHCD.BinderId unique) = BinderId
     { binderIdUnique = unique
+    , binderIdRenderedUnique = T.pack $ show unique
     , binderIdDeBruijn = envFindDeBruijn env unique
     }
 
@@ -77,7 +81,7 @@ cvtIdInfo env GHCD.IdInfo {..} = IdInfo
     }
 
 cvtUnfolding :: CvtEnv -> GHCD.Unfolding GHCD.SBinder GHCD.BinderId -> Unfolding
-cvtUnfolding env GHCD.NoUnfolding = NoUnfolding 
+cvtUnfolding env GHCD.NoUnfolding = NoUnfolding
 cvtUnfolding env GHCD.BootUnfolding = BootUnfolding
 cvtUnfolding env (GHCD.OtherCon cons)  = OtherCon (map cvtAltCon cons)
 cvtUnfolding env GHCD.DFunUnfolding = DFunUnfolding
@@ -92,11 +96,11 @@ cvtExpr env (GHCD.EVarGlobal name) = EVarGlobal (cvtExternalName env name)
 cvtExpr env (GHCD.ELit lit) = ELit (cvtLit lit)
 cvtExpr env (GHCD.EApp f a) = EApp (cvtExpr env f) (cvtExpr env a)
 cvtExpr env (GHCD.ETyLam bndr expr) = ETyLam (cvtBinder env bndr) (cvtExpr env expr)
-cvtExpr env (GHCD.ELam bndr expr) = 
+cvtExpr env (GHCD.ELam bndr expr) =
     let cvtedBinder = cvtBinder env bndr
         env' = envInsertBinder (binderUnique cvtedBinder) env
      in ELam cvtedBinder (cvtExpr env' expr)
-cvtExpr env (GHCD.ELet bs body) = 
+cvtExpr env (GHCD.ELet bs body) =
     let uniques = map ((\(GHCD.BinderId u) -> u) . GHCD.binderId . GHCD.unSBndr . fst) bs
         env' = envInsertBinderN uniques env
         cvtPair (bndr, expr) = (cvtBinder env' bndr, cvtExpr env' expr)
@@ -112,7 +116,7 @@ cvtExpr env GHCD.ECoercion = ECoercion
 cvtLit :: GHCD.Lit -> Lit
 cvtLit (GHCD.MachChar c) = MachChar c
 cvtLit (GHCD.MachStr t) = MachStr (showText t)
-cvtLit (GHCD.MachNullAddr) = MachNullAddr
+cvtLit GHCD.MachNullAddr = MachNullAddr
 cvtLit (GHCD.MachInt i) = MachInt (showText i)
 cvtLit (GHCD.MachInt64 i) = MachInt64 (showText i)
 cvtLit (GHCD.MachWord w) = MachWord (showText w)
@@ -122,10 +126,10 @@ cvtLit (GHCD.MachDouble d) = MachDouble (showText d)
 cvtLit (GHCD.MachLabel l) = MachLabel l
 cvtLit (GHCD.LitInteger i) = LitInteger (showText i)
 cvtLit (GHCD.LitNatural n) = LitNatural (showText n)
-cvtLit (GHCD.LitRubbish) = LitRubbish
+cvtLit GHCD.LitRubbish = LitRubbish
 
 cvtAlt :: CvtEnv -> GHCD.SAlt -> Alt
-cvtAlt env GHCD.Alt {..} = 
+cvtAlt env GHCD.Alt {..} =
     let cvtedBinders = map (cvtBinder env) altBinders
         env' = envInsertBinderN (map binderUnique cvtedBinders) env
     in Alt
@@ -137,7 +141,7 @@ cvtAlt env GHCD.Alt {..} =
 cvtAltCon :: GHCD.AltCon -> AltCon
 cvtAltCon (GHCD.AltDataCon t) = AltDataCon t
 cvtAltCon (GHCD.AltLit lit) = AltLit (cvtLit lit)
-cvtAltCon (GHCD.AltDefault) = AltDefault
+cvtAltCon GHCD.AltDefault = AltDefault
 
 cvtType :: CvtEnv -> GHCD.SType -> Type
 cvtType env (GHCD.VarTy id) = VarTy (cvtBinderId env id)
@@ -145,28 +149,30 @@ cvtType env (GHCD.FunTy f a) = FunTy (cvtType env f) (cvtType env a)
 cvtType env (GHCD.TyConApp con ts) = TyConApp con (map (cvtType env) ts)
 cvtType env (GHCD.AppTy f a) = AppTy (cvtType env f) (cvtType env a)
 cvtType env (GHCD.ForAllTy bndr t) = ForAllTy (cvtBinder env bndr) (cvtType env t)
-cvtType env (GHCD.LitTy) = LitTy
-cvtType env (GHCD.CoercionTy) = CoercionTy
+cvtType env GHCD.LitTy = LitTy
+cvtType env GHCD.CoercionTy = CoercionTy
 
 cvtTopBinding :: CvtEnv -> GHCD.STopBinding -> TopBinding
-cvtTopBinding env tb = 
+cvtTopBinding env tb =
     let cvtInfo :: (GHCD.SBinder, CoreStats, GHCD.SExpr) -> TopBindingInfo
         cvtInfo (bndr, stats, expr) =
             let cvtedBinder = cvtBinder env bndr
                 bndrName = getBinderName cvtedBinder
+                rhs = cvtExpr env expr
 
-            in TopBindingInfo 
+            in TopBindingInfo
                 { topBindingBinder = cvtedBinder
                 , topBindingCoreState = stats
-                , topBindingRHS = cvtExpr env expr
+                , topBindingRHS = rhs
                 , topBindingFromSource = False
+                , topBindingHash = hashExprModAlpha rhs
                 }
     in case tb of
          GHCD.NonRecTopBinding bndr stats expr -> NonRecTopBinding (cvtInfo (bndr, stats, expr))
          GHCD.RecTopBinding bs -> RecTopBinding (map cvtInfo bs)
 
 cvtPhase :: CvtEnv -> GHCD.SModule -> Phase
-cvtPhase env GHCD.Module {..} = Phase 
+cvtPhase env GHCD.Module {..} = Phase
     { phaseName = modulePhase
     , phaseTopBindings = map (cvtTopBinding env) moduleTopBindings
     , phaseFiredRules = []

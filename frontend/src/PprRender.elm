@@ -42,7 +42,7 @@ renderVar env content var =
             Just x -> x
             Nothing -> content
     in a [class "no-style", onClick (MsgCodeMsg env.codeTabId (CodeMsgSelectVar var))]
-         [span [ctxMenu, class className, class (varHighlightClass env var)] [text varName]]
+         [span [ctxMenu, class className, class (varHighlightClass env var), title (typeToString (varType var))] [text varName]]
 
 htmlTagged : PprRenderEnv -> Tag -> String -> List (Html Msg) -> List (Html Msg)
 htmlTagged env tag content next = 

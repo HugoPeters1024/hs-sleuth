@@ -309,9 +309,10 @@ viewBinderInfo bndr = case bndr of
     TyBinder b -> text "TODO: TyBinder"
 
 viewTopInfo : CodeTab -> TopBindingInfo -> Html CodeTabMsg
-viewTopInfo tab ti = div []
+viewTopInfo tab ti = HtmlHelpers.list
     [ button [onClick (CodeMsgMarkTopLevel ti)] [text "Mark"]
     , text ("#markers: " ++ String.fromInt (List.length tab.selectedTopLevels))
+    , text ("hash: " ++ String.fromInt ti.topBindingHash)
     , viewBinderInfo ti.topBindingBinder
     ]
 
