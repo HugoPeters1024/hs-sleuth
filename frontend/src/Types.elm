@@ -67,6 +67,7 @@ type alias CodeTab =
     , moduleDropdown : Dropdown.State
     , selectedVar : Maybe Var
     , hideTypes : Bool
+    , hideModules : Bool
     , disambiguateVariables : Bool
     , showRecursiveGroups : Bool 
     , selectedTopLevels : List TopBindingInfo
@@ -80,6 +81,7 @@ type CodeTabMsg
     | CodeMsgSetPhase SlotId Int
     | CodeMsgSelectVar Var
     | CodeMsgToggleHideTypes
+    | CodeMsgToggleHideModules
     | CodeMsgToggleDisambiguateVariables
     | CodeMsgToggleShowRecursiveGroups
     | CodeMsgModuleDropdown Dropdown.State

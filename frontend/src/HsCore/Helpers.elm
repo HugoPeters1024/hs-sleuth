@@ -24,6 +24,13 @@ varToInt term = case term of
     VarTop tb -> topBindingInfoToInt tb
     VarExternal e -> externalNameToInt e
 
+varGHCUnique : Var -> String
+varGHCUnique var = case var of
+  VarBinder b -> (binderId b).binderIdRenderedUnique
+  VarTop b -> (binderId b.topBindingBinder).binderIdRenderedUnique
+  VarExternal (ExternalName e) -> uniqueToStr e.externalUnique
+  _ -> ""
+
 varPhaseId : Var -> Int
 varPhaseId var = case var of
     VarBinder b -> binderPhaseId b

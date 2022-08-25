@@ -58,6 +58,7 @@ getMergedModuleNames tab = List.map Tuple.first (List.concatMap .captureModules 
 makeCodeTab : Model -> List Capture -> (Model, CodeTab, Cmd Msg)
 makeCodeTab model captures = 
     let tabId = model.idGen
+        tab : CodeTab
         tab =
           { id = tabId
           , name = "Code-" ++ String.fromInt tabId
@@ -66,6 +67,7 @@ makeCodeTab model captures =
           , selectedVar = Nothing
           , moduleDropdown = Dropdown.initialState
           , hideTypes = False
+          , hideModules = False
           , disambiguateVariables = False
           , showRecursiveGroups = False
           , selectedTopLevels = []
@@ -106,6 +108,7 @@ update msg tab = case msg of
         in ({ tab | captureSlots = Dict.update slot (Maybe.map setSlider) tab.captureSlots }, Cmd.none)
     CodeMsgSelectVar var -> ({tab | selectedVar = Just var}, Cmd.none)
     CodeMsgToggleHideTypes -> ({tab | hideTypes = not tab.hideTypes}, Cmd.none)
+    CodeMsgToggleHideModules -> ({tab | hideModules = not tab.hideModules}, Cmd.none)
     CodeMsgToggleDisambiguateVariables -> ({tab | disambiguateVariables = not tab.disambiguateVariables}, Cmd.none)
     CodeMsgToggleShowRecursiveGroups -> ({tab | showRecursiveGroups = not tab.showRecursiveGroups}, Cmd.none)
     CodeMsgModuleDropdown state -> ({tab | moduleDropdown = state}, Cmd.none)
@@ -132,11 +135,11 @@ view model tab =
     div [] [ viewHeader model tab
            , panel
                 (
+                    (Pixels 500, Html.map (mkCodeMsg tab.id) (viewInfo model tab))
+                    ::
                     (foreach (Dict.values tab.captureSlots) <| \mod ->
                         (Fraction 4, viewCode model tab mod)
                     )
-                    ++
-                    [ (Pixels 500, Html.map (mkCodeMsg tab.id) (viewInfo model tab)) ]
                 )
            , Html.map (mkCodeMsg tab.id) <| viewRenameModal tab
            ]
@@ -191,15 +194,32 @@ viewRenameModal tab =
 
 renderVarName : CodeTab -> Var -> String
 renderVarName tab var = 
-    let postfix : String
-        postfix = case var of
-            VarBinder b -> 
-                let debruijn = (binderId b).binderIdDeBruijn
-                in if debruijn == -1 then "" else "_" ++ String.fromInt debruijn
-            _ -> ""
-    in case Dict.get (varToInt var) tab.varRenames of
-    Just name -> name
-    Nothing -> (varName var) ++ postfix
+    let postfix : String -> String
+        postfix i = if tab.disambiguateVariables then i ++ "_" ++ HsCore.Helpers.varGHCUnique var else i
+
+        renamed : String -> String
+        renamed i = case Dict.get (varToInt var) tab.varRenames of
+          Just o -> o
+          Nothing -> i
+
+        disabled : String -> String
+        disabled i = case var of
+          VarBinder bndr ->
+            if HsCore.Helpers.binderIsUnused bndr then "_" else i
+          _ -> i
+
+        prefix : String -> String
+        prefix i = case var of
+          VarExternal (ExternalName e) ->
+            if tab.hideModules then i else e.externalModuleName ++ "." ++ i
+          _ -> i 
+
+    in
+      varName var
+      |> renamed
+      |> postfix
+      |> disabled
+      |> prefix
 
 hideToplevels : Set Int -> Phase -> Phase
 hideToplevels hidden phase =
@@ -215,8 +235,13 @@ hideToplevels hidden phase =
 
 viewCode : Model -> CodeTab -> CodeTabCapture -> Html Msg
 viewCode model tab modtab = 
-    let pprEnv : Ppr.PprRenderEnv
-        pprEnv = 
+    let pprEnv : Ppr.Env
+        pprEnv =
+          { renderVarName = renderVarName tab
+          }
+
+        pprRenderEnv : Ppr.PprRenderEnv
+        pprRenderEnv = 
             { codeTabId = tab.id
             , codeTabSlotId = modtab.slot
             , selectedVar = tab.selectedVar
@@ -242,8 +267,8 @@ viewCode model tab modtab =
                                  |> hideToplevels modtab.toplevelHides
                                  |> (if tab.hideTypes then eraseTypesPhase else identity)
                                  |> (if tab.showRecursiveGroups then identity else \p -> {p | phaseTopBindings = removeRecursiveGroups p.phaseTopBindings})
-                                 |> Ppr.pprPhase mod.moduleName
-                                 |> Ppr.renderHtml pprEnv
+                                 |> Ppr.pprPhase pprEnv mod.moduleName
+                                 |> Ppr.renderHtml pprRenderEnv
                                ]
                         ]
                     ]
@@ -280,6 +305,7 @@ viewInfo model tab =
         , Block.custom <|
             HtmlHelpers.list 
               [ checkbox tab.hideTypes CodeMsgToggleHideTypes "Hide Types"
+              , checkbox tab.hideModules CodeMsgToggleHideModules "Hide Module Qualifiers"
               , checkbox tab.disambiguateVariables CodeMsgToggleDisambiguateVariables "Disambiguate Variables Names"
               , checkbox tab.showRecursiveGroups   CodeMsgToggleShowRecursiveGroups "Show Recursive Groups"
               , hr [] []

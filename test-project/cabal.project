@@ -1,6 +1,5 @@
 packages: .
         , ../hs-comprehension-plugin/plugin
-        , ../hs-comprehension-plugin/server
         , ../ghc-dump/ghc-dump-core
         , ../ghc-dump/ghc-dump-util
         , ../cborg/cborg

@@ -2,6 +2,12 @@ module ElmHelpers exposing (..)
 
 import Set.Any
 import Set exposing (Set)
+import Html exposing (h1)
+
+popLast : List a -> Maybe (List a, a)
+popLast xs = 
+  let n = List.length xs - 1
+  in Maybe.map (\x -> (List.take n xs, x)) (List.head (List.drop n xs))
 
 zip : List a -> List b -> List (a, b)
 zip lhs rhs = case (lhs, rhs) of

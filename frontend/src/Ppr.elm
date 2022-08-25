@@ -6,6 +6,7 @@ import HsCore.Helpers exposing (..)
 
 import Pretty exposing (..)
 import Pretty.Renderer exposing (..)
+import ElmHelpers
 
 type Tag 
     = TagVar Var
@@ -18,6 +19,10 @@ type Tag
 
 type alias PP = Doc Tag
 
+type alias Env =
+  { renderVarName : Var -> String
+  }
+
 keyword : String -> PP
 keyword t = taggedString t TagKeyword
 
@@ -27,15 +32,15 @@ doubleline = append line line
 combine : List PP -> PP
 combine = Pretty.fold a
 
-pprPhase : String -> Phase -> PP
-pprPhase modname phase 
+pprPhase : Env -> String -> Phase -> PP
+pprPhase env modname phase 
     =  keyword "module"
     |> a space
     |> a (string modname)
     |> a space
     |> a (keyword "where")
     |> a doubleline
-    |> a (join doubleline (List.map pprTopBinding phase.phaseTopBindings))
+    |> a (join doubleline (List.map (pprTopBinding env) phase.phaseTopBindings))
     |> a doubleline
     |> a (pprFiredRules phase)
 
@@ -52,82 +57,82 @@ pprFiredRules phase = pprComment <|
 pprComment : String -> PP
 pprComment s = taggedString s TagComment
 
-pprTopBinding : TopBinding -> PP
-pprTopBinding topb = case topb of
-    NonRecTopBinding tinfo -> pprTopBindingInfo tinfo
+pprTopBinding : Env -> TopBinding -> PP
+pprTopBinding env topb = case topb of
+    NonRecTopBinding tinfo -> pprTopBindingInfo env tinfo
     RecTopBinding tinfos -> 
         string "Rec {"
         |> a line
-        |> a (indent 2 (join doubleline (List.map pprTopBindingInfo tinfos)))
+        |> a (indent 2 (join doubleline (List.map (pprTopBindingInfo env) tinfos)))
         |> a line
         |> a (string "}")
 
-pprTopBindingInfo : TopBindingInfo -> PP
-pprTopBindingInfo tb = combine 
-    [ words [pprVar (VarTop tb), string "::", pprType (binderType tb.topBindingBinder)]
+pprTopBindingInfo : Env -> TopBindingInfo -> PP
+pprTopBindingInfo env tb = combine 
+    [ words [pprVar env (VarTop tb), string "::", pprType env (binderType tb.topBindingBinder)]
     , line
-    , pprBinding_ (VarTop tb, tb.topBindingRHS)
+    , pprBinding_ env (VarTop tb, tb.topBindingRHS)
     ]
 
-pprBinding_ : (Var, Expr) -> PP
-pprBinding_ (var, expr) = 
+pprBinding_ : Env -> (Var, Expr) -> PP
+pprBinding_ env (var, expr) = 
     let (fexpr, bs) = leadingLambdas expr
     in nest 2 <| combine
-        [ words (List.map pprVar (var :: List.map VarBinder bs)) 
+        [ words (List.map (pprVar env) (var :: List.map VarBinder bs)) 
         , string " = "
         , combine
-            [ pprExpr fexpr
+            [ pprExpr env fexpr
             ]
         ]
 
-pprBinding : (Binder, Expr) -> PP
-pprBinding (bndr, expr) = pprBinding_ (VarBinder bndr, expr)
+pprBinding : Env -> (Binder, Expr) -> PP
+pprBinding env (bndr, expr) = pprBinding_ env (VarBinder bndr, expr)
 
 
-pprBinder : Binder -> PP
-pprBinder = pprVar << VarBinder
+pprBinder : Env -> Binder -> PP
+pprBinder env = pprVar env << VarBinder
 
-pprExprParens : Expr -> PP
-pprExprParens expr = if exprIsAtom expr then pprExpr expr else parens (pprExpr expr)
+pprExprParens : Env -> Expr -> PP
+pprExprParens env expr = if exprIsAtom expr then pprExpr env expr else parens (pprExpr env expr)
 
 
-pprExpr : Expr -> PP
-pprExpr expr = case expr of
-    EVar varid -> pprBinderThunk (varid.binderIdThunk ())
-    EVarGlobal ename -> pprVar (VarExternal ename)
+pprExpr : Env -> Expr -> PP
+pprExpr env expr = case expr of
+    EVar varid -> pprBinderThunk env (varid.binderIdThunk ())
+    EVarGlobal ename -> pprVar env (VarExternal ename)
     ELit lit -> pprLit lit
-    EApp f a -> hang 2 (combine [pprExpr f, line, pprExprParens a])
-    ETyLam b e -> pprExpr (ELam b e)
+    EApp f a -> hang 2 (combine [pprExpr env f, line, pprExprParens env a])
+    ETyLam b e -> pprExpr env (ELam b e)
     ELam b e -> 
         let (fe, bs) = leadingLambdas e
         in combine
             [ string "\\"
-            , join space (List.map pprBinder (b::bs))
+            , join space (List.map (pprBinder env) (b::bs))
             , string " ->"
             , softline
-            , pprExpr fe
+            , pprExpr env fe
             ]
     ELet bs e -> combine
         [ combine 
             [ tightline
             , keyword "let "
-            , align <| join line (List.map pprBinding bs)
+            , align <| join line (List.map (pprBinding env) bs)
             ]
         , line
         , keyword "in "
-        , pprExpr e
+        , pprExpr env e
         ]
 
     ECase e b alts -> combine
         [ keyword "case"
         , space
-        , pprExpr e
+        , pprExpr env e
         , space
         , keyword "of"
         , line
         , align <| combine
             [ string "{"
-            , indent 1 <| join line (List.map (pprAlt b) (List.reverse alts))
+            , indent 1 <| join line (List.map (pprAlt env b) (List.reverse alts))
             , line
             , string "}"
             ]
@@ -135,28 +140,28 @@ pprExpr expr = case expr of
     ETick _ _ -> string "tick"
     EType t -> 
         taggedString "@" TagOperator
-        |> a (pprType t)
+        |> a (pprType env t)
     ECoercion -> string "coercion"
-    EMarkDiff e -> pprExpr e
+    EMarkDiff e -> pprExpr env e
 
-pprAlt : Binder -> Alt -> PP
-pprAlt b alt = nest 2 <| combine
-    [ pprAltCon b alt.altCon
+pprAlt : Env -> Binder -> Alt -> PP
+pprAlt env b alt = nest 2 <| combine
+    [ pprAltCon env b alt.altCon
     , if List.isEmpty alt.altBinders
       then empty
       else space
-    , words (List.map pprBinder alt.altBinders)
+    , words (List.map (pprBinder env) alt.altBinders)
     , space
     , string "->"
     , softline
-    , pprExpr alt.altRHS
+    , pprExpr env alt.altRHS
     ]
 
-pprAltCon : Binder -> AltCon -> PP
-pprAltCon b con = case con of
+pprAltCon : Env -> Binder -> AltCon -> PP
+pprAltCon env b con = case con of
     AltDataCon s -> if isConstructorName s then keyword s else string s
     AltLit l -> pprLit l
-    AltDefault -> pprBinder b
+    AltDefault -> pprBinder env b
 
 pprLit : Lit -> PP
 pprLit lit = 
@@ -178,51 +183,53 @@ pprLit lit =
         LitRubbish -> string "[LitRubbish]"
 
 
-pprBinderThunk : BinderThunk -> PP
-pprBinderThunk thunk = case thunk of
-    Found b -> pprBinder b
+pprBinderThunk : Env -> BinderThunk -> PP
+pprBinderThunk env thunk = case thunk of
+    Found b -> pprBinder env b
     NotFound -> string "[Binder Not Found]"
     Untouched -> string "[Binder Not Touched]"
 
 
-pprVar : Var -> PP
-pprVar var = 
-    let cname = varName var
-        tag = TagVar var
-    in case var of
-        VarBinder bndr ->
-            if HsCore.Helpers.binderIsUnused bndr
-            then taggedString "_" tag
-            else taggedString cname tag
-        VarExternal (ExternalName ext) -> combine [Pretty.taggedString (ext.externalModuleName ++ ".") TagModule, Pretty.taggedString cname tag]
-        _ -> taggedString cname tag
+pprVar : Env -> Var -> PP
+pprVar env var = 
+  let cname = env.renderVarName var
+  in case var of
+    VarExternal (ExternalName e) -> 
+      case ElmHelpers.popLast (String.split "." cname) of
+        Just ([], _) -> Pretty.taggedString cname (TagVar var)
+        Just (qual, varname) -> combine 
+          [ Pretty.taggedString (String.join "." qual ++ ".") TagModule
+          , Pretty.taggedString varname (TagVar var)
+          ]
+        _ -> Pretty.taggedString cname (TagVar var)
+    _ -> Pretty.taggedString cname (TagVar var)
 
 
-pprType : Type -> PP
-pprType type_ = case type_ of
+pprType : Env -> Type -> PP
+pprType env type_ = case type_ of
     VarTy var -> case var.binderIdThunk () of
-        Found x -> pprBinder x
+        Found x -> pprBinder env x
         NotFound -> string "[UNKNOWN TYPEVAR]"
         Untouched -> string "[TYPEVAR UNTRAVERSED]"
-    FunTy x e -> combine [pprTypeParens x, string " -> ", pprType e]
+    FunTy x e -> combine [pprTypeParens env x, string " -> ", pprType env e]
     TyConApp (TyCon con _) ts ->
         case ts of
             [] -> string con
-            _ -> let tsStr = join space (List.map pprType ts)
+            _ -> let tsStr = join space (List.map (pprType env) ts)
                  in case con of
                     "[]" -> brackets tsStr
                     _    -> combine [string con, space, tsStr]
-    AppTy f a -> combine [pprType f, space, pprTypeParens a]
+    AppTy f a -> combine [pprType env f, space, pprTypeParens env a]
     ForAllTy b t ->
         let (ft, bs) = leadingForalls t
-            bndrs = join space (List.map pprBinder (b::bs))
-        in combine [string "forall ", bndrs, string ". ", pprType ft]
+            bndrs = join space (List.map (pprBinder env) (b::bs))
+        in combine [string "forall ", bndrs, string ". ", pprType env ft]
     LitTy -> string "[LIT TYPE??]"
     CoercionTy -> string "[COERCION TYPE??]" 
 
-pprTypeParens : Type -> PP
-pprTypeParens type_ = case type_ of
-    VarTy t -> pprType (VarTy t)
-    TyConApp con xs -> pprType (TyConApp con xs)
-    _ -> parens (pprType type_)
+pprTypeParens : Env -> Type -> PP
+pprTypeParens env type_ = case type_ of
+    VarTy t -> pprType env (VarTy t)
+    TyConApp con xs -> pprType env (TyConApp con xs)
+    _ -> parens (pprType env type_)
 

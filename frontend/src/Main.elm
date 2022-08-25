@@ -4,7 +4,6 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Types exposing (..)
 import Browser exposing (Document)
-import Url exposing (Url)
 import Loading exposing (..)
 
 import Generated.Types exposing (..)
@@ -12,7 +11,6 @@ import Generated.Types exposing (..)
 import Time
 import Task
 import Dict exposing (Dict)
-import Set.Any exposing (AnySet)
 
 import Pages.Code as Code
 import Pages.Overview as Overview

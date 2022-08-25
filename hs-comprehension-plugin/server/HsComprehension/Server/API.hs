@@ -26,6 +26,10 @@ import Servant
 import Network.Wai
 import Network.Wai.Middleware.Gzip (gzip, def)
 
+data Env = Env
+  { project_root :: FilePath
+  }
+
 type CapturesAPI = "captures" :> Get '[JSON] [Ast.Capture]
 
 serveCapturesApi :: Handler [Ast.Capture]
@@ -75,9 +79,10 @@ addAllOriginsMiddleware baseApp = \req responseFunc -> baseApp req (responseFunc
     where addOriginsAllowed :: Response -> Response
           addOriginsAllowed = mapResponseHeaders $ (("Access-Control-Allow-Origin", "*"):)
 
-app :: IO Application
-app = do
-    putStrLn "Serving..."
+app :: Env -> IO Application
+app env = do
+    putStrLn $ "Serving from " <> project_root env <> "..."
+    setCurrentDirectory $ project_root env
     pure $ gzip def $ addAllOriginsMiddleware $ serve (Proxy @API) handler
 
 
