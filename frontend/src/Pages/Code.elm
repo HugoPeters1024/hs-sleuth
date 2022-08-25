@@ -53,7 +53,32 @@ getMergedModuleNames : CodeTab -> List String
 getMergedModuleNames tab = List.map Tuple.first (List.concatMap .captureModules (getCaptures tab))
     |> EH.removeDuplicates
 
+getModules : CodeTab -> List Module
+getModules tab = EH.mapMaybe Loading.toMaybe (List.map .mod (Dict.values tab.captureSlots))
 
+getCurrentPhases : CodeTab -> List Phase
+getCurrentPhases tab =
+  let go : CodeTabCapture -> Maybe Phase
+      go capture = 
+        capture.mod 
+          |> Loading.toMaybe
+          |> Maybe.andThen (\mod -> EH.indexList capture.phaseSlider.value mod.modulePhases)
+  in EH.mapMaybe go (Dict.values tab.captureSlots)
+
+getMatchedTopLevel : CodeTab -> List (List TopBindingInfo)
+getMatchedTopLevel tab =
+  let insert : TopBindingInfo -> Dict Int (List TopBindingInfo) -> Dict Int (List TopBindingInfo)
+      insert ti dict =
+        let id = HsCore.Helpers.topBindingInfoToInt ti
+            up mxs = case mxs of
+              Just xs -> Just (ti::xs)
+              Nothing -> Just [ti]
+        in Dict.update id up dict
+
+      go : List TopBindingInfo -> Dict Int (List TopBindingInfo) -> Dict Int (List TopBindingInfo)
+      go xs acc = List.foldl insert acc xs
+
+  in Dict.values <| List.foldl go Dict.empty (List.map getPhaseTopBinders (getCurrentPhases tab))
 
 makeCodeTab : Model -> List Capture -> (Model, CodeTab, Cmd Msg)
 makeCodeTab model captures = 
@@ -129,6 +154,30 @@ update msg tab = case msg of
         let updateHideSet : CodeTabCapture -> CodeTabCapture
             updateHideSet tabmod = {tabmod | toplevelHides = EH.toggleSet (topBindingInfoToInt ti) tabmod.toplevelHides}
         in ({tab | captureSlots = Dict.update slot (Maybe.map updateHideSet) tab.captureSlots}, Cmd.none)
+    CodeMsgHideToplevelDiffTemplate -> 
+        let 
+            -- Predicate used to determine wether to hide toplevel defs
+            -- they must all have the same hash and all be present
+            pred : List Int -> Bool
+            pred xs = List.length xs == Dict.size tab.captureSlots && EH.allSame xs
+
+            hideSet : Set Int
+            hideSet = 
+              getMatchedTopLevel tab
+              |> List.filter (pred << List.map .topBindingHash)
+              |> EH.mapMaybe (Maybe.map topBindingInfoToInt << List.head)
+              |> Set.fromList
+
+            updateHideSet : CodeTabCapture -> CodeTabCapture
+            updateHideSet tabmod = {tabmod | toplevelHides = hideSet }
+        in ({tab | captureSlots = Dict.map (\_ c -> updateHideSet c) tab.captureSlots}, Cmd.none)
+    CodeMsgUnhideAll ->
+      let updateHideSet : CodeTabCapture -> CodeTabCapture
+          updateHideSet tabmod = {tabmod | toplevelHides = Set.empty}
+      in ({tab | captureSlots = Dict.map (\_ -> updateHideSet) tab.captureSlots}, Cmd.none)
+
+
+
 
 view : Model -> CodeTab -> Html Msg
 view model tab = 
@@ -312,10 +361,17 @@ viewInfo model tab =
               , h4 [] [text "Selected Variable"]
               , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map (viewVarInfo tab) tab.selectedVar)
               , hr [] []
-              , h4 [] [text "Toplevel functions"]
+              , viewHideOptions model tab
               ]
         ]
     |> Card.view
+
+viewHideOptions : Model -> CodeTab -> Html CodeTabMsg
+viewHideOptions model tab = div []
+  [ h4 [] [text "Hide Options"]
+  , button [onClick CodeMsgHideToplevelDiffTemplate] [text "Only show diff"]
+  , button [onClick CodeMsgUnhideAll]                [text "Unhide all"]
+  ]
 
 viewVarInfo : CodeTab -> Var -> Html CodeTabMsg
 viewVarInfo tab term = case term of

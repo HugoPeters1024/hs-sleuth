@@ -92,6 +92,8 @@ type CodeTabMsg
     | CodeMsgRenameModalStagingText String
     | CodeMsgRenameModalCommit
     | CodeMsgHideToplevel SlotId TopBindingInfo
+    | CodeMsgHideToplevelDiffTemplate
+    | CodeMsgUnhideAll
 
 type CtxMenu =
     CtxCodeVar TabId SlotId Var

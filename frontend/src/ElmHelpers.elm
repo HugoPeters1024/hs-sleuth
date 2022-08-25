@@ -26,6 +26,11 @@ range =
 enumerate : List a -> List (Int, a)
 enumerate xs = zip (range (List.length xs)) xs
 
+allSame : List comparable -> Bool
+allSame xxs = case xxs of
+  [] -> True
+  (x::xs) -> List.all (\y -> x == y) xs
+
 
 zipWith : (a -> b -> c) -> List a -> List b -> List c
 zipWith f lhs rhs = List.map (\(x, y) -> f x y) <| zip lhs rhs

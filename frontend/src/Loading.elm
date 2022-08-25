@@ -51,4 +51,7 @@ withDefault def load = case load of
     Loading (Just x) -> x
     _  -> def
 
-
+toMaybe : Loading a -> Maybe a
+toMaybe l = case l of
+  Ready x -> Just x
+  _ -> Nothing
