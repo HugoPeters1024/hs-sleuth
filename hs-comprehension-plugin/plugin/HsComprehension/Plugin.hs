@@ -86,6 +86,15 @@ parseStdout inp = reverse $ fst $ P.foldl go ([], 0) (lines inp)
                     Nothing -> (acc, p)
 
 
+data CaptureView = CaptureView
+  { cv_project_root :: FilePath
+  }
+
+defaultCaptureView :: CaptureView
+defaultCaptureView = CaptureView
+  { cv_project_root = "./"
+  }
+
 
 millisSinceEpoch :: POSIXTime -> Int
 millisSinceEpoch =
@@ -127,7 +136,7 @@ install options todo = do
                     [slug] -> slug
                     _      -> error "provide a slug for the dump as exactly 1 argument"
     liftIO $ print options
-    liftIO $ FP.createDirectoryIfMissing True (coreDumpDir slug)
+    liftIO $ FP.createDirectoryIfMissing True (coreDumpDir defaultCaptureView slug)
     dflags <- getDynFlags
     modName <- showSDoc dflags . ppr <$> getModule
     liftIO $ modifyIORef projectState $ \(thief, capture) ->
@@ -149,17 +158,17 @@ getPhase todo = showSDocUnsafe (ppr todo) ++ " " ++ showSDocUnsafe (pprPassDetai
 printPpr :: (Outputable a, MonadIO m) => a -> m ()
 printPpr a = liftIO $ putStrLn $ showSDocUnsafe (ppr a)
 
-coreDumpBaseDir :: String
-coreDumpBaseDir = "./dist-newstyle/"
+coreDumpBaseDir :: CaptureView -> String
+coreDumpBaseDir view = (cv_project_root view) ++ "dist-newstyle/"
 
-coreDumpDir :: String -> FilePath
-coreDumpDir pid = coreDumpBaseDir ++ "coredump-" ++ pid ++ "/"
+coreDumpDir :: CaptureView -> String -> FilePath
+coreDumpDir view pid = coreDumpBaseDir view ++ "coredump-" ++ pid ++ "/"
 
-coreDumpFile :: String -> String -> FilePath
-coreDumpFile pid mod = coreDumpDir pid ++ mod ++ ".zstd"
+coreDumpFile :: CaptureView -> String -> String -> FilePath
+coreDumpFile view pid mod = coreDumpDir view pid ++ mod ++ ".zstd"
 
-captureFile :: String -> FilePath
-captureFile pid = coreDumpDir pid ++ "capture.zstd"
+captureFile :: CaptureView -> String -> FilePath
+captureFile view pid = coreDumpDir view pid ++ "capture.zstd"
 
 writeToFile :: (Serialise a) => FilePath -> a -> IO ()
 writeToFile fname = do
@@ -198,8 +207,8 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
             , Ast.modulePhases = phases
             }
 
-        let fname = coreDumpFile slug modName
+        let fname = coreDumpFile defaultCaptureView slug modName
         writeToFile fname mod
 
-        writeToFile (captureFile (T.unpack (captureName capture))) capture
+        writeToFile (captureFile defaultCaptureView (T.unpack (captureName capture))) capture
     pure guts

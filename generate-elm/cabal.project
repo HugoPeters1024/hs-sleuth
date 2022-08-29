@@ -2,4 +2,5 @@ packages: .
         , ../ghc-dump/ghc-dump-core
         , ../hs-comprehension-plugin/plugin
         , ../hs-comprehension-plugin/server
+        , ../cborg/cborg
 allow-newer: all
