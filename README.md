@@ -34,12 +34,16 @@ The project is currently not on hackage so you need to add this repo as a local 
 - :floppy_disk: Now whenever you build dump files are created in `dist-newstyle/coredump-MyCapture001/`
 
 
-- :door: To inspect the dumps with the frontend, you need to run the server:
+- :female_detective: To inspect the dumps with the frontend, you need to run the server:
     ```sh
-    cabal run hs-comprehension-server
-    ```
+    -- when building the server yourself (GHC 9.2+)
+    cabal run hs-comprehension-server -- --project_root PATH/TO/YOUR/PROJECT
 
-- :female_detective: Then open the frontend html in `frontend/index.html`
+    -- when using the released build (https://github.com/HugoPeters1024/hs-comprehension/releases)
+    ./server --project_root PATH/TO/YOUR/PROJECT
+
+    -- the server will serve at port 8080
+    ```
 
 That should be all!
 
