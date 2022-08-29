@@ -6,7 +6,7 @@ import HsCore.Helpers exposing (..)
 
 import Pretty exposing (..)
 import Pretty.Renderer exposing (..)
-import ElmHelpers
+import Dict exposing (Dict)
 
 type Tag 
     = TagVar Var
@@ -20,8 +20,39 @@ type Tag
 type alias PP = Doc Tag
 
 type alias Env =
-  { renderVarName : Var -> String
+  { hideModules : Bool
+  , hideDisambiguation : Bool
+  , varRenames : Dict Int String
   }
+
+renderVarName : Env -> Var -> String
+renderVarName env var = 
+    let postfix : String -> String
+        postfix i = if env.hideDisambiguation then i else i ++ "_" ++ HsCore.Helpers.varGHCUnique var
+
+        renamed : String -> String
+        renamed i = case Dict.get (varToInt var) env.varRenames of
+          Just o -> o
+          Nothing -> i
+
+        disabled : String -> String
+        disabled i = case var of
+          VarBinder bndr ->
+            if HsCore.Helpers.binderIsUnused bndr then "_" else i
+          _ -> i
+
+        prefix : String -> String
+        prefix i = case var of
+          VarExternal (ExternalName e) ->
+            if env.hideModules then i else e.externalModuleName ++ "." ++ i
+          _ -> i 
+
+    in
+      varName var
+      |> renamed
+      |> postfix
+      |> disabled
+      |> prefix
 
 keyword : String -> PP
 keyword t = taggedString t TagKeyword
@@ -61,7 +92,8 @@ pprTopBinding : Env -> TopBinding -> PP
 pprTopBinding env topb = case topb of
     NonRecTopBinding tinfo -> pprTopBindingInfo env tinfo
     RecTopBinding tinfos -> 
-        string "Rec {"
+        taggedString ("Rec(" ++ String.fromInt (List.length tinfos) ++ ")") TagOperator
+        |> a (string " {")
         |> a line
         |> a (indent 2 (join doubleline (List.map (pprTopBindingInfo env) tinfos)))
         |> a line
@@ -191,18 +223,7 @@ pprBinderThunk env thunk = case thunk of
 
 
 pprVar : Env -> Var -> PP
-pprVar env var = 
-  let cname = env.renderVarName var
-  in case var of
-    VarExternal (ExternalName e) -> 
-      case ElmHelpers.popLast (String.split "." cname) of
-        Just ([], _) -> Pretty.taggedString cname (TagVar var)
-        Just (qual, varname) -> combine 
-          [ Pretty.taggedString (String.join "." qual ++ ".") TagModule
-          , Pretty.taggedString varname (TagVar var)
-          ]
-        _ -> Pretty.taggedString cname (TagVar var)
-    _ -> Pretty.taggedString cname (TagVar var)
+pprVar env var = Pretty.taggedString (renderVarName env var) (TagVar var)
 
 
 pprType : Env -> Type -> PP

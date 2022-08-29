@@ -4,6 +4,7 @@ import Types exposing (..)
 import HsCore.Helpers exposing (..)
 
 import Dict exposing (Dict)
+import ElmHelpers as EH
 
 import Ppr exposing (..)
 import Html exposing (..)
@@ -14,6 +15,7 @@ import Pretty
 import Pretty.Renderer
 
 import ContextMenu
+import Generated.Types exposing (..)
 
 type alias PprRenderEnv =
     { codeTabId : TabId
@@ -38,11 +40,17 @@ renderVar : PprRenderEnv -> String -> Var -> Html Msg
 renderVar env content var = 
     let className = if varIsConstructor var then "k" else ""
         ctxMenu = ContextMenu.open MsgCtxMenu (CtxCodeVar env.codeTabId env.codeTabSlotId var)
+        (prefix, base_name) = case EH.popLast (String.split "." content) of
+              Just ([], n) -> ("", n)
+              Just (qual, n) -> ((String.join "." qual) ++ ".", n)
+              _ -> ("", "")
         varName = case Dict.get (varToInt var) env.renameDict of
             Just x -> x
-            Nothing -> content
+            Nothing -> base_name
     in a [class "no-style", onClick (MsgCodeMsg env.codeTabId (CodeMsgSelectVar var))]
-         [span [ctxMenu, class className, class (varHighlightClass env var), title (typeToString (varType var))] [text varName]]
+         [span 
+            [ctxMenu, class className, class (varHighlightClass env var), title (typeToString (varType var))] 
+            [span [class "nc"] [text prefix], text varName]]
 
 htmlTagged : PprRenderEnv -> Tag -> String -> List (Html Msg) -> List (Html Msg)
 htmlTagged env tag content next = 

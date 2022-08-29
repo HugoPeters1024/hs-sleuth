@@ -68,8 +68,8 @@ type alias CodeTab =
     , selectedVar : Maybe Var
     , hideTypes : Bool
     , hideModules : Bool
-    , disambiguateVariables : Bool
-    , showRecursiveGroups : Bool 
+    , hideDisambiguation : Bool
+    , hideRecursiveGroups : Bool 
     , selectedTopLevels : List TopBindingInfo
     , renameModal : CodeTabRenameModal
     , varRenames : Dict Int String
@@ -82,8 +82,8 @@ type CodeTabMsg
     | CodeMsgSelectVar Var
     | CodeMsgToggleHideTypes
     | CodeMsgToggleHideModules
-    | CodeMsgToggleDisambiguateVariables
-    | CodeMsgToggleShowRecursiveGroups
+    | CodeMsgToggleHideDisambiguation
+    | CodeMsgToggleHideRecursiveGroups
     | CodeMsgModuleDropdown Dropdown.State
     | CodeMsgSlider SlotId Slider.Msg
     | CodeMsgMarkTopLevel TopBindingInfo

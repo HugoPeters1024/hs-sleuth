@@ -93,8 +93,8 @@ makeCodeTab model captures =
           , moduleDropdown = Dropdown.initialState
           , hideTypes = False
           , hideModules = False
-          , disambiguateVariables = False
-          , showRecursiveGroups = False
+          , hideDisambiguation = True
+          , hideRecursiveGroups = True
           , selectedTopLevels = []
           , renameModal = 
               { visiblity = Modal.hidden
@@ -134,8 +134,8 @@ update msg tab = case msg of
     CodeMsgSelectVar var -> ({tab | selectedVar = Just var}, Cmd.none)
     CodeMsgToggleHideTypes -> ({tab | hideTypes = not tab.hideTypes}, Cmd.none)
     CodeMsgToggleHideModules -> ({tab | hideModules = not tab.hideModules}, Cmd.none)
-    CodeMsgToggleDisambiguateVariables -> ({tab | disambiguateVariables = not tab.disambiguateVariables}, Cmd.none)
-    CodeMsgToggleShowRecursiveGroups -> ({tab | showRecursiveGroups = not tab.showRecursiveGroups}, Cmd.none)
+    CodeMsgToggleHideDisambiguation -> ({tab | hideDisambiguation = not tab.hideDisambiguation}, Cmd.none)
+    CodeMsgToggleHideRecursiveGroups -> ({tab | hideRecursiveGroups = not tab.hideRecursiveGroups}, Cmd.none)
     CodeMsgModuleDropdown state -> ({tab | moduleDropdown = state}, Cmd.none)
     CodeMsgSlider slot slidermsg ->
         let updateCaptureTab : CodeTabCapture -> CodeTabCapture
@@ -241,35 +241,6 @@ viewRenameModal tab =
         |> Modal.view tab.renameModal.visiblity
 
 
-renderVarName : CodeTab -> Var -> String
-renderVarName tab var = 
-    let postfix : String -> String
-        postfix i = if tab.disambiguateVariables then i ++ "_" ++ HsCore.Helpers.varGHCUnique var else i
-
-        renamed : String -> String
-        renamed i = case Dict.get (varToInt var) tab.varRenames of
-          Just o -> o
-          Nothing -> i
-
-        disabled : String -> String
-        disabled i = case var of
-          VarBinder bndr ->
-            if HsCore.Helpers.binderIsUnused bndr then "_" else i
-          _ -> i
-
-        prefix : String -> String
-        prefix i = case var of
-          VarExternal (ExternalName e) ->
-            if tab.hideModules then i else e.externalModuleName ++ "." ++ i
-          _ -> i 
-
-    in
-      varName var
-      |> renamed
-      |> postfix
-      |> disabled
-      |> prefix
-
 hideToplevels : Set Int -> Phase -> Phase
 hideToplevels hidden phase =
     let q : TopBindingInfo -> Bool
@@ -286,7 +257,9 @@ viewCode : Model -> CodeTab -> CodeTabCapture -> Html Msg
 viewCode model tab modtab = 
     let pprEnv : Ppr.Env
         pprEnv =
-          { renderVarName = renderVarName tab
+          { hideModules = tab.hideModules
+          , hideDisambiguation = tab.hideDisambiguation
+          , varRenames = tab.varRenames
           }
 
         pprRenderEnv : Ppr.PprRenderEnv
@@ -315,7 +288,7 @@ viewCode model tab modtab =
                                [ processDiff tab phase
                                  |> hideToplevels modtab.toplevelHides
                                  |> (if tab.hideTypes then eraseTypesPhase else identity)
-                                 |> (if tab.showRecursiveGroups then identity else \p -> {p | phaseTopBindings = removeRecursiveGroups p.phaseTopBindings})
+                                 |> (if tab.hideRecursiveGroups then \p -> {p | phaseTopBindings = removeRecursiveGroups p.phaseTopBindings} else identity)
                                  |> Ppr.pprPhase pprEnv mod.moduleName
                                  |> Ppr.renderHtml pprRenderEnv
                                ]
@@ -355,8 +328,8 @@ viewInfo model tab =
             HtmlHelpers.list 
               [ checkbox tab.hideTypes CodeMsgToggleHideTypes "Hide Types"
               , checkbox tab.hideModules CodeMsgToggleHideModules "Hide Module Qualifiers"
-              , checkbox tab.disambiguateVariables CodeMsgToggleDisambiguateVariables "Disambiguate Variables Names"
-              , checkbox tab.showRecursiveGroups   CodeMsgToggleShowRecursiveGroups "Show Recursive Groups"
+              , checkbox tab.hideDisambiguation CodeMsgToggleHideDisambiguation "Hide Uniques"
+              , checkbox tab.hideRecursiveGroups   CodeMsgToggleHideRecursiveGroups "Hide Recursive Grouping"
               , hr [] []
               , h4 [] [text "Selected Variable"]
               , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map (viewVarInfo tab) tab.selectedVar)
@@ -367,10 +340,24 @@ viewInfo model tab =
     |> Card.view
 
 viewHideOptions : Model -> CodeTab -> Html CodeTabMsg
-viewHideOptions model tab = div []
+viewHideOptions model tab = HtmlHelpers.list
   [ h4 [] [text "Hide Options"]
-  , button [onClick CodeMsgHideToplevelDiffTemplate] [text "Only show diff"]
-  , button [onClick CodeMsgUnhideAll]                [text "Unhide all"]
+  , Button.button 
+      [ Button.info
+      , Button.disabled (Dict.size tab.captureSlots < 2)
+      , Button.attrs 
+        [ onClick CodeMsgHideToplevelDiffTemplate
+        , title (if (Dict.size tab.captureSlots < 2) then "At least 2 open captures required" else "Hide toplevel definitions that do not differ")
+        ]
+      ]
+      [text "Hide Unchanged"]
+  , Button.button 
+      [ Button.info
+      , Button.attrs 
+        [ onClick CodeMsgUnhideAll
+        ]
+      ]
+      [text "Unhide all"]
   ]
 
 viewVarInfo : CodeTab -> Var -> Html CodeTabMsg

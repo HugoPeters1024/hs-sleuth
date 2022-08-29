@@ -59,6 +59,10 @@ indexList : Int -> List a -> Maybe a
 indexList n xs = List.head (List.drop n xs)
 
 
+addIf : Bool -> a -> List a -> List a
+addIf b a xs = if b then a::xs else xs
+
+
 removeDuplicatesKey : (a -> comparable) -> List a -> List a
 removeDuplicatesKey f = Set.Any.toList << Set.Any.fromList f
 

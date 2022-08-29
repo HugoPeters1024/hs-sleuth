@@ -81,7 +81,7 @@ getCtxMenuItems context = case context of
         let always = [(ContextMenu.item "Rename", Code.mkCodeMsg tabid (CodeMsgRenameModalOpen var))]
             onBinder = 
                 let wBinder bndr = case bndr of
-                        Binder b -> [(ContextMenu.item "Jump to First Occurrance", Code.mkCodeMsg tabid (CodeMsgSetPhase slot b.binderCreatedPhaseId))]
+                        Binder b -> [(ContextMenu.item ("GOTO First Occ. (Pass " ++ String.fromInt b.binderCreatedPhaseId ++ ")"), Code.mkCodeMsg tabid (CodeMsgSetPhase slot b.binderCreatedPhaseId))]
                         _        -> []
                 in case var of
                     VarBinder bndr -> wBinder bndr
@@ -93,6 +93,23 @@ getCtxMenuItems context = case context of
 
         in [always ++ onBinder ++ onToplevel]
 
+ctxConfig : ContextMenu.Config
+ctxConfig = 
+  let d = ContextMenu.defaultConfig
+      lightGray = "rgb(238, 238, 238)"
+      deepBlue = "rgb(62,126,255)"
+  in
+    { d
+        | direction = ContextMenu.RightBottom
+        , overflowX = ContextMenu.Mirror
+        , overflowY = ContextMenu.Shift
+        , containerColor = lightGray
+        , hoverColor = deepBlue
+        , invertText = True
+        , cursor = ContextMenu.Arrow
+        , rounded = True
+    }
+
 view : Model -> Document Msg
 view m = 
     { title = "hs-comprehension"
@@ -102,7 +119,7 @@ view m =
              , node "link" [rel "stylesheet", href "/pygments.css", type_ "text/css"] []
              , div []
                 [ContextMenu.view
-                    ContextMenu.defaultConfig
+                    ctxConfig
                     MsgCtxMenu
                     getCtxMenuItems
                     m.ctxMenu
