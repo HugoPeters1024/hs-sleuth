@@ -19,10 +19,12 @@ eraseTypesExpr expr = case expr of
     EVar x -> EVar x
     EVarGlobal g -> EVarGlobal g
     ELit l -> ELit l
-    EApp f a -> case eraseTypesExpr a of
-        EVar x -> if H.isTyBinderId x then (eraseTypesExpr f) else EApp (eraseTypesExpr f) (eraseTypesExpr a)
-        EType _ -> eraseTypesExpr f
-        _ -> EApp (eraseTypesExpr f) (eraseTypesExpr a)
+    EApp f a -> 
+        let ea = eraseTypesExpr a
+        in case ea of
+          EVar x -> if H.isTyBinderId x then (eraseTypesExpr f) else EApp (eraseTypesExpr f) ea
+          EType _ -> eraseTypesExpr f
+          _ -> EApp (eraseTypesExpr f) ea
     ETyLam _ a -> eraseTypesExpr a
     ELam b a -> ELam b (eraseTypesExpr a)
     -- TODO
