@@ -26,52 +26,71 @@ import Unique (mkUnique, unpkUnique)
 #endif
 
 -- A local scope map and a global unique set
-type UniqEnv = (Map Int Int, Set Int)
+data UniqEnv = UniqEnv
+  { uenv_scope :: Map Int Int
+  , uenv_global :: Set Int
+  }
+
+emptyEnv = UniqEnv
+  { uenv_scope = M.empty
+  , uenv_global = S.empty
+  }
+
+uenvInsertScope :: Int -> Int -> UniqEnv -> UniqEnv
+uenvInsertScope from to env = env { uenv_scope = M.insert from to (uenv_scope env) }
+
+uenvInsertGlobal :: Int -> UniqEnv -> UniqEnv
+uenvInsertGlobal uid env = env { uenv_global = S.insert uid (uenv_global env) }
+
+
 type Uniq a = StateT UniqEnv IO a
+
+runUnique :: Uniq a -> IO a
+runUnique uq = evalStateT uq emptyEnv
 
 uniqueModule :: ModGuts -> IO ModGuts
 uniqueModule guts@ModGuts { mg_binds = mg_binds } = do
-    (nbinds, (scope, nset)) <- runStateT (mapM uniqBind mg_binds) (M.empty, S.empty)
+    nbinds <- runUnique (uniqProgram mg_binds)
     pure $ guts { mg_binds = nbinds }
-
-runUnique :: Uniq a -> IO a
-runUnique uq = evalStateT uq (M.empty, S.empty)
 
 -- Prevent scoped substitutions to escape 
 limitScope :: Uniq a -> Uniq a
 limitScope g = do
-    (s, _) <- get
+    scope_before <- gets uenv_scope
     r <- g
-    (_, gl) <- get
-    put (s, gl)
+    env_after <- get
+    put $ env_after { uenv_scope = scope_before }
     pure r
 
 uniqVar :: Var -> Uniq Var
-uniqVar var = do
-    (scope, _) <- get
-    let (tag, uid) = unpkUnique (getUnique var)
-    case M.lookup uid scope of
-      Just i -> pure $ setVarUnique var (mkUnique tag i)
-      Nothing -> pure var
+uniqVar var = 
+    if isTyVar var
+    then pure var
+    else do
+      scope <- gets uenv_scope
+      let (tag, uid) = unpkUnique (getUnique var)
+      -- Lookup if the unique must change
+      case M.lookup uid scope of
+        Just i -> pure $ setVarUnique var (mkUnique tag i)
+        Nothing -> pure var
 
 uniqBndr :: CoreBndr -> Uniq Var
 uniqBndr var = do
     if isTyVar var
        then pure var
        else do
-        (scope, gl) <- get
+        env <- get
         let (tag, uid) = unpkUnique (getUnique var)
-        if S.member uid gl
+        if S.member uid (uenv_global env)
            then do
-              idx <- (`mod` 10000000) <$> randomIO @Int
-              let nscope = M.insert uid idx scope
-              let ngl = S.insert idx gl
-              put (nscope, ngl)
-              pure $ setVarUnique var (mkUnique tag idx)
+              -- We've seen a different binding site with this unique before, generate a new one
+              new_id <- (`mod` 100000000) <$> randomIO @Int
+              modify $ uenvInsertScope uid new_id
+              modify $ uenvInsertGlobal new_id
+              uniqVar var
            else do
-               let gl' = S.insert uid gl
-               put (scope, gl')
-               pure var
+              modify $ uenvInsertGlobal uid
+              pure var
 
 uniqProgram :: CoreProgram -> Uniq CoreProgram
 uniqProgram = mapM uniqBind
@@ -87,7 +106,7 @@ uniqBind (Rec xs) = do
 uniqExpr :: CoreExpr -> Uniq CoreExpr
 uniqExpr (Var var) = Var <$> uniqVar var
 uniqExpr (Lit lit) = pure $ Lit lit
-uniqExpr (App e a) = App <$> uniqExpr e <*> uniqExpr a
+uniqExpr (App f a) = App <$> uniqExpr f <*> uniqExpr a
 uniqExpr (Lam b e) = limitScope $ Lam <$> uniqBndr b <*> uniqExpr e
 uniqExpr (Let b e) = limitScope $ Let <$> uniqBind b <*> uniqExpr e
 uniqExpr (Case e b t alts) = limitScope $ Case <$> uniqExpr e <*> uniqBndr b <*> pure t <*> mapM uniqAlt alts

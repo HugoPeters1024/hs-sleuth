@@ -216,8 +216,8 @@ readFromFile fname = do
 
 dumpPass :: IORef [Ast.Phase] -> Int -> String -> CoreToDo
 dumpPass ms_ref n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
---    guts <- liftIO $ Uniqify.uniqueModule in_guts
-    guts <- liftIO $ pure in_guts
+    guts <- liftIO $ Uniqify.uniqueModule in_guts
+--    guts <- liftIO $ pure in_guts
 
     dflags <- getDynFlags
     let prefix :: String = showSDocUnsafe (ppr (mg_module guts))
