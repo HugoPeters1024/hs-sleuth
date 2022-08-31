@@ -13,8 +13,17 @@ import System.Random
 import Control.Monad.State
 
 import GHC
+#if MIN_VERSION_ghc(9,0,0)
 import GHC.Plugins
-import GHC.Types.Unique
+#else
+import GhcPlugins
+#endif
+
+#if MIN_VERSION_ghc(9,0,0)
+import GHC.Types.Unique (mkUnique, unpkUnique)
+#else
+import Unique (mkUnique, unpkUnique)
+#endif
 
 -- A local scope map and a global unique set
 type UniqEnv = (Map Int Int, Set Int)

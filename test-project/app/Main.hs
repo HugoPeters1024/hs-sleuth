@@ -9,7 +9,8 @@ import TreeMap
 import HalfMatch
 import Tail
 import Quicksort
+import StringSearch
 
 main :: IO ()
-main = print $ upperLength "1234567891"
+main = print $ isLoveSong
 

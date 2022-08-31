@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fplugin=Data.Record.Plugin #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TypeFamilies #-}

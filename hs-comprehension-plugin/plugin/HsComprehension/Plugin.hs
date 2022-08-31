@@ -1,9 +1,14 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module HsComprehension.Plugin where
 
 import Prelude as P
 import Data.Maybe
+#if MIN_VERSION_ghc(9,0,0)
 import GHC.Plugins
+#else
+import GhcPlugins
+#endif
 
 import HsComprehension.Uniqify as Uniqify
 import HsComprehension.Ast as Ast
@@ -41,7 +46,12 @@ import Data.ByteString.Lazy (hPutStr)
 import qualified GhcDump.Convert
 
 import Data.Time
+import Data.Time.Clock
 import Data.Time.Clock.POSIX
+
+#if MIN_VERSION_ghc(9,0,0)
+import qualified GHC.Data.EnumSet (insert)
+#endif
 
 type StdThief = (FilePath, Handle)
 
@@ -96,14 +106,17 @@ defaultCaptureView = CaptureView
   }
 
 
-millisSinceEpoch :: POSIXTime -> Int
-millisSinceEpoch =
-    floor . (1e3 *) . nominalDiffTimeToSeconds
-
 currentPosixMillis :: IO Int
-currentPosixMillis = millisSinceEpoch <$> getPOSIXTime
+currentPosixMillis = 
+  let posix_time =
+#if MIN_VERSION_ghc(9,0,0)
+        getPOSIXTime
+#else
+        utcTimeToPOSIXSeconds <$> getCurrentTime
+#endif
+  in floor . (1e3 *) . toRational <$> posix_time
 
-cvtGhcPhase :: DynFlags -> Int -> String -> GHC.Plugins.ModGuts -> Ast.Phase
+cvtGhcPhase :: DynFlags -> Int -> String -> ModGuts -> Ast.Phase
 cvtGhcPhase dflags phaseId phase =
     let cvtEnv = Cvt.CvtEnv { Cvt.cvtEnvPhaseId = phaseId
                             , Cvt.cvtEnvBinders = []
@@ -127,10 +140,33 @@ setupProjectStdoutThief = do
     modifyIORef projectState $ \(_, capture) -> (thief, capture)
 
 plugin :: Plugin
-plugin = defaultPlugin { installCoreToDos = install }
+plugin = defaultPlugin 
+  { installCoreToDos = install
+#if MIN_VERSION_ghc(9,2,0)
+  , driverPlugin = modifyDynFlags 
+#elif MIN_VERSION_ghc(9,0,0)
+  , dynflagsPlugin = modifyDynFlags
+#endif
+  }
+
+#if MIN_VERSION_ghc(9,2,0)
+modifyDynFlags :: [CommandLineOption] -> HscEnv -> IO HscEnv
+modifyDynFlags _ hsc_env = 
+  let updateFlags dflags = dflags { dumpFlags = GHC.Data.EnumSet.insert Opt_D_dump_rule_firings (dumpFlags dflags) }
+  in pure $ hsc_env { hsc_dflags = updateFlags (hsc_dflags hsc_env) }
+#elif MIN_VERSION_ghc(9,0,0)
+modifyDynFlags :: [CommandLineOption] -> DynFlags -> IO DynFlags
+modifyDynFlags _ dflags = 
+  let updateFlags dflags = dflags { dumpFlags = GHC.Data.EnumSet.insert Opt_D_dump_rule_firings (dumpFlags dflags) }
+  in pure (updateFlags dflags)
+#endif
 
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install options todo = do
+#if MIN_VERSION_ghc(9,0,0)
+#else
+    liftIO $ putStrLn "HsComprehension: GHC < 9.0.0 requires manual enabling of -ddump-rule-firings to get complete telemetry"
+#endif
     liftIO setupProjectStdoutThief
     let slug = case options of
                     [slug] -> slug
@@ -159,7 +195,7 @@ printPpr :: (Outputable a, MonadIO m) => a -> m ()
 printPpr a = liftIO $ putStrLn $ showSDocUnsafe (ppr a)
 
 coreDumpBaseDir :: CaptureView -> String
-coreDumpBaseDir view = (cv_project_root view) ++ "dist-newstyle/"
+coreDumpBaseDir view = cv_project_root view ++ "dist-newstyle/"
 
 coreDumpDir :: CaptureView -> String -> FilePath
 coreDumpDir view pid = coreDumpBaseDir view ++ "coredump-" ++ pid ++ "/"
