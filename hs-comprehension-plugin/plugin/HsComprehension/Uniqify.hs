@@ -1,123 +1,145 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE BangPatterns #-}
 module HsComprehension.Uniqify
-    ( uniqueModule
+    ( freshenUniques
     ) where
 
-import Data.Map (Map)
-import qualified Data.Map as M
-import Data.Set (Set)
-import qualified Data.Set as S
+-- Adapted from: https://gitlab.haskell.org/ghc/ghc/-/blob/aa3e0154f04a1d3a0c570f77d8f877e0f1222c87/compiler/GHC/Core/FreshenUniques.hs
+-- Changes mostly to backport GHC 8
 
-import System.Random
-import Control.Monad.State
+#if MIN_VERSION_ghc(9,2,0)
+import GHC.Prelude
+#else
+import GhcPrelude
+#endif
 
-import GHC
 #if MIN_VERSION_ghc(9,0,0)
-import GHC.Plugins
+import GHC.Core
+import GHC.Core.Subst
+
+import GHC.Types.Id
+import GHC.Types.Var.Set
+import GHC.Types.Var.Env
+
+import GHC.Utils.Outputable
 #else
 import GhcPlugins
 #endif
 
+import Control.Monad
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.Reader
+import Control.Monad.Trans.State.Strict
+
+import qualified Data.List as List
+import Data.Traversable (for)
+
+type M a = ReaderT Subst (State InScopeSet) a
+
+-- | Gives fresh uniques to all 'Var's ocurring in terms of the 'CoreProgram'.
+-- It works by bringing all 'Var's into scope at once through calls to
+-- 'substBndr'.
+freshenUniques :: CoreProgram -> CoreProgram
+freshenUniques prog = evalState (runReaderT (freshenTopBinds prog) emptySubst) emptyInScopeSet
+
+freshenTopBinds :: [CoreBind] -> M [CoreBind]
+freshenTopBinds binds = do
+  -- The scoping semantics of top-level bindings are quite surprising;
+  -- All bindings are brought into scope at the beginning. Hence they
+  -- mustn't shadow each other.
+  -- See also https://gitlab.haskell.org/ghc/ghc/-/issues/19529
+  let bs = bindersOfBinds binds
+  -- ... hence we bring them all into scope here, without substituting anything.
+  let in_scope = mkInScopeSet $ mkVarSet bs
+  lift $ put $! in_scope
+  -- And we can be sure that no shadowing has happened so far, hence the assert:
+  --massertPpr (sizeVarSet (getInScopeVars in_scope) == length bs)
+  --           (hang (text "Non-unique top-level Id(s)!") 2 $
+  --             ppr (filter (\grp -> length grp > 1) (List.group bs)))
+  local (`setInScope` in_scope) $
+    traverse freshenTopBind binds
+
+freshenTopBind :: CoreBind -> M CoreBind
+-- Binders are already fresh; see freshenTopBinds above
+freshenTopBind (NonRec b rhs) = NonRec b <$!> freshenExpr rhs
+freshenTopBind (Rec binds) = fmap Rec $ for binds $ \(b, rhs) -> do
+  !rhs' <- freshenExpr rhs
+  pure (b, rhs')
+
+-- | `wrapSubstFunM f ids k` wraps a `substBndrs`-like function `f` such that
+--
+--   1. The `InScopeSet` in the state of `M` is taken for the substitution of
+--      the binders `ids`.
+--   2. The extended `Subst` is available in the continuation `k`
+--   3. (But after this function exits, the `Subst` is reset, reader-like, with
+--      no trace of `ids`)
+--   4. After this function exits, the `InScopeSet` is still extended with `ids`.
+wrapSubstFunM :: (Subst -> ids -> (Subst, ids)) -> ids -> (ids -> M r) -> M r
+wrapSubstFunM f ids k = ReaderT $ \subst -> do
+  in_scope <- get
+  let (!subst', !ids') = f (subst `setInScope` in_scope) ids
+  put $! substInScope subst'
+  runReaderT (k ids') subst'
+
+withSubstBndrM :: Var -> (Var -> M r) -> M r
+withSubstBndrM = wrapSubstFunM substBndr
+
+withSubstBndrsM :: [Var] -> ([Var] -> M r) -> M r
+withSubstBndrsM = wrapSubstFunM substBndrs
+
+withSubstRecBndrsM :: [Id] -> ([Id] -> M r) -> M r
+withSubstRecBndrsM = wrapSubstFunM substRecBndrs
+
+-- | The binders of the `CoreBind` are \"in scope\" in the
+-- continuation.
+freshenLocalBind :: CoreBind -> (CoreBind -> M r) -> M r
+freshenLocalBind (NonRec b rhs) k = do
+  !rhs' <- freshenExpr rhs
+  withSubstBndrM b $ \(!b') -> k $! NonRec b' rhs'
+freshenLocalBind (Rec binds) k = do
+  let (bs, rhss) = unzip binds
+  withSubstRecBndrsM bs $ \(!bs') -> do
+    !rhss' <- traverse freshenExpr rhss
+    k $! Rec $! zip bs' rhss'
+
+freshenExpr :: CoreExpr -> M CoreExpr
+-- Quite like substExpr, but we freshen binders unconditionally.
+-- So maybe this is more like substExpr, if we had that
+freshenExpr (Coercion co) = Coercion <$!> (substCo <$> ask <*> pure co)
+freshenExpr (Type t) = Type <$!> (substTy <$> ask <*> pure t)
+freshenExpr e@Lit{} = pure e
 #if MIN_VERSION_ghc(9,0,0)
-import GHC.Types.Unique (mkUnique, unpkUnique)
+freshenExpr (Var v) = lookupIdSubst <$> ask <*> pure v
 #else
-import Unique (mkUnique, unpkUnique)
+freshenExpr (Var v) = lookupIdSubst (ppr v) <$> ask <*> pure v
 #endif
-
--- A local scope map and a global unique set
-data UniqEnv = UniqEnv
-  { uenv_scope :: Map Int Int
-  , uenv_global :: Set Int
-  }
-
-emptyEnv = UniqEnv
-  { uenv_scope = M.empty
-  , uenv_global = S.empty
-  }
-
-uenvInsertScope :: Int -> Int -> UniqEnv -> UniqEnv
-uenvInsertScope from to env = env { uenv_scope = M.insert from to (uenv_scope env) }
-
-uenvInsertGlobal :: Int -> UniqEnv -> UniqEnv
-uenvInsertGlobal uid env = env { uenv_global = S.insert uid (uenv_global env) }
-
-
-type Uniq a = StateT UniqEnv IO a
-
-runUnique :: Uniq a -> IO a
-runUnique uq = evalStateT uq emptyEnv
-
-uniqueModule :: ModGuts -> IO ModGuts
-uniqueModule guts@ModGuts { mg_binds = mg_binds } = do
-    nbinds <- runUnique (uniqProgram mg_binds)
-    pure $ guts { mg_binds = nbinds }
-
--- Prevent scoped substitutions to escape 
-limitScope :: Uniq a -> Uniq a
-limitScope g = do
-    scope_before <- gets uenv_scope
-    r <- g
-    env_after <- get
-    put $ env_after { uenv_scope = scope_before }
-    pure r
-
-uniqVar :: Var -> Uniq Var
-uniqVar var = 
-    if isTyVar var
-    then pure var
-    else do
-      scope <- gets uenv_scope
-      let (tag, uid) = unpkUnique (getUnique var)
-      -- Lookup if the unique must change
-      case M.lookup uid scope of
-        Just i -> pure $ setVarUnique var (mkUnique tag i)
-        Nothing -> pure var
-
-uniqBndr :: CoreBndr -> Uniq Var
-uniqBndr var = do
-    if isTyVar var
-       then pure var
-       else do
-        env <- get
-        let (tag, uid) = unpkUnique (getUnique var)
-        if S.member uid (uenv_global env)
-           then do
-              -- We've seen a different binding site with this unique before, generate a new one
-              new_id <- (`mod` 100000000) <$> randomIO @Int
-              modify $ uenvInsertScope uid new_id
-              modify $ uenvInsertGlobal new_id
-              uniqVar var
-           else do
-              modify $ uenvInsertGlobal uid
-              pure var
-
-uniqProgram :: CoreProgram -> Uniq CoreProgram
-uniqProgram = mapM uniqBind
-
-uniqBind :: CoreBind -> Uniq CoreBind
-uniqBind (NonRec b e) = NonRec <$> uniqBndr b <*> uniqExpr e
-uniqBind (Rec xs) = do
-    let (bs, es) = unzip xs
-    bs' <- mapM uniqBndr bs
-    es' <- mapM uniqExpr es
-    pure $ Rec $ zip bs' es'
-
-uniqExpr :: CoreExpr -> Uniq CoreExpr
-uniqExpr (Var var) = Var <$> uniqVar var
-uniqExpr (Lit lit) = pure $ Lit lit
-uniqExpr (App f a) = App <$> uniqExpr f <*> uniqExpr a
-uniqExpr (Lam b e) = limitScope $ Lam <$> uniqBndr b <*> uniqExpr e
-uniqExpr (Let b e) = limitScope $ Let <$> uniqBind b <*> uniqExpr e
-uniqExpr (Case e b t alts) = limitScope $ Case <$> uniqExpr e <*> uniqBndr b <*> pure t <*> mapM uniqAlt alts
-uniqExpr (Cast e c) = Cast <$> uniqExpr e <*> pure c
-uniqExpr (Tick t e) = Tick t <$> uniqExpr e
-uniqExpr (Type t) = pure $ Type t
-uniqExpr (Coercion c) = pure $ Coercion c
-
-uniqAlt :: CoreAlt -> Uniq CoreAlt
-#if MIN_VERSION_ghc(9,2,0)
-uniqAlt (Alt con bs e) = limitScope $ Alt con <$> mapM uniqBndr bs <*> uniqExpr e
+freshenExpr (Tick t e) = do
+  t <- substTickish <$> ask <*> pure t
+  Tick t <$!> freshenExpr e
+freshenExpr (Cast e co) = do
+  co' <- substCo <$> ask <*> pure co
+  flip Cast co' <$!> freshenExpr e
+freshenExpr (App f a) = do
+  !f' <- freshenExpr f
+  !a' <- freshenExpr a
+  pure $ App f' a'
+freshenExpr (Lam b e) = withSubstBndrM b $ \(!b') -> do
+  !e' <- freshenExpr e
+  pure $ Lam b' e'
+freshenExpr (Let b e) = do
+  freshenLocalBind b $ \(!b') -> do
+    !e' <- freshenExpr e
+    pure $ Let b' e'
+freshenExpr (Case e b ty alts) = do
+  !e' <- freshenExpr e
+  withSubstBndrM b $ \(!b') -> do
+    !ty' <- substTy <$> ask <*> pure ty
+#if MIN_VERSION_ghc(9,2,2)
+    let do_alt (Alt con bs e) = withSubstBndrsM bs $ \(!bs') ->
+          Alt con bs' <$!> freshenExpr e
 #else
-uniqAlt (con, bs, e) = limitScope $ (,,) con <$> mapM uniqBndr bs <*> uniqExpr e
+    let do_alt (con, bs, e) = withSubstBndrsM bs $ \(!bs') ->
+          (,,) con bs' <$!> freshenExpr e
 #endif
+    !alts' <- traverse do_alt alts
+    pure $ Case e' b' ty' alts'
