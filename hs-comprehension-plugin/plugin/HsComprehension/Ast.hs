@@ -2,7 +2,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
 module HsComprehension.Ast
-    ( Capture (..)
+    ( ServerSettings(..)
+    , Capture (..)
     , ExternalName (..)
     , Binder (..)
     , IdInfo (..)
@@ -39,6 +40,10 @@ import Codec.Serialise (Serialise)
 import Data.Hashable
 
 import GhcDump.Ast (Unique(..), IdDetails(..), TyCon(..), SrcSpan(..), LineCol(..), OccInfo(..), Tick(..), CoreStats(..))
+
+data ServerSettings = ServerSettings
+    { st_baseDir :: Text 
+    } deriving (Generic, Serialise, Show)
 
 data Capture = Capture
     { captureName :: Text

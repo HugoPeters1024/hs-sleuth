@@ -100,6 +100,7 @@ type CtxMenu =
 
 type alias Model = 
     { pageTab : Tabs.Model
+    , settingsLoading : Loading ServerSettings
     , capturesLoading : Loading (List Capture)
     , timezone : Time.Zone
     , codeTabs : Dict TabId CodeTab
@@ -119,7 +120,8 @@ type OverviewMsg
 
 
 type Msg 
-    = MsgGotCaptures (Result Http.Error (List Capture))
+    = MsgGotSettings (Result Http.Error ServerSettings)
+    | MsgGotCaptures (Result Http.Error (List Capture))
     | MsgCodeMsg TabId CodeTabMsg
     | MsgPageTab Tabs.Msg
     | MsgOverViewTab OverviewMsg

@@ -18,7 +18,7 @@ lift : OverviewMsg -> Msg
 lift = Types.MsgOverViewTab
 
 init : Cmd Msg
-init = Commands.fetchCaptures
+init = Cmd.batch [Commands.fetchCaptures, Commands.fetchSettings]
 
 update : OverviewMsg -> OverviewTab -> (OverviewTab, Cmd Msg)
 update msg tab = case msg of
@@ -51,7 +51,7 @@ view m =
             div []
                 [ h1 [] [text "Overview"]
                 , hr [] []
-                , h2 [] [text "Captures"]
+                , span [] [h2 [] [text "Captures"], text " (", Loading.renderLoading m.settingsLoading (\s -> text (s.st_baseDir ++ "/coredump-*")),text ")"]
                 , Table.table
                     { options = [Table.striped, Table.hover]
                     , thead = Table.simpleThead

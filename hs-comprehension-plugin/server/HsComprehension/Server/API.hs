@@ -39,10 +39,15 @@ instance Accept HTML where
 instance MimeRender HTML RawHtml where
   mimeRender = const unRaw
 
+type SettingsAPI = "settings" :> Get '[JSON] Ast.ServerSettings
+
+serveSettingsAPI :: CaptureView -> Handler ServerSettings 
+serveSettingsAPI view = pure $ ServerSettings { st_baseDir = T.pack (coreDumpBaseDir view) }
+
 type CapturesAPI = "captures" :> Get '[JSON] [Ast.Capture]
 
 serveCapturesApi :: CaptureView -> Handler [Ast.Capture]
-serveCapturesApi view = liftIO $ collectCaptures view
+serveCapturesApi = liftIO . collectCaptures
 
 type CaptureAPI = "capture" :> Capture "slug" String :> Get '[JSON] Ast.Capture
 
@@ -72,7 +77,8 @@ serveIndexApi :: Handler RawHtml
 serveIndexApi = liftIO $ RawHtml <$> BL.readFile "static/index.html"
 
 
-type API = CapturesAPI
+type API = SettingsAPI
+      :<|> CapturesAPI
       :<|> CaptureAPI
       :<|> DeleteCaptureAPI
       :<|> ModuleAPI
@@ -83,7 +89,8 @@ type API = CapturesAPI
 
 handler :: CaptureView -> Server API
 handler view = 
-    (serveCapturesApi view)
+    (serveSettingsAPI view)
+  :<|> (serveCapturesApi view)
   :<|> (serveCaptureApi view)
   :<|> (serveDeleteCaptureAPI view)
   :<|> (serveModuleApi view)
@@ -96,10 +103,8 @@ addAllOriginsMiddleware baseApp = \req responseFunc -> baseApp req (responseFunc
     where addOriginsAllowed :: Response -> Response
           addOriginsAllowed = mapResponseHeaders $ (("Access-Control-Allow-Origin", "*"):)
 
-app :: CaptureView -> IO Application
-app view = do
-    putStrLn $ "Serving captures from " <> cv_project_root view
-    pure $ gzip def $ addAllOriginsMiddleware $ serve (Proxy @API) (handler view)
+app :: CaptureView -> Application
+app view = gzip def $ addAllOriginsMiddleware $ serve (Proxy @API) (handler view)
 
 
 listDirectorySafe :: FilePath -> IO [FilePath]

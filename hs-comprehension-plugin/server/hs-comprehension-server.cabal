@@ -51,6 +51,11 @@ library
 executable hs-comprehension-server
     main-is:          Main.hs
 
+    other-modules:  HsComprehension.Server.ElmDeriving
+                  , HsComprehension.Server.API
+                  , HsComprehension.Server.ElmDerivingUtils
+
+
     build-depends:    base
                     , process
                     , hs-comprehension-server

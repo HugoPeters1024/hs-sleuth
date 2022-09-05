@@ -1,5 +1,6 @@
 module Generated.Decoders exposing
-    ( captureDecoder
+    ( serverSettingsDecoder
+    , captureDecoder
     , uniqueDecoder
     , externalNameDecoder
     , binderIdDecoder
@@ -29,6 +30,12 @@ import Generated.Types exposing (..)
 import Json.Decode
 import Generated.Types exposing (..)
 import Json.Decode.Pipeline
+
+
+serverSettingsDecoder : Json.Decode.Decoder ServerSettings
+serverSettingsDecoder =
+    Json.Decode.succeed ServerSettings |>
+    Json.Decode.Pipeline.required "st_baseDir" Json.Decode.string
 
 
 captureDecoder : Json.Decode.Decoder Capture

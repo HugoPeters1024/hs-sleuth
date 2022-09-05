@@ -1,5 +1,6 @@
 module Generated.Types exposing
-    ( Capture
+    ( ServerSettings
+    , Capture
     , Unique(..)
     , ExternalName(..)
     , BinderId
@@ -26,6 +27,10 @@ module Generated.Types exposing
     , CoreStats
     )
 
+
+
+type alias ServerSettings  =
+    { st_baseDir : String }
 
 
 type alias Capture  =

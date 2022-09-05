@@ -3,6 +3,7 @@ module Pages.Code exposing (..)
 import ElmHelpers as EH
 
 import Html exposing (..)
+import Html.Lazy
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import HtmlHelpers exposing (..)
@@ -91,7 +92,10 @@ makeCodeTab model captures =
           { id = tabId
           , name = "Code-" ++ String.fromInt tabId
           , captureSlots = Dict.fromList (List.map (\(i, c) -> (i, initCodeTabCapture i c)) (EH.enumerate captures))
-          , currentModule = "Main"
+          , currentModule = 
+              List.head captures
+              |> Maybe.andThen (.captureModules >> List.map Tuple.first >> List.head)
+              |> Maybe.withDefault "Main"
           , selectedVar = Nothing
           , moduleDropdown = Dropdown.initialState
           , hideTypes = False
@@ -109,7 +113,7 @@ makeCodeTab model captures =
     in
     ( { model | idGen = model.idGen + 1 }
       , tab
-      , Cmd.batch (List.map (\ct -> C.fetchModule tabId ct.slot ct.capture.captureName "Main") (Dict.values tab.captureSlots))
+      , Cmd.batch (List.map (\ct -> C.fetchModule tabId ct.slot ct.capture.captureName tab.currentModule) (Dict.values tab.captureSlots))
     )
 
 
@@ -187,7 +191,7 @@ update msg tab = case msg of
 
 
 view : Model -> CodeTab -> Html Msg
-view model tab = 
+view model = Html.Lazy.lazy <| \tab ->
     div [] [ viewHeader model tab
            , panel
                 (

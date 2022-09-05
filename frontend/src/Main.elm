@@ -35,6 +35,7 @@ init _ =
     let (ctxMenu, ctxCmd) = ContextMenu.init
     in (
            { pageTab = Tabs.init
+           , settingsLoading = Loading Nothing
            , capturesLoading = Loading Nothing
            , timezone = Time.utc
            , overviewTab =
@@ -144,6 +145,7 @@ updateDictWithEffect f dict key = Dict.get key dict
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
+    MsgGotSettings res -> ({model | settingsLoading = Loading.loadFromResult res}, Cmd.none)
     MsgGotCaptures res -> ({model | capturesLoading = Loading.loadFromResult res}, Cmd.none)
     MsgPageTab tabmsg -> ({model | pageTab = Tabs.update tabmsg model.pageTab}, Cmd.none)
     MsgAdjustTimeZone zone -> ({model | timezone = zone}, Cmd.none)

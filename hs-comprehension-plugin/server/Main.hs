@@ -8,8 +8,8 @@ import Network.Wai.Handler.Warp (run)
 import System.Process (runCommand)
 import Data.Data (Data, Typeable)
 import System.Console.CmdArgs (def, (&=), help, opt, summary, cmdArgs)
-import Control.Monad (when, void)
-import System.Directory (getCurrentDirectory)
+import Control.Monad (when, void, (>=>))
+import System.Directory (getCurrentDirectory, doesDirectoryExist, canonicalizePath)
 
 data Opts = Opts
   { debug :: Bool
@@ -25,15 +25,25 @@ parseArgs = Opts
 
 
 finalizeArgs :: Opts -> IO Opts
-finalizeArgs = 
-  let setDebugRoot opts = 
-        if (debug opts) then do 
+finalizeArgs = let 
+  setDebugRoot opts = 
+        if (debug opts && project_root opts == "./") then do 
           let project_root = "/home/hugo/repos/hs-comprehension/test-project/"
           putStrLn $ "DEBUG mode enabled, defaulting project_root to " <> project_root
           pure $ opts { project_root = project_root }
         else pure opts
 
-  in setDebugRoot
+  makePathAbsolute :: Opts -> IO Opts
+  makePathAbsolute opts = do
+    exists <- doesDirectoryExist (project_root opts)
+    if exists
+    then do 
+      absolute <- canonicalizePath (project_root opts)
+      pure $ opts { project_root = absolute }
+    else do
+      pure opts
+
+  in setDebugRoot >=> makePathAbsolute
 
   
 
@@ -41,6 +51,7 @@ main :: IO ()
 main = do
   args <- cmdArgs parseArgs >>= finalizeArgs
 
+  putStrLn $ "Serving captures from: " <> project_root args
   getCurrentDirectory >>= \d -> putStrLn ("Serving frontend from: " <> d)
 
   when (debug args) $ do
@@ -48,4 +59,10 @@ main = do
     void $ runCommand "cd /home/hugo/repos/hs-comprehension/frontend/src && elm reactor"
 
   let view = CaptureView { cv_project_root = project_root args }
-  run 8080 =<< (app view)
+  run 8080 (app view)
+
+whenM :: (Monad m) => m Bool -> m () -> m ()
+whenM p t = p >>= \p' -> if p' then t else pure ()
+
+ifM :: (Monad m) => m Bool -> m a -> m a -> m a
+ifM p t f = p >>= \p' -> if p' then t else f

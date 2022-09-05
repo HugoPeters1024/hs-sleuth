@@ -14,6 +14,13 @@ import qualified Generics.SOP as SOP
 import Data.Aeson as Aeson
 import Language.Haskell.To.Elm
 
+deriving instance SOP.Generic ServerSettings
+deriving instance SOP.HasDatatypeInfo ServerSettings
+type ServerSettingsElm = ElmType "Generated.TODO.ServerSettings" ServerSettings
+deriving via ServerSettingsElm instance Aeson.ToJSON ServerSettings
+deriving via ServerSettingsElm instance HasElmType ServerSettings
+deriving via ServerSettingsElm instance HasElmDecoder Aeson.Value ServerSettings
+
 deriving instance SOP.Generic Capture
 deriving instance SOP.HasDatatypeInfo Capture
 type CaptureElm = ElmType "Generated.TODO.Capture" Capture

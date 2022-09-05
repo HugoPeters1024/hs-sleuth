@@ -16,6 +16,11 @@ fetchModule tid slot slug mod =
              , expect = Http.expectJson (MsgCodeMsg tid << CodeMsgGotModule slot) (Json.Decode.map TR.reconModule HE.moduleDecoder)
              }
 
+fetchSettings : Cmd Msg
+fetchSettings = Http.get { url = "http://localhost:8080/settings"
+                         , expect = Http.expectJson MsgGotSettings HE.serverSettingsDecoder
+                         }
+
 fetchCaptures : Cmd Msg
 fetchCaptures = Http.get { url = "http://localhost:8080/captures"
                          , expect = Http.expectJson MsgGotCaptures (Json.Decode.list HE.captureDecoder)
