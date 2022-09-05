@@ -133,7 +133,7 @@ pprExpr env expr = case expr of
     EVar varid -> pprBinderThunk env (varid.binderIdThunk ())
     EVarGlobal ename -> pprVar env (VarExternal ename)
     ELit lit -> pprLit lit
-    EApp f a -> hang 2 (combine [pprExpr env f, line, pprExprParens env a])
+    EApp f a -> if exprIsAtom a then combine [pprExpr env f, space, pprExpr env a] else hang 2 (combine [pprExpr env f, line, pprExprParens env a])
     ETyLam b e -> pprExpr env (ELam b e)
     ELam b e -> 
         let (fe, bs) = leadingLambdas e

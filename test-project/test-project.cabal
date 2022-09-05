@@ -41,4 +41,4 @@ executable hs-plugin-test
                     , alfred-margaret
     hs-source-dirs:   app
     default-language: Haskell2010
-    ghc-options: -O1 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:Baseline
+    ghc-options: -O1 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:Old

@@ -44,6 +44,7 @@ view m =
                         ] []
                     ]
                 , Table.td [] [text project.captureName]
+                , Table.td [] [text project.captureGhcVersion]
                 , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix project.captureDate))]
                 ] 
     in Loading.debugLoading "SessionMeta" m.capturesLoading <| \captures ->
@@ -56,6 +57,7 @@ view m =
                     , thead = Table.simpleThead
                         [ Table.th [] [text "Stage"]
                         , Table.th [] [text "Capture Slug"]
+                        , Table.th [] [text "GHC Version"]
                         , Table.th [] [text "Captured at"]
                         ]
                     , tbody = Table.tbody [] (List.map mkRow captures)

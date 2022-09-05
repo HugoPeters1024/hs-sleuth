@@ -43,6 +43,7 @@ import GhcDump.Ast (Unique(..), IdDetails(..), TyCon(..), SrcSpan(..), LineCol(.
 data Capture = Capture
     { captureName :: Text
     , captureDate :: Int
+    , captureGhcVersion :: Text
     , captureModules :: [(Text, Int)]
     }
     deriving (Generic, Serialise, Show)

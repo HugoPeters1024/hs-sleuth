@@ -12,5 +12,4 @@ import Quicksort
 import StringSearch
 
 main :: IO ()
-main = print $ isLoveSong
-
+main = putStrLn

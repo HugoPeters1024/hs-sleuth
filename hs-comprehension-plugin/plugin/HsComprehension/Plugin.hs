@@ -123,21 +123,22 @@ cvtGhcPhase dflags phaseId phase =
                             }
     in Cvt.cvtPhase cvtEnv . GhcDump.Convert.cvtModule dflags phaseId phase
 
-projectState :: IORef (StdThief, Capture)
+projectState :: IORef (Bool, StdThief, Capture)
 projectState =  do
     let capture =
             Capture { captureName = T.empty
                     , captureDate = 0
+                    , captureGhcVersion = T.pack "GHC version unknown"
                     , captureModules = []
                     }
     unsafePerformIO $ do
         time <- currentPosixMillis
-        newIORef (undefined, capture { captureDate = time })
+        newIORef (False, undefined, capture { captureDate = time })
 
 setupProjectStdoutThief :: IO ()
 setupProjectStdoutThief = do
     thief <- setupStdoutThief
-    modifyIORef projectState $ \(_, capture) -> (thief, capture)
+    modifyIORef projectState $ \(reset, _, capture) -> (reset, thief, capture)
 
 plugin :: Plugin
 plugin = defaultPlugin 
@@ -161,6 +162,21 @@ modifyDynFlags _ dflags =
   in pure (updateFlags dflags)
 #endif
 
+ensureOldDeleted :: String -> IO ()
+ensureOldDeleted slug = do
+  (isReset,_,_) <- readIORef projectState
+  unless isReset $ do
+    putStrLn "HsComprehension: Removing the old capture if it exists"
+    exists <- FP.doesDirectoryExist (coreDumpDir defaultCaptureView slug)
+    when exists $ do
+      FP.removeDirectoryRecursive (coreDumpDir defaultCaptureView slug)
+    modifyIORef projectState $ \(_,thief,capture) -> (True,thief,capture)
+
+getGhcVersionString :: CoreM String
+getGhcVersionString = do
+  ghc_v <- ghcNameVersion <$> getDynFlags
+  pure $ ghcNameVersion_programName ghc_v ++ " " ++ ghcNameVersion_projectVersion ghc_v
+
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install options todo = do
 #if MIN_VERSION_ghc(9,0,0)
@@ -172,13 +188,17 @@ install options todo = do
                     [slug] -> slug
                     _      -> error "provide a slug for the dump as exactly 1 argument"
     liftIO $ print options
+    liftIO $ ensureOldDeleted slug
     liftIO $ FP.createDirectoryIfMissing True (coreDumpDir defaultCaptureView slug)
     dflags <- getDynFlags
     modName <- showSDoc dflags . ppr <$> getModule
-    liftIO $ modifyIORef projectState $ \(thief, capture) ->
-        ( thief
+    ghcVersion <- T.pack <$> getGhcVersionString
+    liftIO $ modifyIORef projectState $ \(setup, thief, capture) ->
+        ( setup
+        , thief
         , capture
             { captureModules = (T.pack modName, length todo) : captureModules capture
+            , captureGhcVersion = ghcVersion
             , captureName = T.pack slug
             }
         )
@@ -230,7 +250,7 @@ dumpPass ms_ref n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
 finalPass :: IORef [Ast.Phase] -> (String, String) -> CoreToDo
 finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts -> do
     liftIO $ do
-        (thief, capture) <- readIORef projectState
+        (_, thief, capture) <- readIORef projectState
         in_phases <- readIORef ms_ref
         r <- readStdoutThief thief
         let ruleFirings = parseStdout r

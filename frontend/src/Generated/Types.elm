@@ -31,6 +31,7 @@ module Generated.Types exposing
 type alias Capture  =
     { captureName : String
     , captureDate : Int
+    , captureGhcVersion : String
     , captureModules : List (String , Int) }
 
 

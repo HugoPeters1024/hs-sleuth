@@ -36,6 +36,7 @@ captureDecoder =
     Json.Decode.succeed Capture |>
     Json.Decode.Pipeline.required "captureName" Json.Decode.string |>
     Json.Decode.Pipeline.required "captureDate" Json.Decode.int |>
+    Json.Decode.Pipeline.required "captureGhcVersion" Json.Decode.string |>
     Json.Decode.Pipeline.required "captureModules" (Json.Decode.list (Json.Decode.map2 Tuple.pair (Json.Decode.index 0 Json.Decode.string) (Json.Decode.index 1 Json.Decode.int)))
 
 
