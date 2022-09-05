@@ -46,15 +46,18 @@ initCodeTabCapture slot capture =
     , toplevelHides = Set.empty
     }
 
-getCaptures : CodeTab -> List Capture
-getCaptures tab = List.map .capture (Dict.values tab.captureSlots)
+getCurrentCaptures : CodeTab -> List Capture
+getCurrentCaptures tab = List.map .capture (Dict.values tab.captureSlots)
+
+getCurrentCaptureTabs : CodeTab -> List CodeTabCapture
+getCurrentCaptureTabs tab = Dict.values tab.captureSlots
 
 getMergedModuleNames : CodeTab -> List String
-getMergedModuleNames tab = List.map Tuple.first (List.concatMap .captureModules (getCaptures tab))
+getMergedModuleNames tab = List.map Tuple.first (List.concatMap .captureModules (getCurrentCaptures tab))
     |> EH.removeDuplicates
 
 getModules : CodeTab -> List Module
-getModules tab = EH.mapMaybe Loading.toMaybe (List.map .mod (Dict.values tab.captureSlots))
+getModules tab = EH.mapMaybe Loading.toMaybe (List.map .mod (getCurrentCaptureTabs tab))
 
 getCurrentPhases : CodeTab -> List Phase
 getCurrentPhases tab =
@@ -65,11 +68,11 @@ getCurrentPhases tab =
           |> Maybe.andThen (\mod -> EH.indexList capture.phaseSlider.value mod.modulePhases)
   in EH.mapMaybe go (Dict.values tab.captureSlots)
 
-getMatchedTopLevel : CodeTab -> List (List TopBindingInfo)
-getMatchedTopLevel tab =
+getMatchedTopLevel : (TopBindingInfo -> Int) -> CodeTab -> List (List TopBindingInfo)
+getMatchedTopLevel lens tab =
   let insert : TopBindingInfo -> Dict Int (List TopBindingInfo) -> Dict Int (List TopBindingInfo)
       insert ti dict =
-        let id = HsCore.Helpers.topBindingInfoToInt ti
+        let id = lens ti
             up mxs = case mxs of
               Just xs -> Just (ti::xs)
               Nothing -> Just [ti]
@@ -157,16 +160,20 @@ update msg tab = case msg of
     CodeMsgHideToplevelDiffTemplate -> 
         let 
             -- Predicate used to determine wether to hide toplevel defs
-            -- they must all have the same hash and all be present
-            pred : List Int -> Bool
-            pred xs = List.length xs == Dict.size tab.captureSlots && EH.allSame xs
+            -- they must all have the same hash (inferred by the bucket being full)
+            -- It can also be that the bucket is fuller because multiple toplevel definitions
+            -- are the same, this is a currently unaddressed problem
+            pred : List TopBindingInfo -> Bool
+            pred xs = List.length xs >= Dict.size tab.captureSlots-- && EH.allSame xs
 
             hideSet : Set Int
             hideSet = 
-              getMatchedTopLevel tab
-              |> List.filter (pred << List.map .topBindingHash)
-              |> EH.mapMaybe (Maybe.map topBindingInfoToInt << List.head)
+              getMatchedTopLevel .topBindingHash tab
+              |> List.filter pred
+              |> List.concat
+              |> List.map topBindingInfoToInt
               |> Set.fromList
+              |> Debug.log ""
 
             updateHideSet : CodeTabCapture -> CodeTabCapture
             updateHideSet tabmod = {tabmod | toplevelHides = hideSet }
@@ -342,6 +349,7 @@ viewInfo model tab =
 viewHideOptions : Model -> CodeTab -> Html CodeTabMsg
 viewHideOptions model tab = HtmlHelpers.list
   [ h4 [] [text "Hide Options"]
+  , text (String.fromInt (List.sum (List.map (Set.size << .toplevelHides) (getCurrentCaptureTabs tab))) ++ " toplevels currently hidden")
   , Button.button 
       [ Button.info
       , Button.disabled (Dict.size tab.captureSlots < 2)
