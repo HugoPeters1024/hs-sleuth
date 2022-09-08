@@ -177,7 +177,6 @@ update msg tab = case msg of
               |> List.concat
               |> List.map topBindingInfoToInt
               |> Set.fromList
-              |> Debug.log ""
 
             updateHideSet : CodeTabCapture -> CodeTabCapture
             updateHideSet tabmod = {tabmod | toplevelHides = hideSet }

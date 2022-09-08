@@ -8,6 +8,7 @@ import ElmHelpers as EH
 
 import Ppr exposing (..)
 import Html exposing (..)
+import Html.Lazy
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
@@ -77,4 +78,4 @@ htmlRenderer env =
     }
 
 renderHtml : PprRenderEnv -> Pretty.Doc Tag -> Html Msg
-renderHtml env = Pretty.Renderer.pretty 80 (htmlRenderer env)
+renderHtml env = Html.Lazy.lazy <| Pretty.Renderer.pretty 80 (htmlRenderer env)

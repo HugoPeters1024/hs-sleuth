@@ -12,4 +12,4 @@ import Quicksort
 import StringSearch
 
 main :: IO ()
-main = putStrLn
+main = putStrLn "Hello, Haskell!"

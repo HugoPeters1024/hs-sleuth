@@ -231,7 +231,7 @@ captureFile view pid = coreDumpDir view pid `FP.combine` "capture.zstd"
 
 writeToFile :: (Serialise a) => FilePath -> a -> IO ()
 writeToFile fname = do
-    BSL.writeFile fname . Zstd.compress 2 . Ser.serialise
+    BSL.writeFile fname . Zstd.compress 7 . Ser.serialise
 
 readFromFile :: Serialise a => FilePath -> IO a
 readFromFile fname = do
