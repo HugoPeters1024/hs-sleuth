@@ -4,21 +4,23 @@ Haskell Comprehension is a tool to inspect/verify/debug the interaction your has
 
 ## Requirements
 
-* GHC >= 9.0 (Backports to 8.0 are both possible and planned)
+* GHC >= 8.4
 * zlib (`sudo apt install zlib1g-dev`)
 
-## Quickstart
+## Using the plugin & Creating dumps
 
 The project is currently not on hackage so you need to add this repo as a local repo
 
-- :package: Clone this repository to wherever you want (lets assume `..`) and update the submodules
+- :package: Clone this repository to wherever you want and update the submodules
   ```sh
   git clone --recurse-submodules https://github.com/HugoPeters1024/hs-comprehension 
   ```
-- Create or edit a `cabal.project` file for your project: 
-    ```sh
+- Create or edit a `cabal.project` file for your project to transitively include all upstream dependencies (assuming the clone location is at `..`): 
+    ```cabal
     packages: .
-            , ../hs-comprehension-plugin  #or wherever else you cloned it
+            , ../hs-comprehension/plugin
+            , ../hs-comprehension/cborg/cborg
+            , ../hs-comprehension/ghc-dump
     ```
 - :electric_plug: Register the dependency and enable the plugin in your cabal file, use the `-fplugin-opt` flag to give a name to your capture.
     ```cabal
@@ -34,13 +36,22 @@ The project is currently not on hackage so you need to add this repo as a local 
 - :floppy_disk: Now whenever you build dump files are created in `dist-newstyle/coredump-MyCapture001/`
 
 
+# Inspecting dumps
+
+
 - :female_detective: To inspect the dumps with the frontend, you need to run the server:
     ```sh
     -- when building the server yourself (GHC 9.2+)
-    cabal run hs-comprehension-server -- --project_root PATH/TO/YOUR/PROJECT
+    -- Make sure to install Elm: https://guide.elm-lang.org/install/elm.html
+    -- You can also opt to not install elm and extract the html and css files from the release
+    cd hs-comprehension/
+    ./make_release.sh
+    cd release/
+    ./server --project-root PATH/TO/YOUR/PROJECT
+
 
     -- when using the released build (https://github.com/HugoPeters1024/hs-comprehension/releases)
-    ./server --project_root PATH/TO/YOUR/PROJECT
+    ./server --project-root PATH/TO/YOUR/PROJECT
 
     -- the server will serve at port 8080
     ```
@@ -62,7 +73,7 @@ That should be all!
 
 ## Current Capabilities
 
-- GHC >= 9.0 support capability (backport to GHC >= 8.0 desired
+- GHC >= 8.4 support
 - Core pretty printer
 - Phase scrolling
 - Side by side view of 2 or more captures
@@ -74,8 +85,6 @@ That should be all!
 
 ## Possible Future Capabilities/Goals
 
-- GHC 8.0+ support, should only require a few version macros in the uniqify module that deals with canonical core 
-    - The server binary contains libraries that generate elm code from record definitions and use advanced deriving strategies that make it extremely cost ineffective (if at all possible) to backport to < GHC 9.0. As such, the server will need to be provided as a prebuilt binary, or with a separate stack/nix/docker/?? build environment.
 - Capture the dflags used to configure the compiler
 - Productively explore the unfolding of a variable (it is currently not clear what that means)
     - We need a use case/example for this feature

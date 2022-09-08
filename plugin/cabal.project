@@ -1,7 +1,5 @@
 packages: .
-        , ../plugin
         , ../ghc-dump/ghc-dump-core
         , ../ghc-dump/ghc-dump-util
         , ../cborg/cborg
-        , ./stream-fusion
 allow-newer: all

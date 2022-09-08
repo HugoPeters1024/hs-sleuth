@@ -14,12 +14,14 @@ import System.Directory (getCurrentDirectory, doesDirectoryExist, canonicalizePa
 data Opts = Opts
   { debug :: Bool
   , project_root :: FilePath
+  , port :: Int
   }
   deriving (Show, Data, Typeable)
 
 parseArgs = Opts
   { debug = def &= help "Run in debug modus (Using elm reactor)"
   , project_root = "./" &= help "The project root whose captures to inspect"
+  , port = 8080 &= help "What port to serve on"
   } 
   &= summary "HsComprehension backend server"
 
@@ -41,7 +43,7 @@ finalizeArgs = let
       absolute <- canonicalizePath (project_root opts)
       pure $ opts { project_root = absolute }
     else do
-      pure opts
+      error $ "project-root (" <> project_root opts <> ") does not exist"
 
   in setDebugRoot >=> makePathAbsolute
 
@@ -59,7 +61,8 @@ main = do
     void $ runCommand "cd /home/hugo/repos/hs-comprehension/frontend/src && elm reactor"
 
   let view = CaptureView { cv_project_root = project_root args }
-  run 8080 (app view)
+  putStrLn $ "Starting the app at http://localhost:" <> show (port args) <> "/"
+  run (port args) (app view)
 
 whenM :: (Monad m) => m Bool -> m () -> m ()
 whenM p t = p >>= \p' -> if p' then t else pure ()
