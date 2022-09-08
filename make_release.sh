@@ -4,9 +4,10 @@ cd "${0%/*}"
 mkdir release
 mkdir release/static
 echo "Building Server App"
-cd ./hs-comprehension-plugin/server/ && cabal build
-cd ../../
-cp ./hs-comprehension-plugin/server/dist-newstyle/build/x86_64-linux/ghc-9.2.2/hs-comprehension-server-0.1.0.0/x/hs-comprehension-server/build/hs-comprehension-server/hs-comprehension-server release/server
+cd ./server/
+cabal build
+cd ../
+cp ./server/dist-newstyle/build/x86_64-linux/ghc-9.2.2/hs-comprehension-server-0.1.0.0/x/hs-comprehension-server/build/hs-comprehension-server/hs-comprehension-server release/server
 
 echo "Building Elm Frontend"
 cd ./frontend/

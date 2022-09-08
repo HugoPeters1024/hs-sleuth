@@ -54,10 +54,24 @@ renameModalOpen : Var -> CodeTabRenameModal -> CodeTabRenameModal
 renameModalOpen var
     =  renameModalSetVis Modal.shown 
     << renameModalSetVarId (varToInt var)
-    << renameModalSetStaginText (varName var)
+    << renameModalSetStagingText (varName var)
 
-renameModalSetStaginText : String -> CodeTabRenameModal -> CodeTabRenameModal
-renameModalSetStaginText t modal = { modal | stagingText = t}
+renameModalSetStagingText : String -> CodeTabRenameModal -> CodeTabRenameModal
+renameModalSetStagingText t modal = { modal | stagingText = t}
+
+type alias CodeViewOptions =
+  { hideTypes : Bool
+  , hideModules : Bool
+  , hideDisambiguation : Bool
+  , hideRecursiveGroups : Bool 
+  , varRenames : Dict Int String
+  }
+
+codeViewOptionsToggleHideTypes o = { o | hideTypes = not o.hideTypes }
+codeViewOptionsToggleHideModules o = { o | hideModules = not o.hideModules }
+codeViewOptionsToggleHideDisambiguation o = { o | hideDisambiguation = not o.hideDisambiguation }
+codeViewOptionsToggleHideRecursiveGroups o = { o | hideRecursiveGroups = not o.hideRecursiveGroups }
+codeViewOptionsMapVarRenames f o = { o | varRenames = f o.varRenames }
 
 type alias CodeTab = 
     { id : TabId
@@ -65,14 +79,10 @@ type alias CodeTab =
     , captureSlots : Dict Int CodeTabCapture
     , currentModule : ModuleName
     , moduleDropdown : Dropdown.State
+    , codeViewOptions : CodeViewOptions
     , selectedVar : Maybe Var
-    , hideTypes : Bool
-    , hideModules : Bool
-    , hideDisambiguation : Bool
-    , hideRecursiveGroups : Bool 
     , selectedTopLevels : List TopBindingInfo
     , renameModal : CodeTabRenameModal
-    , varRenames : Dict Int String
     }
 
 type CodeTabMsg
@@ -113,11 +123,11 @@ type alias OverviewTab =
     { stagedProjects : List Capture
     }
 
+
 type OverviewMsg
     = OverviewMsgStageCapture Capture
     | OverViewMsgDeleteCapture Capture
     | OverViewMsgCaptureDeleted
-
 
 type Msg 
     = MsgGotSettings (Result Http.Error ServerSettings)

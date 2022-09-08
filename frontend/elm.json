@@ -16,6 +16,7 @@
             "elm/url": "1.0.0",
             "folkertdev/elm-state": "3.0.1",
             "jinjor/elm-contextmenu": "2.0.0",
+            "rtfeldman/elm-css": "17.1.1",
             "rundis/elm-bootstrap": "5.2.0",
             "the-sett/elm-pretty-printer": "3.0.0",
             "toastal/either": "3.6.3",
@@ -27,6 +28,8 @@
             "elm/file": "1.0.5",
             "elm/virtual-dom": "1.0.2",
             "elm-community/basics-extra": "4.1.0",
+            "robinheghan/murmur3": "1.0.0",
+            "rtfeldman/elm-hex": "1.0.0",
             "turboMaCk/any-dict": "2.6.0"
         }
     },

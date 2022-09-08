@@ -15,27 +15,20 @@ import Html.Events exposing (..)
 import Pretty
 import Pretty.Renderer
 
+import Css
+import Css.Global
+import Html.Styled
+
 import ContextMenu
 import Generated.Types exposing (..)
 
 type alias PprRenderEnv =
     { codeTabId : TabId
     , codeTabSlotId : SlotId
-    , selectedVar : Maybe Var
-    , renameDict : Dict Int String
-    , slug : String
     }
 
 varHighlightClass : PprRenderEnv -> Var -> String
-varHighlightClass env o = case env.selectedVar of
-    Nothing -> ""
-    Just v -> 
-        if varToInt v == varToInt o
-        then ( if varPhaseId v == varPhaseId o
-               then "highlight-exact"  
-               else "highlight-approx"
-             )
-        else ""
+varHighlightClass env o = "var" ++ String.fromInt (varToInt o)
 
 renderVar : PprRenderEnv -> String -> Var -> Html Msg
 renderVar env content var = 
@@ -45,13 +38,10 @@ renderVar env content var =
               Just ([], n) -> ("", n)
               Just (qual, n) -> ((String.join "." qual) ++ ".", n)
               _ -> ("", "")
-        varName = case Dict.get (varToInt var) env.renameDict of
-            Just x -> x
-            Nothing -> base_name
     in a [class "no-style", onClick (MsgCodeMsg env.codeTabId (CodeMsgSelectVar var))]
          [span 
             [ctxMenu, class className, class (varHighlightClass env var), title (typeToString (varType var))] 
-            [span [class "nc"] [text prefix], text varName]]
+            [span [class "nc"] [text prefix], text base_name]]
 
 htmlTagged : PprRenderEnv -> Tag -> String -> List (Html Msg) -> List (Html Msg)
 htmlTagged env tag content next = 
@@ -77,5 +67,16 @@ htmlRenderer env =
     , outer = span []
     }
 
-renderHtml : PprRenderEnv -> Pretty.Doc Tag -> Html Msg
-renderHtml env = Html.Lazy.lazy <| Pretty.Renderer.pretty 80 (htmlRenderer env)
+dyn_css : Maybe Var -> Html msg
+dyn_css selectedVar = 
+  let highlight var= Css.Global.class ("var" ++ String.fromInt (varToInt var)) [Css.backgroundColor (Css.rgb 53 100 30)]
+  in Html.Styled.toUnstyled <| Css.Global.global (EH.mapMaybe identity [Maybe.map highlight selectedVar])
+
+renderHtml : TabId -> SlotId -> Pretty.Doc Tag -> Html Msg
+renderHtml tabid slotid content = 
+  let env = 
+        { codeTabId = tabid
+        , codeTabSlotId = slotid
+        }
+  in Pretty.Renderer.pretty 80 (htmlRenderer env) content
+

@@ -19,13 +19,7 @@ type Tag
 
 type alias PP = Doc Tag
 
-type alias Env =
-  { hideModules : Bool
-  , hideDisambiguation : Bool
-  , varRenames : Dict Int String
-  }
-
-renderVarName : Env -> Var -> String
+renderVarName : CodeViewOptions -> Var -> String
 renderVarName env var = 
     let postfix : String -> String
         postfix i = if env.hideDisambiguation then i else i ++ "_" ++ HsCore.Helpers.varGHCUnique var
@@ -63,7 +57,7 @@ doubleline = append line line
 combine : List PP -> PP
 combine = Pretty.fold a
 
-pprPhase : Env -> String -> Phase -> PP
+pprPhase : CodeViewOptions -> String -> Phase -> PP
 pprPhase env modname phase 
     =  keyword "module"
     |> a space
@@ -88,7 +82,7 @@ pprFiredRules phase = pprComment <|
 pprComment : String -> PP
 pprComment s = taggedString s TagComment
 
-pprTopBinding : Env -> TopBinding -> PP
+pprTopBinding : CodeViewOptions -> TopBinding -> PP
 pprTopBinding env topb = case topb of
     NonRecTopBinding tinfo -> pprTopBindingInfo env tinfo
     RecTopBinding tinfos -> 
@@ -99,14 +93,14 @@ pprTopBinding env topb = case topb of
         |> a line
         |> a (string "}")
 
-pprTopBindingInfo : Env -> TopBindingInfo -> PP
+pprTopBindingInfo : CodeViewOptions -> TopBindingInfo -> PP
 pprTopBindingInfo env tb = combine 
     [ words [pprVar env (VarTop tb), string "::", pprType env (binderType tb.topBindingBinder)]
     , line
     , pprBinding_ env (VarTop tb, tb.topBindingRHS)
     ]
 
-pprBinding_ : Env -> (Var, Expr) -> PP
+pprBinding_ : CodeViewOptions -> (Var, Expr) -> PP
 pprBinding_ env (var, expr) = 
     let (fexpr, bs) = leadingLambdas expr
     in nest 2 <| combine
@@ -117,18 +111,18 @@ pprBinding_ env (var, expr) =
             ]
         ]
 
-pprBinding : Env -> (Binder, Expr) -> PP
+pprBinding : CodeViewOptions -> (Binder, Expr) -> PP
 pprBinding env (bndr, expr) = pprBinding_ env (VarBinder bndr, expr)
 
 
-pprBinder : Env -> Binder -> PP
+pprBinder : CodeViewOptions -> Binder -> PP
 pprBinder env = pprVar env << VarBinder
 
-pprExprParens : Env -> Expr -> PP
+pprExprParens : CodeViewOptions -> Expr -> PP
 pprExprParens env expr = if exprIsAtom expr then pprExpr env expr else parens (pprExpr env expr)
 
 
-pprExpr : Env -> Expr -> PP
+pprExpr : CodeViewOptions -> Expr -> PP
 pprExpr env expr = case expr of
     EVar varid -> pprBinderThunk env (varid.binderIdThunk ())
     EVarGlobal ename -> pprVar env (VarExternal ename)
@@ -176,7 +170,7 @@ pprExpr env expr = case expr of
     ECoercion -> string "coercion"
     EMarkDiff e -> pprExpr env e
 
-pprAlt : Env -> Binder -> Alt -> PP
+pprAlt : CodeViewOptions -> Binder -> Alt -> PP
 pprAlt env b alt = nest 2 <| combine
     [ pprAltCon env b alt.altCon
     , if List.isEmpty alt.altBinders
@@ -189,7 +183,7 @@ pprAlt env b alt = nest 2 <| combine
     , pprExpr env alt.altRHS
     ]
 
-pprAltCon : Env -> Binder -> AltCon -> PP
+pprAltCon : CodeViewOptions -> Binder -> AltCon -> PP
 pprAltCon env b con = case con of
     AltDataCon s -> if isConstructorName s then keyword s else string s
     AltLit l -> pprLit l
@@ -215,18 +209,18 @@ pprLit lit =
         LitRubbish -> string "[LitRubbish]"
 
 
-pprBinderThunk : Env -> BinderThunk -> PP
+pprBinderThunk : CodeViewOptions -> BinderThunk -> PP
 pprBinderThunk env thunk = case thunk of
     Found b -> pprBinder env b
     NotFound -> string "[Binder Not Found]"
     Untouched -> string "[Binder Not Touched]"
 
 
-pprVar : Env -> Var -> PP
+pprVar : CodeViewOptions -> Var -> PP
 pprVar env var = Pretty.taggedString (renderVarName env var) (TagVar var)
 
 
-pprType : Env -> Type -> PP
+pprType : CodeViewOptions -> Type -> PP
 pprType env type_ = case type_ of
     VarTy var -> case var.binderIdThunk () of
         Found x -> pprBinder env x
@@ -248,7 +242,7 @@ pprType env type_ = case type_ of
     LitTy -> string "[LIT TYPE??]"
     CoercionTy -> string "[COERCION TYPE??]" 
 
-pprTypeParens : Env -> Type -> PP
+pprTypeParens : CodeViewOptions -> Type -> PP
 pprTypeParens env type_ = case type_ of
     VarTy t -> pprType env (VarTy t)
     TyConApp con xs -> pprType env (TyConApp con xs)
