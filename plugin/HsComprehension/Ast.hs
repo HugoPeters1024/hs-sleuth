@@ -28,6 +28,7 @@ module HsComprehension.Ast
     , OccInfo (..)
     , Tick (..)
     , CoreStats (..)
+    , TyLit (..)
     ) where
 
 import GHC.Generics
@@ -39,7 +40,7 @@ import qualified Data.ByteString as BS
 import Codec.Serialise (Serialise)
 import Data.Hashable
 
-import GhcDump.Ast (Unique(..), IdDetails(..), TyCon(..), SrcSpan(..), LineCol(..), OccInfo(..), Tick(..), CoreStats(..))
+import GhcDump.Ast (Unique(..), IdDetails(..), TyCon(..), SrcSpan(..), LineCol(..), OccInfo(..), Tick(..), CoreStats(..), TyLit(..))
 
 data ServerSettings = ServerSettings
     { st_baseDir :: Text 
@@ -140,9 +141,11 @@ data Type
     | TyConApp TyCon [Type]
     | AppTy Type Type
     | ForAllTy Binder Type
-    | LitTy
+    | LitTy TyLit
     | CoercionTy
     deriving (Generic, Serialise, Show)
+
+instance Hashable TyLit
 
 data FiredRule = FiredRule
     { firedRuleName :: Text

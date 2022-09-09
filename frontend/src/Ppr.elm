@@ -239,7 +239,7 @@ pprType env type_ = case type_ of
         let (ft, bs) = leadingForalls t
             bndrs = join space (List.map (pprBinder env) (b::bs))
         in combine [string "forall ", bndrs, string ". ", pprType env ft]
-    LitTy -> string "[LIT TYPE??]"
+    LitTy ty -> string (HsCore.Helpers.tyLitToString ty)
     CoercionTy -> string "[COERCION TYPE??]" 
 
 pprTypeParens : CodeViewOptions -> Type -> PP

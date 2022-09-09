@@ -12,6 +12,7 @@ module Generated.Decoders exposing
     , litDecoder
     , tyConDecoder
     , typeDecoder
+    , tyLitDecoder
     , firedRuleDecoder
     , phaseDecoder
     , moduleDecoder
@@ -332,10 +333,37 @@ typeDecoder =
             Json.Decode.Pipeline.custom (Json.Decode.index 1 typeDecoder))
 
         "LitTy" ->
-            Json.Decode.succeed LitTy
+            Json.Decode.succeed LitTy |>
+            Json.Decode.Pipeline.required "contents" tyLitDecoder
 
         "CoercionTy" ->
             Json.Decode.succeed CoercionTy
+
+        _ ->
+            Json.Decode.fail "No matching constructor")
+
+
+tyLitDecoder : Json.Decode.Decoder TyLit
+tyLitDecoder =
+    Json.Decode.field "tag" Json.Decode.string |>
+    Json.Decode.andThen (\a -> case a of
+        "NumTyLit" ->
+            Json.Decode.succeed NumTyLit |>
+            Json.Decode.Pipeline.required "contents" Json.Decode.int
+
+        "StrTyLit" ->
+            Json.Decode.succeed StrTyLit |>
+            Json.Decode.Pipeline.required "contents" Json.Decode.string
+
+        "CharTyLit" ->
+            Json.Decode.succeed CharTyLit |>
+            Json.Decode.Pipeline.required "contents" (Json.Decode.string |>
+            Json.Decode.andThen (\b -> case String.uncons b of
+                Just (c , "") ->
+                    Json.Decode.succeed c
+
+                _ ->
+                    Json.Decode.fail "Not a char"))
 
         _ ->
             Json.Decode.fail "No matching constructor")

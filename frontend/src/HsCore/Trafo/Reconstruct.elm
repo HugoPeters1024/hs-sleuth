@@ -105,7 +105,7 @@ reconType env type_ = case type_ of
     TyConApp con ts -> TyConApp con (List.map (reconType env) ts)
     AppTy f a -> AppTy (reconType env f) (reconType env a)
     ForAllTy b t -> ForAllTy (reconBinder env b) (reconType (withBinding b env) t)
-    LitTy -> LitTy
+    LitTy ty -> LitTy ty
     CoercionTy -> CoercionTy
 
 

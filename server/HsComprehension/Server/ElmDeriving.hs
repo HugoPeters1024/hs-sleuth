@@ -70,6 +70,13 @@ deriving via TypeElm instance Aeson.ToJSON Type
 deriving via TypeElm instance HasElmType Type
 deriving via TypeElm instance HasElmDecoder Aeson.Value Type
 
+deriving instance SOP.Generic TyLit
+deriving instance SOP.HasDatatypeInfo TyLit
+type TyLitElm = ElmType "Generated.TODO.TyLit" TyLit
+deriving via TyLitElm instance Aeson.ToJSON TyLit
+deriving via TyLitElm instance HasElmType TyLit
+deriving via TyLitElm instance HasElmDecoder Aeson.Value TyLit
+
 deriving instance SOP.Generic FiredRule
 deriving instance SOP.HasDatatypeInfo FiredRule
 type FiredRuleElm = ElmType "Generated.TODO.FiredRule" FiredRule

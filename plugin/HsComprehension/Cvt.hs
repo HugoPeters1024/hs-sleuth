@@ -149,7 +149,7 @@ cvtType env (GHCD.FunTy f a) = FunTy (cvtType env f) (cvtType env a)
 cvtType env (GHCD.TyConApp con ts) = TyConApp con (map (cvtType env) ts)
 cvtType env (GHCD.AppTy f a) = AppTy (cvtType env f) (cvtType env a)
 cvtType env (GHCD.ForAllTy bndr t) = ForAllTy (cvtBinder env bndr) (cvtType env t)
-cvtType env GHCD.LitTy = LitTy
+cvtType env (GHCD.LitTy tylit) = LitTy tylit
 cvtType env GHCD.CoercionTy = CoercionTy
 
 cvtTopBinding :: CvtEnv -> GHCD.STopBinding -> TopBinding

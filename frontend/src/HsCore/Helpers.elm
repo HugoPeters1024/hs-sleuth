@@ -237,9 +237,14 @@ typeToString type_ = case type_ of
         let (ft, bs) = leadingForalls t
             bndrsStr = String.concat <| List.intersperse " " (List.map binderName (b::bs))
         in "forall " ++ bndrsStr ++ ". " ++ typeToString ft
-    LitTy -> "[LitTy]"
+    LitTy tylit -> tyLitToString tylit
     CoercionTy -> "[CoercionTy]"
 
+tyLitToString : TyLit -> String
+tyLitToString tylit = case tylit of
+  NumTyLit n -> String.fromInt n
+  StrTyLit s -> s
+  CharTyLit c -> String.fromChar c
 
 topBindingMap : (TopBindingInfo -> TopBindingInfo) -> TopBinding -> TopBinding
 topBindingMap f top = case top of

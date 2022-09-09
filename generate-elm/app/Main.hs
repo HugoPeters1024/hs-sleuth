@@ -36,6 +36,7 @@ elmDefsFor = (,) <$> elmDefinition @a <*> elmDecoderDefinition @Aeson.Value @a
     , elmDefsFor @Lit
     , elmDefsFor @TyCon 
     , elmDefsFor @Type 
+    , elmDefsFor @TyLit
     , elmDefsFor @FiredRule
     , elmDefsFor @Phase
     , elmDefsFor @Module 

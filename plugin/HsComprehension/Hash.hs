@@ -24,7 +24,6 @@ hashType (FunTy f a) = hashType f + hashType a
 hashType (TyConApp tc tys) = sum (map hashType tys)
 hashType (AppTy f a) = hashType f + hashType a
 hashType (ForAllTy bi e) = hashType e
-hashType LitTy = 0
+hashType (LitTy tylit) = hash tylit
 hashType CoercionTy = 0
-
 

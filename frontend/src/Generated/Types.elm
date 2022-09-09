@@ -12,6 +12,7 @@ module Generated.Types exposing
     , Lit(..)
     , TyCon(..)
     , Type(..)
+    , TyLit(..)
     , FiredRule
     , Phase
     , Module
@@ -144,8 +145,14 @@ type Type
     | TyConApp TyCon (List Type)
     | AppTy Type Type
     | ForAllTy Binder Type
-    | LitTy 
+    | LitTy TyLit
     | CoercionTy 
+
+
+type TyLit 
+    = NumTyLit Int
+    | StrTyLit String
+    | CharTyLit Char
 
 
 type alias FiredRule  =
