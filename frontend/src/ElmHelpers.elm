@@ -73,3 +73,12 @@ removeDuplicates = removeDuplicatesKey identity
 
 toggleSet : comparable -> Set comparable -> Set comparable
 toggleSet el set = if Set.member el set then Set.remove el set else Set.insert el set
+
+setCombine : List (Set comparable) -> Set comparable
+setCombine = List.foldl Set.union Set.empty
+
+setInsertMany : List comparable -> Set comparable -> Set comparable
+setInsertMany items set = List.foldl Set.insert set items
+
+setRemoveMany : List comparable -> Set comparable -> Set comparable
+setRemoveMany items set = List.foldl Set.remove set items

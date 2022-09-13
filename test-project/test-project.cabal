@@ -25,18 +25,13 @@ executable hs-plugin-test
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    other-modules:    TextExt
-                    , Text
-                    , Fusion
-                    , Records
-                    , LargeRecords
-                    , StringSearch
+    other-modules:    Channable
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:    base
                     , hs-comprehension-plugin
-                    , text
+                    , text == 1.2.4.0
                     , stream-fusion
                     , alfred-margaret
     hs-source-dirs:   app

@@ -7,10 +7,12 @@ import Browser exposing (Document)
 import Loading exposing (..)
 
 import Generated.Types exposing (..)
+import HsCore.Trafo.VarOccs exposing (exprVarOccs)
 
 import Time
 import Task
 import Dict exposing (Dict)
+import Set exposing (Set)
 
 import Pages.Code as Code
 import Pages.Overview as Overview
@@ -79,7 +81,10 @@ viewCodeTabs model =
 getCtxMenuItems : CtxMenu -> List (List (ContextMenu.Item, Msg))
 getCtxMenuItems context = case context of
     CtxCodeVar tabid slot var -> 
-        let always = [(ContextMenu.item "Rename", Code.mkCodeMsg tabid (CodeMsgRenameModalOpen var))]
+        let always = 
+              [ (ContextMenu.item "Rename", Code.mkCodeMsg tabid (CodeMsgRenameModalOpen var))
+              , (ContextMenu.item "Toggle Highlight", Code.mkCodeMsg tabid (CodeMsgHighlightVar var))
+              ]
             onBinder = 
                 let wBinder bndr = case bndr of
                         Binder b -> [(ContextMenu.item ("GOTO First Occ. (Pass " ++ String.fromInt b.binderCreatedPhaseId ++ ")"), Code.mkCodeMsg tabid (CodeMsgSetPhase slot b.binderCreatedPhaseId))]
@@ -89,7 +94,10 @@ getCtxMenuItems context = case context of
                     VarTop t -> wBinder t.topBindingBinder
                     _ -> []
             onToplevel = case var of
-                VarTop t -> [(ContextMenu.item "Hide", Code.mkCodeMsg tabid (CodeMsgHideToplevel slot t))]
+                VarTop t -> [ (ContextMenu.item "Hide", Code.mkCodeMsg tabid (CodeMsgHideToplevel slot t))
+                            , (ContextMenu.item "Hide all but this", Code.mkCodeMsg tabid (CodeMsgHideToplevelAllBut slot t))
+                            , (ContextMenu.item ("Unhide usages in function"), Code.mkCodeMsg tabid (CodeMsgUnhideTransitively slot t))
+                            ]
                 _        -> []
 
         in [always ++ onBinder ++ onToplevel]

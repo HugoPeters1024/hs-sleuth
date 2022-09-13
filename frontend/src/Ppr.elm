@@ -64,10 +64,11 @@ pprPhase env modname phase
     |> a (string modname)
     |> a space
     |> a (keyword "where")
+    |> a line
+    |> a (pprFiredRules phase)
     |> a doubleline
     |> a (join doubleline (List.map (pprTopBinding env) phase.phaseTopBindings))
     |> a doubleline
-    |> a (pprFiredRules phase)
 
 pprFiredRules : Phase -> PP
 pprFiredRules phase = pprComment <|

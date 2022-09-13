@@ -12,6 +12,7 @@ import Generated.Types exposing (..)
 import Types exposing (..)
 import HsCore.Helpers exposing (..)
 import HsCore.Trafo.EraseTypes exposing (eraseTypesPhase)
+import HsCore.Trafo.VarOccs exposing (exprVarOccs)
 import HsCore.Trafo.Diff as Diff
 
 import Ppr
@@ -97,6 +98,7 @@ makeCodeTab model captures =
               |> Maybe.andThen (.captureModules >> List.map Tuple.first >> List.head)
               |> Maybe.withDefault "Main"
           , selectedVar = Nothing
+          , varHighlights = Set.empty
           , moduleDropdown = Dropdown.initialState
           , codeViewOptions = 
             { hideTypes = False
@@ -150,7 +152,6 @@ update msg tab = case msg of
             updateCaptureTab tabmod = {tabmod | phaseSlider = Slider.update slidermsg tabmod.phaseSlider }
 
         in ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
-    CodeMsgMarkTopLevel ti -> ({tab | selectedTopLevels = ti::tab.selectedTopLevels }, Cmd.none)
     CodeMsgRenameModalOpen var -> ({tab | renameModal = renameModalOpen var tab.renameModal}, Cmd.none)
     CodeMsgRenameModalClose -> ({tab | renameModal = renameModalClose tab.renameModal}, Cmd.none)
     CodeMsgRenameModalStagingText txt -> ({tab | renameModal = renameModalSetStagingText txt tab.renameModal}, Cmd.none)
@@ -162,6 +163,24 @@ update msg tab = case msg of
         let updateHideSet : CodeTabCapture -> CodeTabCapture
             updateHideSet tabmod = {tabmod | toplevelHides = EH.toggleSet (topBindingInfoToInt ti) tabmod.toplevelHides}
         in ({tab | captureSlots = Dict.update slot (Maybe.map updateHideSet) tab.captureSlots}, Cmd.none)
+    CodeMsgHideToplevelAllBut slot ti -> 
+      let allVarIds =
+            getModules tab
+            |> List.concatMap .modulePhases
+            |> List.concatMap .phaseTopBindings
+            |> List.concatMap HsCore.Helpers.getTopLevelBinders
+            |> List.map HsCore.Helpers.topBindingInfoToInt
+            |> Set.fromList
+
+          updateHideSet : CodeTabCapture -> CodeTabCapture
+          updateHideSet tabmod = {tabmod | toplevelHides = EH.toggleSet (topBindingInfoToInt ti) allVarIds}
+      in ({tab | captureSlots = Dict.update slot (Maybe.map updateHideSet) tab.captureSlots}, Cmd.none)
+
+    CodeMsgUnhideTransitively slot ti -> 
+      let updateHideSet : CodeTabCapture -> CodeTabCapture
+          updateHideSet tabmod = {tabmod | toplevelHides = Set.diff tabmod.toplevelHides (exprVarOccs ti.topBindingRHS) }
+      in ({tab | captureSlots = Dict.update slot (Maybe.map updateHideSet) tab.captureSlots}, Cmd.none)
+        
     CodeMsgHideToplevelDiffTemplate -> 
         let 
             -- Predicate used to determine wether to hide toplevel defs
@@ -186,6 +205,8 @@ update msg tab = case msg of
       let updateHideSet : CodeTabCapture -> CodeTabCapture
           updateHideSet tabmod = {tabmod | toplevelHides = Set.empty}
       in ({tab | captureSlots = Dict.map (\_ -> updateHideSet) tab.captureSlots}, Cmd.none)
+    CodeMsgHighlightVar var -> ({tab | varHighlights = EH.toggleSet (HsCore.Helpers.varToInt var) tab.varHighlights}, Cmd.none)
+    CodeMsgRemoveAllHightlights -> ({tab | varHighlights = Set.empty}, Cmd.none)
 
 
 
@@ -264,13 +285,13 @@ hideToplevels hidden phase =
 
     in {phase | phaseTopBindings = List.filterMap go phase.phaseTopBindings}
 
-renderPhase : CodeViewOptions -> Set Int -> Int -> Int -> Phase -> Html Msg
-renderPhase cv toplevelHides tabid panelid phase = 
+renderPhase : CodeViewOptions -> ModuleName -> Set Int -> Int -> Int -> Phase -> Html Msg
+renderPhase cv modname toplevelHides tabid panelid phase = 
   phase
   |> hideToplevels toplevelHides
   |> (if cv.hideTypes then eraseTypesPhase else identity)
   |> (if cv.hideRecursiveGroups then \p -> {p | phaseTopBindings = removeRecursiveGroups p.phaseTopBindings} else identity)
-  |> Ppr.pprPhase cv "TODO ModuleName"
+  |> Ppr.pprPhase cv modname
   |> Ppr.renderHtml tabid panelid
 
 viewCode : CodeTab -> CodeTabCapture -> Html Msg
@@ -289,8 +310,8 @@ viewCode tab modtab = div []
                         |> Slider.view modtab.phaseSlider
                     , pre [class "dark"] 
                         [ code [] 
-                               [ Ppr.dyn_css tab.selectedVar
-                               , Html.Lazy.lazy5 renderPhase tab.codeViewOptions modtab.toplevelHides tab.id modtab.slot phase
+                               [ Ppr.dyn_css tab.varHighlights tab.selectedVar
+                               , Html.Lazy.lazy6 renderPhase tab.codeViewOptions mod.moduleName modtab.toplevelHides tab.id modtab.slot phase
                                ]
                         ]
                     ]
@@ -335,6 +356,8 @@ viewInfo model tab =
               , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map (viewVarInfo tab) tab.selectedVar)
               , hr [] []
               , viewHideOptions model tab
+              , hr [] []
+              , viewExtraOptions model tab
               ]
         ]
     |> Card.view
@@ -361,6 +384,22 @@ viewHideOptions model tab = HtmlHelpers.list
       [text "Unhide all"]
   ]
 
+viewExtraOptions : Model -> CodeTab -> Html CodeTabMsg
+viewExtraOptions model tab = HtmlHelpers.list
+  [ h4 [] [text "Other Options"]
+  , Button.button
+      [ Button.info
+      , Button.disabled (Set.size tab.varHighlights == 0)
+      , Button.attrs
+        [ onClick CodeMsgRemoveAllHightlights
+        , title (if (Set.size tab.varHighlights == 0) then "No terms currently highlighted" else "Remove all highlights from currently highlighted variables")
+        ]
+      ]
+      [text "Remove All Highlights"]
+  ]
+
+
+
 viewVarInfo : CodeTab -> Var -> Html CodeTabMsg
 viewVarInfo tab term = case term of
     VarBinder b -> viewBinderInfo b
@@ -380,9 +419,7 @@ viewBinderInfo bndr = case bndr of
 
 viewTopInfo : CodeTab -> TopBindingInfo -> Html CodeTabMsg
 viewTopInfo tab ti = HtmlHelpers.list
-    [ button [onClick (CodeMsgMarkTopLevel ti)] [text "Mark"]
-    , text ("#markers: " ++ String.fromInt (List.length tab.selectedTopLevels))
-    , text ("hash: " ++ String.fromInt ti.topBindingHash)
+    [ text ("hash: " ++ String.fromInt ti.topBindingHash)
     , viewBinderInfo ti.topBindingBinder
     ]
 

@@ -12,6 +12,10 @@ import GHC.Plugins
 import GhcPlugins
 # endif
 
+#if MIN_VERSION_ghc(9,0,0)
+import qualified GHC.Data.EnumSet (insert)
+#endif
+
 
 import HsComprehension.Uniqify as Uniqify
 import HsComprehension.Ast as Ast
@@ -51,9 +55,6 @@ import qualified GhcDump.Convert
 import Data.Time
 import Data.Time.Clock
 import Data.Time.Clock.POSIX
-
-
-
 
 
 type StdThief = (FilePath, Handle)
@@ -111,12 +112,7 @@ defaultCaptureView = CaptureView
 
 currentPosixMillis :: IO Int
 currentPosixMillis =
-  let posix_time =
-
-
-
-        utcTimeToPOSIXSeconds <$> getCurrentTime
-
+  let posix_time = utcTimeToPOSIXSeconds <$> getCurrentTime
   in floor . (1e3 *) . toRational <$> posix_time
 
 cvtGhcPhase :: DynFlags -> Int -> String -> ModGuts -> Ast.Phase
@@ -144,26 +140,26 @@ setupProjectStdoutThief = do
     modifyIORef projectState $ \(reset, _, capture) -> (reset, thief, capture)
 
 plugin :: Plugin
-plugin = defaultPlugin
+plugin = defaultPlugin 
   { installCoreToDos = install
-
-
-
-
-
+#if MIN_VERSION_ghc(9,2,0)
+  , driverPlugin = modifyDynFlags 
+#elif MIN_VERSION_ghc(9,0,0)
+  , dynflagsPlugin = modifyDynFlags
+#endif
   }
 
-
-
-
-
-
-
-
-
-
-
-
+#if MIN_VERSION_ghc(9,2,0)
+modifyDynFlags :: [CommandLineOption] -> HscEnv -> IO HscEnv
+modifyDynFlags _ hsc_env = 
+  let updateFlags dflags = dflags { dumpFlags = GHC.Data.EnumSet.insert Opt_D_dump_rule_firings (dumpFlags dflags) }
+  in pure $ hsc_env { hsc_dflags = updateFlags (hsc_dflags hsc_env) }
+#elif MIN_VERSION_ghc(9,0,0)
+modifyDynFlags :: [CommandLineOption] -> DynFlags -> IO DynFlags
+modifyDynFlags _ dflags = 
+  let updateFlags dflags = dflags { dumpFlags = GHC.Data.EnumSet.insert Opt_D_dump_rule_firings (dumpFlags dflags) }
+  in pure (updateFlags dflags)
+#endif
 
 ensureOldDeleted :: String -> IO ()
 ensureOldDeleted slug = do
@@ -183,8 +179,14 @@ getGhcVersionString = do
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install options todo = do
 
+    dflags <- getDynFlags
+    modName <- showSDoc dflags . ppr <$> getModule
+    ghc_version <- getGhcVersionString
 
-    liftIO $ putStrLn "HsComprehension: GHC < 9.0.0 requires manual enabling of -ddump-rule-firings to get complete telemetry"
+    let ghc_version_major :: Int = read $ head $ split '.' $ drop 4 ghc_version
+
+    when (ghc_version_major < 9) $ do
+      liftIO $ putStrLn "HsComprehension: GHC < 9.0.0 requires manual enabling of -ddump-rule-firings to get complete telemetry"
 
     liftIO setupProjectStdoutThief
     let slug = case options of
@@ -193,15 +195,12 @@ install options todo = do
     liftIO $ print options
     liftIO $ ensureOldDeleted slug
     liftIO $ FP.createDirectoryIfMissing True (coreDumpDir defaultCaptureView slug)
-    dflags <- getDynFlags
-    modName <- showSDoc dflags . ppr <$> getModule
-    ghcVersion <- T.pack <$> getGhcVersionString
     liftIO $ modifyIORef projectState $ \(setup, thief, capture) ->
         ( setup
         , thief
         , capture
             { captureModules = (T.pack modName, length todo) : captureModules capture
-            , captureGhcVersion = ghcVersion
+            , captureGhcVersion = T.pack ghc_version
             , captureName = T.pack slug
             }
         )

@@ -12,14 +12,14 @@ import Control.Monad (when, void, (>=>))
 import System.Directory (getCurrentDirectory, doesDirectoryExist, canonicalizePath)
 
 data Opts = Opts
-  { debug :: Bool
+  { dev :: Bool
   , project_root :: FilePath
   , port :: Int
   }
   deriving (Show, Data, Typeable)
 
 parseArgs = Opts
-  { debug = def &= help "Run in debug modus (Using elm reactor)"
+  { dev = def &= help "Run in dev mode (Using elm reactor)"
   , project_root = "./" &= help "The project root whose captures to inspect"
   , port = 8080 &= help "What port to serve on"
   } 
@@ -29,9 +29,9 @@ parseArgs = Opts
 finalizeArgs :: Opts -> IO Opts
 finalizeArgs = let 
   setDebugRoot opts = 
-        if (debug opts && project_root opts == "./") then do 
+        if (dev opts && project_root opts == "./") then do 
           let project_root = "/home/hugo/repos/hs-comprehension/test-project/"
-          putStrLn $ "DEBUG mode enabled, defaulting project_root to " <> project_root
+          putStrLn $ "DEV mode enabled, defaulting project_root to " <> project_root
           pure $ opts { project_root = project_root }
         else pure opts
 
@@ -56,8 +56,8 @@ main = do
   putStrLn $ "Serving captures from: " <> project_root args
   getCurrentDirectory >>= \d -> putStrLn ("Serving frontend from: " <> d)
 
-  when (debug args) $ do
-    putStrLn "DEBUG mode enabled, starting live elm reactor at port 8000"
+  when (dev args) $ do
+    putStrLn "DEV mode enabled, starting live elm reactor at port 8000"
     void $ runCommand "cd /home/hugo/repos/hs-comprehension/frontend/src && elm reactor"
 
   let view = CaptureView { cv_project_root = project_root args }

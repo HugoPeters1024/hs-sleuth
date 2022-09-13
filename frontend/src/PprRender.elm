@@ -4,6 +4,7 @@ import Types exposing (..)
 import HsCore.Helpers exposing (..)
 
 import Dict exposing (Dict)
+import Set exposing (Set)
 import ElmHelpers as EH
 
 import Ppr exposing (..)
@@ -67,10 +68,14 @@ htmlRenderer env =
     , outer = span []
     }
 
-dyn_css : Maybe Var -> Html msg
-dyn_css selectedVar = 
-  let highlight var= Css.Global.class ("var" ++ String.fromInt (varToInt var)) [Css.backgroundColor (Css.rgb 53 100 30)]
-  in Html.Styled.toUnstyled <| Css.Global.global (EH.mapMaybe identity [Maybe.map highlight selectedVar])
+dyn_css : Set Int -> Maybe Var -> Html msg
+dyn_css var_highlights selectedVar = 
+  let highlight_selected var = Css.Global.class ("var" ++ String.fromInt (varToInt var)) [Css.backgroundColor (Css.rgb 53 100 30)]
+      highlights = 
+        var_highlights
+        |> Set.toList
+        |> List.map (\i -> Css.Global.class ("var" ++ String.fromInt i) [Css.backgroundColor (Css.rgb 181 167 18)])
+  in Html.Styled.toUnstyled <| Css.Global.global (highlights ++ (EH.mapMaybe identity [Maybe.map highlight_selected selectedVar]))
 
 renderHtml : TabId -> SlotId -> Pretty.Doc Tag -> Html Msg
 renderHtml tabid slotid content = 

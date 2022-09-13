@@ -83,6 +83,7 @@ type alias CodeTab =
     , selectedVar : Maybe Var
     , selectedTopLevels : List TopBindingInfo
     , renameModal : CodeTabRenameModal
+    , varHighlights : Set Int
     }
 
 type CodeTabMsg
@@ -96,14 +97,17 @@ type CodeTabMsg
     | CodeMsgToggleHideRecursiveGroups
     | CodeMsgModuleDropdown Dropdown.State
     | CodeMsgSlider SlotId Slider.Msg
-    | CodeMsgMarkTopLevel TopBindingInfo
     | CodeMsgRenameModalOpen Var
     | CodeMsgRenameModalClose
     | CodeMsgRenameModalStagingText String
     | CodeMsgRenameModalCommit
     | CodeMsgHideToplevel SlotId TopBindingInfo
+    | CodeMsgHideToplevelAllBut SlotId TopBindingInfo
+    | CodeMsgUnhideTransitively SlotId TopBindingInfo
     | CodeMsgHideToplevelDiffTemplate
     | CodeMsgUnhideAll
+    | CodeMsgHighlightVar Var
+    | CodeMsgRemoveAllHightlights
 
 type CtxMenu =
     CtxCodeVar TabId SlotId Var
