@@ -104,7 +104,8 @@ addAllOriginsMiddleware baseApp = \req responseFunc -> baseApp req (responseFunc
           addOriginsAllowed = mapResponseHeaders $ (("Access-Control-Allow-Origin", "*"):)
 
 app :: CaptureView -> Application
-app view = gzip def $ addAllOriginsMiddleware $ serve (Proxy @API) (handler view)
+app view = addAllOriginsMiddleware $ serve (Proxy @API) (handler view)
+--gzip def $ addAllOriginsMiddleware $ serve (Proxy @API) (handler view)
 
 
 listDirectorySafe :: FilePath -> IO [FilePath]

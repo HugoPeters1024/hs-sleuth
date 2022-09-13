@@ -30,12 +30,15 @@ debugLoading name load f = case load of
     Error _ -> text ("Error loading " ++ name)
     NotRequested -> text ("Not yet started loading " ++ name)
 
-renderLoading : Loading a -> (a -> Html msg) -> Html msg
-renderLoading load f = case load of
+renderLoadingWith : Html msg -> Loading a -> (a -> Html msg) -> Html msg
+renderLoadingWith load_html load f = case load of
     Ready x -> f x
     Loading (Just x) -> f x
     Error _ -> Html.h1 [Attributes.style "color" "red"] [text "x"]
-    _ -> Spinner.spinner [] []
+    _ -> load_html
+
+renderLoading : Loading a -> (a -> Html msg) -> Html msg
+renderLoading = renderLoadingWith (Spinner.spinner [] [])
 
 map : (a -> b) -> Loading a -> Loading b
 map f load = case load of

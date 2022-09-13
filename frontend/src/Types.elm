@@ -29,6 +29,7 @@ type alias ModuleName = String
 
 type alias CodeTabCapture =
     { mod : Loading Module
+    , modRequestProgress : Int
     , capture : Capture
     , phaseSlider : Slider.Model
     , slot : Int
@@ -97,6 +98,7 @@ type CodeTabMsg
     | CodeMsgToggleHideRecursiveGroups
     | CodeMsgModuleDropdown Dropdown.State
     | CodeMsgSlider SlotId Slider.Msg
+    | CodeMsgHttpTrack SlotId Http.Progress
     | CodeMsgRenameModalOpen Var
     | CodeMsgRenameModalClose
     | CodeMsgRenameModalStagingText String

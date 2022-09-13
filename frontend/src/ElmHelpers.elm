@@ -1,5 +1,6 @@
 module ElmHelpers exposing (..)
 
+import Http
 import Set.Any
 import Set exposing (Set)
 import Html exposing (h1)
@@ -82,3 +83,8 @@ setInsertMany items set = List.foldl Set.insert set items
 
 setRemoveMany : List comparable -> Set comparable -> Set comparable
 setRemoveMany items set = List.foldl Set.remove set items
+
+progressBytes : Http.Progress -> Int
+progressBytes progress = case progress of
+  Http.Sending x -> x.sent
+  Http.Receiving x -> x.received

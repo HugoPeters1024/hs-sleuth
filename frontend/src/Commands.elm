@@ -10,11 +10,22 @@ import HsCore.Trafo.Reconstruct as TR
 import Json.Decode
 
 
+defRequest r =
+    { method = "GET"
+    , headers = []
+    , url = r.url
+    , body = Http.emptyBody
+    , expect = r.expect
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+
 fetchModule : TabId -> SlotId -> Slug -> String -> Cmd Msg
 fetchModule tid slot slug mod = 
-    Http.get { url = "http://127.0.0.1:8080/module/" ++ slug ++ "/" ++ mod
-             , expect = Http.expectJson (MsgCodeMsg tid << CodeMsgGotModule slot) (Json.Decode.map TR.reconModule HE.moduleDecoder)
-             }
+  let def = defRequest { url = "http://127.0.0.1:8080/module/" ++ slug ++ "/" ++ mod
+                       , expect = Http.expectJson (MsgCodeMsg tid << CodeMsgGotModule slot) (Json.Decode.map TR.reconModule HE.moduleDecoder)
+                       }
+  in Http.request { def | tracker = Just (String.fromInt slot) }
 
 fetchSettings : Cmd Msg
 fetchSettings = Http.get { url = "http://127.0.0.1:8080/settings"

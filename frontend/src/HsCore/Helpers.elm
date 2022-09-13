@@ -2,6 +2,7 @@ module HsCore.Helpers exposing (..)
 
 import ElmHelpers as EH
 
+import Http
 import Set exposing (Set)
 import Char
 import Generated.Types exposing (..)
@@ -278,5 +279,4 @@ exprIsAtom expr = case expr of
     EType _ -> True
     EMarkDiff e -> exprIsAtom e
     _ -> False
-
 

@@ -2,6 +2,7 @@ module Pages.Code exposing (..)
 
 import ElmHelpers as EH
 
+import Http
 import Html exposing (..)
 import Html.Lazy
 import Html.Attributes exposing (..)
@@ -27,6 +28,7 @@ import Set exposing (Set)
 import UI.Slider as Slider
 
 import Bootstrap.Card as Card
+import Bootstrap.Spinner as Spinner
 import Bootstrap.Card.Block as Block
 import Bootstrap.Dropdown  as Dropdown
 import Bootstrap.Button  as Button
@@ -37,11 +39,19 @@ mkCodeMsg : TabId -> CodeTabMsg -> Msg
 mkCodeMsg id msg = MsgCodeMsg id msg
 
 subscriptions : CodeTab -> Sub Msg
-subscriptions tab = Sub.map (MsgCodeMsg tab.id) (Dropdown.subscriptions tab.moduleDropdown CodeMsgModuleDropdown)
+subscriptions tab = Sub.batch
+  (
+  [ Sub.map (MsgCodeMsg tab.id) (Dropdown.subscriptions tab.moduleDropdown CodeMsgModuleDropdown)
+  ] ++ 
+    (Dict.values tab.captureSlots
+     |> List.map (\cap -> Http.track (String.fromInt cap.slot) (mkCodeMsg tab.id << CodeMsgHttpTrack cap.slot))
+    )
+  )
 
 initCodeTabCapture : Int -> Capture -> CodeTabCapture
 initCodeTabCapture slot capture = 
     { mod = Loading Nothing
+    , modRequestProgress = 0
     , capture = capture
     , phaseSlider = Slider.init 0
     , slot = slot
@@ -207,6 +217,10 @@ update msg tab = case msg of
       in ({tab | captureSlots = Dict.map (\_ -> updateHideSet) tab.captureSlots}, Cmd.none)
     CodeMsgHighlightVar var -> ({tab | varHighlights = EH.toggleSet (HsCore.Helpers.varToInt var) tab.varHighlights}, Cmd.none)
     CodeMsgRemoveAllHightlights -> ({tab | varHighlights = Set.empty}, Cmd.none)
+    CodeMsgHttpTrack slot p -> 
+      let updateProgress : CodeTabCapture -> CodeTabCapture
+          updateProgress c = {c | modRequestProgress = EH.progressBytes p}
+      in ({tab | captureSlots = Dict.update slot (Maybe.map updateProgress) tab.captureSlots}, Cmd.none)
 
 
 
@@ -297,7 +311,7 @@ renderPhase cv modname toplevelHides tabid panelid phase =
 viewCode : CodeTab -> CodeTabCapture -> Html Msg
 viewCode tab modtab = div []
         [ h4 [] [text modtab.capture.captureName]
-        , Loading.renderLoading modtab.mod <| \mod -> 
+        , Loading.renderLoadingWith (span [] [Spinner.spinner [] [], text ("downloaded " ++ String.fromInt (modtab.modRequestProgress // (1024 * 1024)) ++ "mb") ]) modtab.mod <| \mod -> 
             case EH.indexList modtab.phaseSlider.value mod.modulePhases of
                 Nothing -> text "Invalid Phase Index"
                 Just phase -> div []
