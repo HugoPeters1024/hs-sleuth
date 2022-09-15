@@ -6,6 +6,7 @@ import Prelude as P
 import Data.Maybe
 
 
+import GHC
 # if MIN_VERSION_ghc(9,0,0)
 import GHC.Plugins
 # else
@@ -45,6 +46,7 @@ import Data.Set (Set)
 import qualified Data.Set as S
 import Data.List (isPrefixOf, splitAt)
 import Data.Traversable (for)
+import Data.Char (isSpace)
 
 import Text.Parsec as Parsec
 import Text.Parsec.Number as Parsec
@@ -80,24 +82,35 @@ eitherToMaybe (Left _) = Nothing
 eitherToMaybe (Right x) = Just x
 
 phaseMarkerParser :: Parsec.Parsec String () Int
-phaseMarkerParser = id <$ Parsec.string "__PHASE_MARKER " <*> Parsec.int
+phaseMarkerParser = do
+  Parsec.string "__PHASE_MARKER "
+  n <- Parsec.int
+  Parsec.newline
+  pure n
+
+anyLine :: Parsec.Parsec String () String
+anyLine = manyTill Parsec.anyChar Parsec.newline
 
 ruleParser :: Int -> Parsec.Parsec String () Ast.FiredRule
-ruleParser p = Ast.FiredRule
-                 <$ Parsec.string "Rule fired: "
-                 <*> (T.pack <$> Parsec.manyTill Parsec.anyChar (Parsec.try (Parsec.string " (")))
-                 <*> (T.pack <$> Parsec.manyTill Parsec.anyChar (Parsec.try (Parsec.char ')')))
-                 <*> pure (p+1)
+ruleParser p = do
+   Parsec.string "Rule fired:"
+   Parsec.skipMany (Parsec.satisfy isSpace)
+   chuncks <- words <$> anyLine
+   let rulename = unwords (init chuncks)
+   let modname = tail (init (last chuncks))
+   pure $ Ast.FiredRule (T.pack rulename) (T.pack modname) (p+1)
+
+stdoutParser :: Parsec.Parsec String () [Ast.FiredRule]
+stdoutParser = 
+  let phaseParser = (phaseMarkerParser >>= \n -> Parsec.many (ruleParser n)) <|> (anyLine >> phaseParser)
+  in concat <$> many phaseParser
 
 parseStdout :: String -> [Ast.FiredRule]
-parseStdout inp = reverse $ fst $ P.foldl go ([], 0) (lines inp)
-    where go :: ([Ast.FiredRule], Int) -> String -> ([Ast.FiredRule], Int)
-          go (acc, p) s =
-              case eitherToMaybe (Parsec.runParser phaseMarkerParser () "stdout" s) of
-                Just np -> (acc, np)
-                Nothing -> case eitherToMaybe (Parsec.runParser (ruleParser p) () "stdout" s) of
-                    Just x -> (x:acc, p)
-                    Nothing -> (acc, p)
+parseStdout inp = case Parsec.runParser stdoutParser () "stdout" inp of
+  Right rs -> rs
+  Left e -> error $ "Failed to parse rewrite rule output from stdout: " ++ show e
+
+  
 
 
 data CaptureView = CaptureView
@@ -147,6 +160,7 @@ plugin = defaultPlugin
 #elif MIN_VERSION_ghc(9,0,0)
   , dynflagsPlugin = modifyDynFlags
 #endif
+  , parsedResultAction = parsedPlugin
   }
 
 #if MIN_VERSION_ghc(9,2,0)
@@ -192,7 +206,6 @@ install options todo = do
     let slug = case options of
                     [slug] -> slug
                     _      -> error "provide a slug for the dump as exactly 1 argument"
-    liftIO $ print options
     liftIO $ ensureOldDeleted slug
     liftIO $ FP.createDirectoryIfMissing True (coreDumpDir defaultCaptureView slug)
     liftIO $ modifyIORef projectState $ \(setup, thief, capture) ->
@@ -272,3 +285,11 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
 
         writeToFile (captureFile defaultCaptureView (T.unpack (captureName capture))) capture
     pure guts
+
+parsedPlugin :: [CommandLineOption] -> ModSummary -> HsParsedModule -> Hsc HsParsedModule
+parsedPlugin _ modsum parsed = do
+  case ml_hs_file (ms_location modsum) of
+    Just x -> liftIO $ putStrLn $ "MODULE FILE: " ++ x
+    Nothing -> pure ()
+  pure parsed
+
