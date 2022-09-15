@@ -27,13 +27,22 @@ type alias VarId = Int
 type alias Slug = String
 type alias ModuleName = String
 
+
+type SrcToggle = Core | Src
+toggleSrc : SrcToggle -> SrcToggle
+toggleSrc t = case t of
+  Core -> Src
+  Src -> Core
+
 type alias CodeTabCapture =
     { mod : Loading Module
     , modRequestProgress : Int
+    , srcLoading : Loading String
     , capture : Capture
     , phaseSlider : Slider.Model
     , slot : Int
     , toplevelHides : Set Int
+    , srcToggle : SrcToggle
     }
 
 type alias CodeTabRenameModal =
@@ -92,8 +101,10 @@ type alias CodeTab =
 type CodeTabMsg
     = CodeMsgSetModule ModuleName
     | CodeMsgGotModule SlotId (Result Http.Error Module)
+    | CodeMsgGotSrc SlotId (Result Http.Error String)
     | CodeMsgSetPhase SlotId Int
     | CodeMsgSelectVar Var
+    | CodeMsgToggleSrc SlotId
     | CodeMsgToggleHideTypes
     | CodeMsgToggleHideModules
     | CodeMsgToggleHideDisambiguation

@@ -14,7 +14,8 @@ import HsComprehension.Server.ElmDeriving
 import Data.Proxy
 import Data.List
 import Data.Maybe
-import System.Directory
+import System.Directory as FP
+import System.FilePath.Posix as FP
 import Control.Monad
 import Control.Monad.IO.Class
 
@@ -62,6 +63,10 @@ serveDeleteCaptureAPI view slug = liftIO $ do
     putStrLn ("deleting " <> dir)
     removeDirectoryRecursive dir
 
+type SrcAPI = "src" :> Capture "slug" String :> Capture "modname" String :> Get '[HTML] RawHtml
+
+serveSrcApi :: CaptureView -> String -> String -> Handler RawHtml
+serveSrcApi view slug mod = liftIO $ RawHtml <$> BL.readFile (coreDumpDir view slug `FP.combine` mod ++ ".hs")
 
 
 
@@ -81,6 +86,7 @@ type API = SettingsAPI
       :<|> CapturesAPI
       :<|> CaptureAPI
       :<|> DeleteCaptureAPI
+      :<|> SrcAPI
       :<|> ModuleAPI
       :<|> IndexAPI
       :<|> Raw
@@ -93,6 +99,7 @@ handler view =
   :<|> (serveCapturesApi view)
   :<|> (serveCaptureApi view)
   :<|> (serveDeleteCaptureAPI view)
+  :<|> (serveSrcApi view)
   :<|> (serveModuleApi view)
   :<|> serveIndexApi
   :<|> serveDirectoryWebApp "./static"

@@ -65,3 +65,14 @@ ul.no-dot {
     width: 100%;
 }
 
+.src-toggle {
+  cursor: pointer;
+  text-decoration: underline !important;
+  color: gray !important;
+  font-size: 10pt;
+}
+
+.hidden {
+  display: none;
+}
+

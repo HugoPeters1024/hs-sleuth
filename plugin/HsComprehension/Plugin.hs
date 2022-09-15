@@ -8,9 +8,9 @@ import Data.Maybe
 
 import GHC
 # if MIN_VERSION_ghc(9,0,0)
-import GHC.Plugins
+import GHC.Plugins as Plugins
 # else
-import GhcPlugins
+import GhcPlugins as Plugins
 # endif
 
 #if MIN_VERSION_ghc(9,0,0)
@@ -175,26 +175,21 @@ modifyDynFlags _ dflags =
   in pure (updateFlags dflags)
 #endif
 
-ensureOldDeleted :: String -> IO ()
-ensureOldDeleted slug = do
-  (isReset,_,_) <- readIORef projectState
-  unless isReset $ do
-    putStrLn "HsComprehension: Removing the old capture if it exists"
-    exists <- FP.doesDirectoryExist (coreDumpDir defaultCaptureView slug)
-    when exists $ do
-      FP.removeDirectoryRecursive (coreDumpDir defaultCaptureView slug)
-    modifyIORef projectState $ \(_,thief,capture) -> (True,thief,capture)
-
 getGhcVersionString :: CoreM String
 getGhcVersionString = do
   ghc_v <- ghcNameVersion <$> getDynFlags
   pure $ ghcNameVersion_programName ghc_v ++ " " ++ ghcNameVersion_projectVersion ghc_v
 
+parseCmdLineOptions :: [CommandLineOption] -> String
+parseCmdLineOptions options = case options of
+    [slug] -> slug
+    _      -> error "provide a slug for the dump as exactly 1 argument"
+
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install options todo = do
 
     dflags <- getDynFlags
-    modName <- showSDoc dflags . ppr <$> getModule
+    modName <- Plugins.moduleNameString . Plugins.moduleName <$> getModule
     ghc_version <- getGhcVersionString
 
     let ghc_version_major :: Int = read $ head $ split '.' $ drop 4 ghc_version
@@ -202,11 +197,8 @@ install options todo = do
     when (ghc_version_major < 9) $ do
       liftIO $ putStrLn "HsComprehension: GHC < 9.0.0 requires manual enabling of -ddump-rule-firings to get complete telemetry"
 
+    let slug = parseCmdLineOptions options
     liftIO setupProjectStdoutThief
-    let slug = case options of
-                    [slug] -> slug
-                    _      -> error "provide a slug for the dump as exactly 1 argument"
-    liftIO $ ensureOldDeleted slug
     liftIO $ FP.createDirectoryIfMissing True (coreDumpDir defaultCaptureView slug)
     liftIO $ modifyIORef projectState $ \(setup, thief, capture) ->
         ( setup
@@ -287,9 +279,17 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
     pure guts
 
 parsedPlugin :: [CommandLineOption] -> ModSummary -> HsParsedModule -> Hsc HsParsedModule
-parsedPlugin _ modsum parsed = do
+parsedPlugin options modsum parsed = do
   case ml_hs_file (ms_location modsum) of
-    Just x -> liftIO $ putStrLn $ "MODULE FILE: " ++ x
+    Just loc -> do
+      let slug = parseCmdLineOptions options
+      let src_loc = cv_project_root defaultCaptureView `FP.combine` loc
+      exists <- liftIO $ FP.doesFileExist src_loc
+      when exists $ do
+        let mod_name = Plugins.moduleNameString (Plugins.moduleName (ms_mod modsum))
+        let dst_loc = coreDumpDir defaultCaptureView slug `FP.combine` (mod_name ++ ".hs")
+        liftIO $ putStrLn $ "copying " ++ src_loc ++ " to " ++ dst_loc
+        liftIO $ FP.copyFile src_loc dst_loc
     Nothing -> pure ()
   pure parsed
 

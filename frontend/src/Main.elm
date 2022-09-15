@@ -126,6 +126,7 @@ view m =
              , node "link" [rel "stylesheet", href "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css", type_ "text/css"] []
              , node "link" [rel "stylesheet", href "/style.css", type_ "text/css"] []
              , node "link" [rel "stylesheet", href "/pygments.css", type_ "text/css"] []
+             , node "script" [attribute "defer" "", src "highlight.min.js", type_ "text/javascript"] []
              , div []
                 [ContextMenu.view
                     ctxConfig

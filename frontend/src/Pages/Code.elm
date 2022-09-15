@@ -52,10 +52,12 @@ initCodeTabCapture : Int -> Capture -> CodeTabCapture
 initCodeTabCapture slot capture = 
     { mod = Loading Nothing
     , modRequestProgress = 0
+    , srcLoading = Loading Nothing
     , capture = capture
     , phaseSlider = Slider.init 0
     , slot = slot
     , toplevelHides = Set.empty
+    , srcToggle = Core
     }
 
 getCurrentCaptures : CodeTab -> List Capture
@@ -128,7 +130,7 @@ makeCodeTab model captures =
     in
     ( { model | idGen = model.idGen + 1 }
       , tab
-      , Cmd.batch (List.map (\ct -> C.fetchModule tabId ct.slot ct.capture.captureName tab.currentModule) (Dict.values tab.captureSlots))
+      , Cmd.batch (List.map (\ct -> C.fetchModuleWithSrc tabId ct.slot ct.capture.captureName tab.currentModule) (Dict.values tab.captureSlots))
     )
 
 update : CodeTabMsg -> CodeTab -> (CodeTab, Cmd Msg)
@@ -140,7 +142,7 @@ update msg tab = case msg of
         ( {tab | currentModule = modname, captureSlots = Dict.map (\_ -> resetCapture) tab.captureSlots }
         , Cmd.batch 
             ( List.map
-             (\ct -> Commands.fetchModule tab.id ct.slot ct.capture.captureName modname)
+             (\ct -> Commands.fetchModuleWithSrc tab.id ct.slot ct.capture.captureName modname)
              (Dict.values tab.captureSlots)
             )
         )
@@ -148,11 +150,19 @@ update msg tab = case msg of
         let updateCaptureTab : CodeTabCapture -> CodeTabCapture
             updateCaptureTab tabmod = {tabmod | mod = Loading.loadFromResult res }
         in ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
+    CodeMsgGotSrc slot res -> 
+        let updateCaptureTab : CodeTabCapture -> CodeTabCapture
+            updateCaptureTab tabmod = {tabmod | srcLoading = Loading.loadFromResult res }
+        in ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
     CodeMsgSetPhase slot phase -> 
         let setSlider : CodeTabCapture -> CodeTabCapture
             setSlider tabmod = { tabmod | phaseSlider = Slider.init phase }
         in ({ tab | captureSlots = Dict.update slot (Maybe.map setSlider) tab.captureSlots }, Cmd.none)
     CodeMsgSelectVar var -> ({tab | selectedVar = Just var}, Cmd.none)
+    CodeMsgToggleSrc slot -> 
+        let setSlider : CodeTabCapture -> CodeTabCapture
+            setSlider tabmod = { tabmod | srcToggle = toggleSrc tabmod.srcToggle }
+        in ({ tab | captureSlots = Dict.update slot (Maybe.map setSlider) tab.captureSlots }, Cmd.none)
     CodeMsgToggleHideTypes -> ({tab | codeViewOptions = codeViewOptionsToggleHideTypes tab.codeViewOptions}, Cmd.none)
     CodeMsgToggleHideModules -> ({tab | codeViewOptions = codeViewOptionsToggleHideModules tab.codeViewOptions}, Cmd.none)
     CodeMsgToggleHideDisambiguation -> ({tab | codeViewOptions = codeViewOptionsToggleHideDisambiguation tab.codeViewOptions}, Cmd.none)
@@ -325,11 +335,18 @@ viewCode tab modtab = div []
                         }
                         |> Slider.view modtab.phaseSlider
                     , pre [class "dark"] 
-                        [ code [] 
-                               [ Ppr.dyn_css tab.varHighlights tab.selectedVar
-                               , Html.Lazy.lazy6 renderPhase tab.codeViewOptions mod.moduleName modtab.toplevelHides tab.id modtab.slot phase
-                               ]
-                        ]
+                      [ case modtab.srcToggle of
+                          Core -> code [] 
+                                       [ a [class "src-toggle", onClick (mkCodeMsg tab.id (CodeMsgToggleSrc modtab.slot))] [text "view source\n\n"]
+                                       , Ppr.dyn_css tab.varHighlights tab.selectedVar
+                                       , Html.Lazy.lazy6 renderPhase tab.codeViewOptions mod.moduleName modtab.toplevelHides tab.id modtab.slot phase
+                                       ]
+                                 
+                          Src -> code [class "language-haskell"]
+                                      [ a [class "src-toggle", onClick (mkCodeMsg tab.id (CodeMsgToggleSrc modtab.slot))] [text "view core\n\n"]
+                                      , Loading.renderLoading modtab.srcLoading text
+                                      ]
+                      ]
                     ]
         ]
 
