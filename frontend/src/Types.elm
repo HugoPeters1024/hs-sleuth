@@ -65,6 +65,7 @@ type alias CodeViewOptions =
   , hideModules : Bool
   , hideDisambiguation : Bool
   , hideRecursiveGroups : Bool 
+  , hideUndemanded : Bool
   , varRenames : Dict Int String
   }
 
@@ -72,6 +73,7 @@ codeViewOptionsToggleHideTypes o = { o | hideTypes = not o.hideTypes }
 codeViewOptionsToggleHideModules o = { o | hideModules = not o.hideModules }
 codeViewOptionsToggleHideDisambiguation o = { o | hideDisambiguation = not o.hideDisambiguation }
 codeViewOptionsToggleHideRecursiveGroups o = { o | hideRecursiveGroups = not o.hideRecursiveGroups }
+codeViewOptionsToggleHideUndemanded o = { o | hideUndemanded = not o.hideUndemanded }
 codeViewOptionsMapVarRenames f o = { o | varRenames = f o.varRenames }
 
 type alias CodeTab = 
@@ -96,6 +98,7 @@ type CodeTabMsg
     | CodeMsgToggleHideModules
     | CodeMsgToggleHideDisambiguation
     | CodeMsgToggleHideRecursiveGroups
+    | CodeMsgToggleHideUndemanded
     | CodeMsgModuleDropdown Dropdown.State
     | CodeMsgSlider SlotId Slider.Msg
     | CodeMsgHttpTrack SlotId Http.Progress

@@ -115,6 +115,7 @@ makeCodeTab model captures =
             , hideModules = False
             , hideDisambiguation = True
             , hideRecursiveGroups = True
+            , hideUndemanded = True
             , varRenames = Dict.empty
           }
           , selectedTopLevels = []
@@ -156,6 +157,7 @@ update msg tab = case msg of
     CodeMsgToggleHideModules -> ({tab | codeViewOptions = codeViewOptionsToggleHideModules tab.codeViewOptions}, Cmd.none)
     CodeMsgToggleHideDisambiguation -> ({tab | codeViewOptions = codeViewOptionsToggleHideDisambiguation tab.codeViewOptions}, Cmd.none)
     CodeMsgToggleHideRecursiveGroups -> ({tab | codeViewOptions = codeViewOptionsToggleHideRecursiveGroups tab.codeViewOptions}, Cmd.none)
+    CodeMsgToggleHideUndemanded -> ({tab | codeViewOptions = codeViewOptionsToggleHideUndemanded tab.codeViewOptions}, Cmd.none)
     CodeMsgModuleDropdown state -> ({tab | moduleDropdown = state}, Cmd.none)
     CodeMsgSlider slot slidermsg ->
         let updateCaptureTab : CodeTabCapture -> CodeTabCapture
@@ -365,6 +367,7 @@ viewInfo model tab =
               , checkbox tab.codeViewOptions.hideModules CodeMsgToggleHideModules "Hide Module Qualifiers"
               , checkbox tab.codeViewOptions.hideDisambiguation CodeMsgToggleHideDisambiguation "Hide Uniques"
               , checkbox tab.codeViewOptions.hideRecursiveGroups   CodeMsgToggleHideRecursiveGroups "Hide Recursive Grouping"
+              , checkbox tab.codeViewOptions.hideUndemanded CodeMsgToggleHideUndemanded "Render Undemanded Variables as _"
               , hr [] []
               , h4 [] [text "Selected Variable"]
               , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map (viewVarInfo tab) tab.selectedVar)

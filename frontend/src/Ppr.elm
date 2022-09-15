@@ -32,7 +32,7 @@ renderVarName env var =
         disabled : String -> String
         disabled i = case var of
           VarBinder bndr ->
-            if HsCore.Helpers.binderIsUnused bndr then "_" else i
+            if env.hideUndemanded && HsCore.Helpers.binderIsUnused bndr then "_" else i
           _ -> i
 
         prefix : String -> String
