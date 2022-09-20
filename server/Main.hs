@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Main where
 
-import HsComprehension.Plugin (CaptureView(..))
+import HsComprehension.Plugin (CaptureView(..), coreDumpBaseDir)
 import HsComprehension.Server.API (app)
 
 import Network.Wai.Handler.Warp (run)
@@ -14,6 +14,7 @@ import System.Directory (getCurrentDirectory, doesDirectoryExist, canonicalizePa
 data Opts = Opts
   { dev :: Bool
   , project_root :: FilePath
+  , direct_root :: FilePath
   , port :: Int
   }
   deriving (Show, Data, Typeable)
@@ -21,6 +22,7 @@ data Opts = Opts
 parseArgs = Opts
   { dev = def &= help "Run in dev mode (Using elm reactor)"
   , project_root = "./" &= help "The project root whose captures to inspect"
+  , direct_root = "" &= help "Directly provide a path containing coredump-XXX directories"
   , port = 8080 &= help "What port to serve on"
   } 
   &= summary "HsComprehension backend server"
@@ -29,7 +31,7 @@ parseArgs = Opts
 finalizeArgs :: Opts -> IO Opts
 finalizeArgs = let 
   setDebugRoot opts = 
-        if (dev opts && project_root opts == "./") then do 
+        if (dev opts && project_root opts == "./" && direct_root opts == "") then do 
           let project_root = "/home/hugo/repos/hs-comprehension/test-project/"
           putStrLn $ "DEV mode enabled, defaulting project_root to " <> project_root
           pure $ opts { project_root = project_root }
@@ -53,14 +55,17 @@ main :: IO ()
 main = do
   args <- cmdArgs parseArgs >>= finalizeArgs
 
-  putStrLn $ "Serving captures from: " <> project_root args
+  let view = CaptureView { cv_project_root = project_root args 
+                         , cv_direct_path = if direct_root args == "" then Nothing else Just (direct_root args)
+                         }
+
+  putStrLn $ "Serving captures from: " <> coreDumpBaseDir view
   getCurrentDirectory >>= \d -> putStrLn ("Serving frontend from: " <> d)
 
   when (dev args) $ do
     putStrLn "DEV mode enabled, starting live elm reactor at port 8000"
     void $ runCommand "cd /home/hugo/repos/hs-comprehension/frontend/src && elm reactor"
 
-  let view = CaptureView { cv_project_root = project_root args }
   putStrLn $ "Starting the app at http://localhost:" <> show (port args) <> "/"
   run (port args) (app view)
 

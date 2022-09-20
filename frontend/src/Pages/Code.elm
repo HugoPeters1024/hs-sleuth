@@ -408,7 +408,7 @@ viewHideOptions model tab = HtmlHelpers.list
         , title (if (Dict.size tab.captureSlots < 2) then "At least 2 open captures required" else "Hide toplevel definitions that do not differ")
         ]
       ]
-      [text "Hide Unchanged"]
+      [text "Hide Common Definitions"]
   , Button.button 
       [ Button.info
       , Button.attrs 

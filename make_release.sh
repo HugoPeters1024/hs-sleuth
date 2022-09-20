@@ -5,9 +5,9 @@ mkdir release
 mkdir release/static
 echo "Building Server App"
 cd ./server/
-cabal build
+cabal build -O2
 cd ../
-cp ./server/dist-newstyle/build/x86_64-linux/ghc-9.2.2/hs-comprehension-server-0.1.0.0/x/hs-comprehension-server/build/hs-comprehension-server/hs-comprehension-server release/server
+# cp ./server/dist-newstyle/build/x86_64-linux/ghc-9.2.2/hs-comprehension-server-0.1.0.0/x/hs-comprehension-server/build/hs-comprehension-server/hs-comprehension-server release/server
 
 echo "Building Elm Frontend"
 cd ./frontend/

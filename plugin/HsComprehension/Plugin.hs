@@ -115,11 +115,13 @@ parseStdout inp = case Parsec.runParser stdoutParser () "stdout" inp of
 
 data CaptureView = CaptureView
   { cv_project_root :: FilePath
+  , cv_direct_path :: Maybe FilePath
   }
 
 defaultCaptureView :: CaptureView
 defaultCaptureView = CaptureView
   { cv_project_root = "./"
+  , cv_direct_path = Nothing
   }
 
 
@@ -222,7 +224,9 @@ printPpr :: (Outputable a, MonadIO m) => a -> m ()
 printPpr a = liftIO $ putStrLn $ showSDocUnsafe (ppr a)
 
 coreDumpBaseDir :: CaptureView -> String
-coreDumpBaseDir view = cv_project_root view `FP.combine` "dist-newstyle"
+coreDumpBaseDir view = case cv_direct_path view of
+  Nothing -> cv_project_root view `FP.combine` "dist-newstyle"
+  Just fp -> fp
 
 coreDumpDir :: CaptureView -> String -> FilePath
 coreDumpDir view pid = coreDumpBaseDir view `FP.combine` "coredump-" ++ pid
@@ -280,9 +284,10 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
 
 parsedPlugin :: [CommandLineOption] -> ModSummary -> HsParsedModule -> Hsc HsParsedModule
 parsedPlugin options modsum parsed = do
+  let slug = parseCmdLineOptions options
+  liftIO $ FP.createDirectoryIfMissing True (coreDumpDir defaultCaptureView slug)
   case ml_hs_file (ms_location modsum) of
     Just loc -> do
-      let slug = parseCmdLineOptions options
       let src_loc = cv_project_root defaultCaptureView `FP.combine` loc
       exists <- liftIO $ FP.doesFileExist src_loc
       when exists $ do
