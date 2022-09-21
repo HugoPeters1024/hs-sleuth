@@ -40,7 +40,7 @@ toggleSrc t = case t of
   Src -> Core
 
 type alias CodeTabCapture =
-    { mod : Loading Module
+    { mod : Module
     , srcLoading : Loading String
     , capture_view : CaptureView
     , phaseSlider : Slider.Model

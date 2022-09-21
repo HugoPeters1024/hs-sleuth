@@ -14,6 +14,11 @@ type Var = VarBinder Binder
 concatWith : String -> List String -> String
 concatWith sep = String.concat << List.intersperse sep
 
+resultToMaybe : Result x a -> Maybe a
+resultToMaybe r = case r of
+  Err _ -> Nothing
+  Ok x -> Just x
+
 concatSpaced : List String -> String
 concatSpaced = concatWith " "
 

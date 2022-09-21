@@ -10,11 +10,13 @@ import Html.Events exposing (..)
 import HtmlHelpers exposing (..)
 import Dict exposing (Dict)
 import Generated.Types exposing (..)
+import Generated.Decoders
 import Types exposing (..)
 import HsCore.Helpers exposing (..)
 import HsCore.Trafo.EraseTypes exposing (eraseTypesPhase)
 import HsCore.Trafo.VarOccs exposing (exprVarOccs)
 import HsCore.Trafo.Diff as Diff
+import HsCore.Trafo.Reconstruct as Recon
 
 import Ppr
 import PprRender as Ppr
@@ -32,6 +34,8 @@ import Bootstrap.Dropdown  as Dropdown
 import Bootstrap.Button  as Button
 import Bootstrap.Modal as Modal
 import Bootstrap.Form.Input as Input
+import Zip.Entry
+import Json.Decode
 
 mkCodeMsg : TabId -> CodeTabMsg -> Msg
 mkCodeMsg id msg = MsgCodeMsg id msg
@@ -39,9 +43,14 @@ mkCodeMsg id msg = MsgCodeMsg id msg
 subscriptions : CodeTab -> Sub Msg
 subscriptions tab = Sub.map (MsgCodeMsg tab.id) (Dropdown.subscriptions tab.moduleDropdown CodeMsgModuleDropdown)
 
-initCodeTabCapture : Int -> CaptureView -> CodeTabCapture
-initCodeTabCapture slot capture_view = 
-    { mod = Loading Nothing
+initCodeTabCapture : Int -> CaptureView -> ModuleName -> CodeTabCapture
+initCodeTabCapture slot capture_view modname = 
+  let default_mod = { moduleName = "LOADING", modulePhases = [] } 
+      mod = case getModuleFromView capture_view modname of
+              Nothing -> default_mod
+              Just m -> m
+  in 
+    { mod = mod
     , srcLoading = Loading Nothing
     , capture_view = capture_view
     , phaseSlider = Slider.init 0
@@ -56,20 +65,20 @@ getCurrentCaptures tab = List.map .capture_view (Dict.values tab.captureSlots)
 getCurrentCaptureTabs : CodeTab -> List CodeTabCapture
 getCurrentCaptureTabs tab = Dict.values tab.captureSlots
 
+getCurrentPhase : CodeTabCapture -> Maybe Phase
+getCurrentPhase capture_tab = EH.indexList capture_tab.phaseSlider.value capture_tab.mod.modulePhases
+
 getMergedModuleNames : CodeTab -> List String
 getMergedModuleNames tab = List.map Tuple.first (List.concatMap (.captureModules << .capture) (getCurrentCaptures tab))
     |> EH.removeDuplicates
 
 getModules : CodeTab -> List Module
-getModules tab = EH.mapMaybe Loading.toMaybe (List.map .mod (getCurrentCaptureTabs tab))
+getModules tab = List.map .mod (getCurrentCaptureTabs tab)
 
 getCurrentPhases : CodeTab -> List Phase
 getCurrentPhases tab =
   let go : CodeTabCapture -> Maybe Phase
-      go capture = 
-        capture.mod 
-          |> Loading.toMaybe
-          |> Maybe.andThen (\mod -> EH.indexList capture.phaseSlider.value mod.modulePhases)
+      go capture = EH.indexList capture.phaseSlider.value capture.mod.modulePhases
   in EH.mapMaybe go (Dict.values tab.captureSlots)
 
 getMatchedTopLevel : (TopBindingInfo -> Int) -> CodeTab -> List (List TopBindingInfo)
@@ -90,15 +99,17 @@ getMatchedTopLevel lens tab =
 makeCodeTab : Model -> List CaptureView -> (Model, CodeTab, Cmd Msg)
 makeCodeTab model cvs = 
     let tabId = model.idGen
+        currentModule = 
+            List.head cvs
+            |> Maybe.andThen (.capture >> .captureModules >> List.map Tuple.first >> List.head)
+            |> Maybe.withDefault "Main"
+
         tab : CodeTab
         tab =
           { id = tabId
           , name = "Code-" ++ String.fromInt tabId
-          , captureSlots = Dict.fromList (List.map (\(i, c) -> (i, initCodeTabCapture i c)) (EH.enumerate cvs))
-          , currentModule = 
-              List.head cvs
-              |> Maybe.andThen (.capture >> .captureModules >> List.map Tuple.first >> List.head)
-              |> Maybe.withDefault "Main"
+          , captureSlots = Dict.fromList (List.map (\(i, c) -> (i, initCodeTabCapture i c currentModule)) (EH.enumerate cvs))
+          , currentModule = currentModule
           , selectedVar = Nothing
           , varHighlights = Set.empty
           , moduleDropdown = Dropdown.initialState
@@ -125,13 +136,25 @@ makeCodeTab model cvs =
 
     )
 
+getModuleFromView : CaptureView -> String -> Maybe Module
+getModuleFromView cv modname = 
+  Dict.get (modname ++ ".json") cv.files
+  |> Maybe.andThen (Zip.Entry.toString >> resultToMaybe)
+  |> Maybe.andThen (Json.Decode.decodeString Generated.Decoders.moduleDecoder >> resultToMaybe)
+  |> Maybe.map Recon.reconModule
+
 update : CodeTabMsg -> CodeTab -> (CodeTab, Cmd Msg)
 update msg tab = case msg of
     CodeMsgSetModule modname -> 
         let resetCapture : CodeTabCapture -> CodeTabCapture
-            resetCapture x = { x | phaseSlider = Slider.init 0, mod = Loading Nothing }
+            resetCapture x = { x | phaseSlider = Slider.init 0 }
+
+            setModule : CodeTabCapture -> CodeTabCapture
+            setModule x = case getModuleFromView x.capture_view modname of
+              Nothing -> x
+              Just mod -> { x | mod = mod }
         in
-        ( {tab | currentModule = modname, captureSlots = Dict.map (\_ -> resetCapture) tab.captureSlots }
+        ( {tab | currentModule = modname, captureSlots = Dict.map (\_ -> resetCapture >> setModule) tab.captureSlots }
         , Cmd.none
         )
     CodeMsgSetPhase slot phase -> 
@@ -299,31 +322,30 @@ renderPhase cv modname toplevelHides tabid panelid phase =
 viewCode : CodeTab -> CodeTabCapture -> Html Msg
 viewCode tab modtab = div []
         [ h4 [] [text modtab.capture_view.capture.captureName]
-        , Loading.renderLoading modtab.mod <| \mod -> 
-            case EH.indexList modtab.phaseSlider.value mod.modulePhases of
-                Nothing -> text "Invalid Phase Index"
-                Just phase -> div []
-                    [ text phase.phaseName
-                    , Slider.config
-                        { lift = \msg -> mkCodeMsg tab.id (CodeMsgSlider modtab.slot msg)
-                        , mininum = 0
-                        , maximum = List.length mod.modulePhases - 1
-                        }
-                        |> Slider.view modtab.phaseSlider
-                    , pre [class "dark"] 
-                      [ case modtab.srcToggle of
-                          Core -> code [] 
-                                       [ a [class "src-toggle", onClick (mkCodeMsg tab.id (CodeMsgToggleSrc modtab.slot))] [text "view source\n\n"]
-                                       , Ppr.dyn_css tab.varHighlights tab.selectedVar
-                                       , Html.Lazy.lazy6 renderPhase tab.codeViewOptions mod.moduleName modtab.toplevelHides tab.id modtab.slot phase
-                                       ]
-                                 
-                          Src -> code [class "language-haskell"]
-                                      [ a [class "src-toggle", onClick (mkCodeMsg tab.id (CodeMsgToggleSrc modtab.slot))] [text "view core\n\n"]
-                                      , Loading.renderLoading modtab.srcLoading text
-                                      ]
-                      ]
-                    ]
+        , case getCurrentPhase modtab of
+             Nothing -> text "Invalid Phase Index"
+             Just phase -> div []
+                 [ text phase.phaseName
+                 , Slider.config
+                     { lift = \msg -> mkCodeMsg tab.id (CodeMsgSlider modtab.slot msg)
+                     , mininum = 0
+                     , maximum = List.length modtab.mod.modulePhases - 1
+                     }
+                     |> Slider.view modtab.phaseSlider
+                 , pre [class "dark"] 
+                   [ case modtab.srcToggle of
+                       Core -> code [] 
+                                    [ a [class "src-toggle", onClick (mkCodeMsg tab.id (CodeMsgToggleSrc modtab.slot))] [text "view source\n\n"]
+                                    , Ppr.dyn_css tab.varHighlights tab.selectedVar
+                                    , Html.Lazy.lazy6 renderPhase tab.codeViewOptions modtab.mod.moduleName modtab.toplevelHides tab.id modtab.slot phase
+                                    ]
+                              
+                       Src -> code [class "language-haskell"]
+                                   [ a [class "src-toggle", onClick (mkCodeMsg tab.id (CodeMsgToggleSrc modtab.slot))] [text "view core\n\n"]
+                                   , Loading.renderLoading modtab.srcLoading text
+                                   ]
+                   ]
+                 ]
         ]
 
 
