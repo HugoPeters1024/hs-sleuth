@@ -18,7 +18,11 @@ import ContextMenu exposing (ContextMenu)
 
 import Bootstrap.Dropdown  as Dropdown
 import Bootstrap.Modal as Modal
+import Bootstrap.Alert as Alert
 import File exposing (File)
+import Zip
+import Zip.Entry exposing (Entry)
+import Bytes exposing (Bytes)
 
 
 type alias PhaseId = Int
@@ -37,9 +41,8 @@ toggleSrc t = case t of
 
 type alias CodeTabCapture =
     { mod : Loading Module
-    , modRequestProgress : Int
     , srcLoading : Loading String
-    , capture : Capture
+    , capture_view : CaptureView
     , phaseSlider : Slider.Model
     , slot : Int
     , toplevelHides : Set Int
@@ -86,6 +89,11 @@ codeViewOptionsToggleHideRecursiveGroups o = { o | hideRecursiveGroups = not o.h
 codeViewOptionsToggleHideUndemanded o = { o | hideUndemanded = not o.hideUndemanded }
 codeViewOptionsMapVarRenames f o = { o | varRenames = f o.varRenames }
 
+type alias CaptureView =
+    { capture: Capture
+    , files: Dict String Entry
+    }
+
 type alias CodeTab = 
     { id : TabId
     , name : String
@@ -101,8 +109,6 @@ type alias CodeTab =
 
 type CodeTabMsg
     = CodeMsgSetModule ModuleName
-    | CodeMsgGotModule SlotId (Result Http.Error Module)
-    | CodeMsgGotSrc SlotId (Result Http.Error String)
     | CodeMsgSetPhase SlotId Int
     | CodeMsgSelectVar Var
     | CodeMsgToggleSrc SlotId
@@ -113,7 +119,6 @@ type CodeTabMsg
     | CodeMsgToggleHideUndemanded
     | CodeMsgModuleDropdown Dropdown.State
     | CodeMsgSlider SlotId Slider.Msg
-    | CodeMsgHttpTrack SlotId Http.Progress
     | CodeMsgRenameModalOpen Var
     | CodeMsgRenameModalClose
     | CodeMsgRenameModalStagingText String
@@ -131,8 +136,6 @@ type CtxMenu =
 
 type alias Model = 
     { pageTab : Tabs.Model
-    , settingsLoading : Loading ServerSettings
-    , capturesLoading : Loading (List Capture)
     , timezone : Time.Zone
     , codeTabs : Dict TabId CodeTab
     , overviewTab : OverviewTab
@@ -141,23 +144,30 @@ type alias Model =
     }
 
 type alias OverviewTab =
-    { stagedProjects : List Capture
+    { stagedProjects : List CaptureView
+    , problem: Maybe String
+    , captures : List CaptureView
     }
+
+overviewSetProblem : String -> OverviewTab -> OverviewTab
+overviewSetProblem problem tab = { tab | problem = Just problem }
+
+overviewRemoveProblem : OverviewTab -> OverviewTab
+overviewRemoveProblem tab = { tab | problem = Nothing }
+
 
 
 type OverviewMsg
-    = OverviewMsgStageCapture Capture
-    | OverViewMsgDeleteCapture Capture
-    | OverViewMsgCaptureDeleted
+    = OverviewMsgStageCapture CaptureView
+    | OverviewMsgTriggerFile
+    | OverviewMsgGotFile File
+    | OverviewMsgReadFile Bytes
+    | OverviewMsgDismissProblem Alert.Visibility
 
 type Msg 
-    = MsgGotSettings (Result Http.Error ServerSettings)
-    | MsgGotCaptures (Result Http.Error (List Capture))
-    | MsgCodeMsg TabId CodeTabMsg
+    = MsgCodeMsg TabId CodeTabMsg
     | MsgPageTab Tabs.Msg
     | MsgOverViewTab OverviewMsg
     | MsgOpenCodeTab
     | MsgAdjustTimeZone Time.Zone
     | MsgCtxMenu (ContextMenu.Msg CtxMenu)
-    | MsgTriggerFile
-    | MsgGotFile File

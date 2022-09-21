@@ -3,7 +3,7 @@ module ElmHelpers exposing (..)
 import Http
 import Set.Any
 import Set exposing (Set)
-import Html exposing (h1)
+import Html exposing (text, Html)
 
 
 
@@ -88,3 +88,8 @@ progressBytes : Http.Progress -> Int
 progressBytes progress = case progress of
   Http.Sending x -> x.sent
   Http.Receiving x -> x.received
+
+maybeHtml : Maybe a -> (a -> Html msg) -> Html msg
+maybeHtml m f = case m of
+  Nothing -> text ""
+  Just x -> f x

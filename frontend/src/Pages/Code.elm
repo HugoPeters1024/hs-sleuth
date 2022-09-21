@@ -19,9 +19,7 @@ import HsCore.Trafo.Diff as Diff
 import Ppr
 import PprRender as Ppr
 
-import Commands as C
 import Loading exposing (Loading(..))
-import Commands
 
 import Set exposing (Set)
 
@@ -39,35 +37,27 @@ mkCodeMsg : TabId -> CodeTabMsg -> Msg
 mkCodeMsg id msg = MsgCodeMsg id msg
 
 subscriptions : CodeTab -> Sub Msg
-subscriptions tab = Sub.batch
-  (
-  [ Sub.map (MsgCodeMsg tab.id) (Dropdown.subscriptions tab.moduleDropdown CodeMsgModuleDropdown)
-  ] ++ 
-    (Dict.values tab.captureSlots
-     |> List.map (\cap -> Http.track (String.fromInt cap.slot) (mkCodeMsg tab.id << CodeMsgHttpTrack cap.slot))
-    )
-  )
+subscriptions tab = Sub.map (MsgCodeMsg tab.id) (Dropdown.subscriptions tab.moduleDropdown CodeMsgModuleDropdown)
 
-initCodeTabCapture : Int -> Capture -> CodeTabCapture
-initCodeTabCapture slot capture = 
+initCodeTabCapture : Int -> CaptureView -> CodeTabCapture
+initCodeTabCapture slot capture_view = 
     { mod = Loading Nothing
-    , modRequestProgress = 0
     , srcLoading = Loading Nothing
-    , capture = capture
+    , capture_view = capture_view
     , phaseSlider = Slider.init 0
     , slot = slot
     , toplevelHides = Set.empty
     , srcToggle = Core
     }
 
-getCurrentCaptures : CodeTab -> List Capture
-getCurrentCaptures tab = List.map .capture (Dict.values tab.captureSlots)
+getCurrentCaptures : CodeTab -> List CaptureView
+getCurrentCaptures tab = List.map .capture_view (Dict.values tab.captureSlots)
 
 getCurrentCaptureTabs : CodeTab -> List CodeTabCapture
 getCurrentCaptureTabs tab = Dict.values tab.captureSlots
 
 getMergedModuleNames : CodeTab -> List String
-getMergedModuleNames tab = List.map Tuple.first (List.concatMap .captureModules (getCurrentCaptures tab))
+getMergedModuleNames tab = List.map Tuple.first (List.concatMap (.captureModules << .capture) (getCurrentCaptures tab))
     |> EH.removeDuplicates
 
 getModules : CodeTab -> List Module
@@ -97,17 +87,17 @@ getMatchedTopLevel lens tab =
 
   in Dict.values <| List.foldl go Dict.empty (List.map getPhaseTopBinders (getCurrentPhases tab))
 
-makeCodeTab : Model -> List Capture -> (Model, CodeTab, Cmd Msg)
-makeCodeTab model captures = 
+makeCodeTab : Model -> List CaptureView -> (Model, CodeTab, Cmd Msg)
+makeCodeTab model cvs = 
     let tabId = model.idGen
         tab : CodeTab
         tab =
           { id = tabId
           , name = "Code-" ++ String.fromInt tabId
-          , captureSlots = Dict.fromList (List.map (\(i, c) -> (i, initCodeTabCapture i c)) (EH.enumerate captures))
+          , captureSlots = Dict.fromList (List.map (\(i, c) -> (i, initCodeTabCapture i c)) (EH.enumerate cvs))
           , currentModule = 
-              List.head captures
-              |> Maybe.andThen (.captureModules >> List.map Tuple.first >> List.head)
+              List.head cvs
+              |> Maybe.andThen (.capture >> .captureModules >> List.map Tuple.first >> List.head)
               |> Maybe.withDefault "Main"
           , selectedVar = Nothing
           , varHighlights = Set.empty
@@ -130,7 +120,9 @@ makeCodeTab model captures =
     in
     ( { model | idGen = model.idGen + 1 }
       , tab
-      , Cmd.batch (List.map (\ct -> C.fetchModuleWithSrc tabId ct.slot ct.capture.captureName tab.currentModule) (Dict.values tab.captureSlots))
+      , Cmd.none
+--      , Cmd.batch (List.map (\ct -> C.fetchModuleWithSrc tabId ct.slot ct.capture.captureName tab.currentModule) (Dict.values tab.captureSlots))
+
     )
 
 update : CodeTabMsg -> CodeTab -> (CodeTab, Cmd Msg)
@@ -140,20 +132,8 @@ update msg tab = case msg of
             resetCapture x = { x | phaseSlider = Slider.init 0, mod = Loading Nothing }
         in
         ( {tab | currentModule = modname, captureSlots = Dict.map (\_ -> resetCapture) tab.captureSlots }
-        , Cmd.batch 
-            ( List.map
-             (\ct -> Commands.fetchModuleWithSrc tab.id ct.slot ct.capture.captureName modname)
-             (Dict.values tab.captureSlots)
-            )
+        , Cmd.none
         )
-    CodeMsgGotModule slot res -> 
-        let updateCaptureTab : CodeTabCapture -> CodeTabCapture
-            updateCaptureTab tabmod = {tabmod | mod = Loading.loadFromResult res }
-        in ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
-    CodeMsgGotSrc slot res -> 
-        let updateCaptureTab : CodeTabCapture -> CodeTabCapture
-            updateCaptureTab tabmod = {tabmod | srcLoading = Loading.loadFromResult res }
-        in ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
     CodeMsgSetPhase slot phase -> 
         let setSlider : CodeTabCapture -> CodeTabCapture
             setSlider tabmod = { tabmod | phaseSlider = Slider.init phase }
@@ -229,10 +209,6 @@ update msg tab = case msg of
       in ({tab | captureSlots = Dict.map (\_ -> updateHideSet) tab.captureSlots}, Cmd.none)
     CodeMsgHighlightVar var -> ({tab | varHighlights = EH.toggleSet (HsCore.Helpers.varToInt var) tab.varHighlights}, Cmd.none)
     CodeMsgRemoveAllHightlights -> ({tab | varHighlights = Set.empty}, Cmd.none)
-    CodeMsgHttpTrack slot p -> 
-      let updateProgress : CodeTabCapture -> CodeTabCapture
-          updateProgress c = {c | modRequestProgress = EH.progressBytes p}
-      in ({tab | captureSlots = Dict.update slot (Maybe.map updateProgress) tab.captureSlots}, Cmd.none)
 
 
 
@@ -322,8 +298,8 @@ renderPhase cv modname toplevelHides tabid panelid phase =
 
 viewCode : CodeTab -> CodeTabCapture -> Html Msg
 viewCode tab modtab = div []
-        [ h4 [] [text modtab.capture.captureName]
-        , Loading.renderLoadingWith (span [] [Spinner.spinner [] [], text ("downloaded " ++ String.fromInt (modtab.modRequestProgress // (1024 * 1024)) ++ "mb") ]) modtab.mod <| \mod -> 
+        [ h4 [] [text modtab.capture_view.capture.captureName]
+        , Loading.renderLoading modtab.mod <| \mod -> 
             case EH.indexList modtab.phaseSlider.value mod.modulePhases of
                 Nothing -> text "Invalid Phase Index"
                 Just phase -> div []

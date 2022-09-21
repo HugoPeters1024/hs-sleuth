@@ -25,6 +25,8 @@ library
                     , HsComprehension.Uniqify
                     , HsComprehension.DefAnalysis
                     , HsComprehension.Hash
+                    , HsComprehension.ElmDerivingUtils
+                    , HsComprehension.ElmDeriving
 
     -- Modules included in this library but not exported.
     other-modules: 
@@ -50,5 +52,10 @@ library
                     , parsec
                     , parsec3-numbers
                     , transformers
+                    , haskell-to-elm
+                    , elm-syntax
+                    , bound
+                    , generics-sop
+                    , aeson
     hs-source-dirs: .
     default-language: Haskell2010

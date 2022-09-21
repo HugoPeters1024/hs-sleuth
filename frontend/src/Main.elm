@@ -6,6 +6,10 @@ import Types exposing (..)
 import Browser exposing (Document)
 import Loading exposing (..)
 
+import ElmHelpers as EH
+import Generated.Decoders as DE
+import Json.Decode exposing (decodeString)
+
 import Generated.Types exposing (..)
 import HsCore.Trafo.VarOccs exposing (exprVarOccs)
 
@@ -18,6 +22,7 @@ import Pages.Code as Code
 import Pages.Overview as Overview
 
 import Bootstrap.CDN as CDN
+import Bootstrap.Alert as Alert
 
 import UI.Tabs as Tabs
 import ContextMenu
@@ -25,6 +30,9 @@ import ContextMenu
 import HsCore.Helpers exposing (..)
 import File.Select
 import File
+import Zip
+import Css exposing (content)
+import Zip.Entry exposing (basename)
 
 main : Program () Model Msg
 main = Browser.document
@@ -39,11 +47,11 @@ init _ =
     let (ctxMenu, ctxCmd) = ContextMenu.init
     in (
            { pageTab = Tabs.init
-           , settingsLoading = Loading Nothing
-           , capturesLoading = Loading Nothing
            , timezone = Time.utc
            , overviewTab =
                { stagedProjects = []
+               , problem = Nothing
+               , captures = []
                }
            , idGen = 0
            , codeTabs = Dict.empty
@@ -51,12 +59,9 @@ init _ =
            }
         , Cmd.batch 
            [ Task.perform MsgAdjustTimeZone Time.here
-           , Overview.init
            , Cmd.map MsgCtxMenu ctxCmd
            ]
         )
-
-
 
 addCodeTab : CodeTab -> Model -> Model
 addCodeTab tab model = { model | codeTabs = Dict.insert tab.id tab model.codeTabs }
@@ -154,10 +159,9 @@ updateDictWithEffect : (v -> (v, e)) -> Dict comparable v -> comparable -> Maybe
 updateDictWithEffect f dict key = Dict.get key dict
    |> Maybe.map (\v -> let (nv, e) = f v in (Dict.insert key nv dict, e))
 
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
-    MsgGotSettings res -> ({model | settingsLoading = Loading.loadFromResult res}, Cmd.none)
-    MsgGotCaptures res -> ({model | capturesLoading = Loading.loadFromResult res}, Cmd.none)
     MsgPageTab tabmsg -> ({model | pageTab = Tabs.update tabmsg model.pageTab}, Cmd.none)
     MsgAdjustTimeZone zone -> ({model | timezone = zone}, Cmd.none)
     MsgCodeMsg tid codemsg -> case updateDictWithEffect (Code.update codemsg) model.codeTabs tid of
@@ -175,7 +179,4 @@ update msg model = case msg of
     MsgCtxMenu ctx -> 
         let (ctxMenu, cmd) = ContextMenu.update ctx model.ctxMenu
         in ({model | ctxMenu = ctxMenu}, Cmd.map MsgCtxMenu cmd) 
-    MsgTriggerFile -> (model, File.Select.file ["application/json"] MsgGotFile)
-    MsgGotFile file -> (Debug.log (File.name file) model, Cmd.none)
-
 

@@ -22,6 +22,7 @@ import HsComprehension.Uniqify as Uniqify
 import HsComprehension.Ast as Ast
 import qualified HsComprehension.Cvt as Cvt
 import HsComprehension.DefAnalysis
+import HsComprehension.ElmDeriving
 
 import Control.Monad.IO.Class
 import Control.Monad
@@ -52,6 +53,7 @@ import Text.Parsec as Parsec
 import Text.Parsec.Number as Parsec
 
 import Data.ByteString.Lazy (hPutStr)
+import Data.Aeson (encode, ToJSON)
 import qualified GhcDump.Convert
 
 import Data.Time
@@ -232,14 +234,14 @@ coreDumpDir :: CaptureView -> String -> FilePath
 coreDumpDir view pid = coreDumpBaseDir view `FP.combine` "coredump-" ++ pid
 
 coreDumpFile :: CaptureView -> String -> String -> FilePath
-coreDumpFile view pid mod = coreDumpDir view pid `FP.combine` mod ++ ".zstd"
+coreDumpFile view pid mod = coreDumpDir view pid `FP.combine` mod ++ ".json"
 
 captureFile :: CaptureView -> String -> FilePath
-captureFile view pid = coreDumpDir view pid `FP.combine` "capture.zstd"
+captureFile view pid = coreDumpDir view pid `FP.combine` "capture.json"
 
-writeToFile :: (Serialise a) => FilePath -> a -> IO ()
+writeToFile :: (ToJSON a) => FilePath -> a -> IO ()
 writeToFile fname = do
-    BSL.writeFile fname . Zstd.compress 7 . Ser.serialise
+    BSL.writeFile fname . encode
 
 readFromFile :: Serialise a => FilePath -> IO a
 readFromFile fname = do
