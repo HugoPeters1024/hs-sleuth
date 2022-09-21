@@ -13,6 +13,7 @@ import Time
 
 import Bootstrap.Table as Table
 import Bootstrap.Button as Button
+import File.Select exposing (file)
 
 lift : OverviewMsg -> Msg
 lift = Types.MsgOverViewTab
@@ -72,6 +73,7 @@ view m =
                     , Button.attrs [onClick MsgOpenCodeTab]
                     ] 
                     [text "Open Tab"]
+                , Button.button [Button.attrs [onClick MsgTriggerFile]] [text "TRIGGER"]
                 ]
 
 

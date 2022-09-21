@@ -18,6 +18,7 @@ import ContextMenu exposing (ContextMenu)
 
 import Bootstrap.Dropdown  as Dropdown
 import Bootstrap.Modal as Modal
+import File exposing (File)
 
 
 type alias PhaseId = Int
@@ -158,3 +159,5 @@ type Msg
     | MsgOpenCodeTab
     | MsgAdjustTimeZone Time.Zone
     | MsgCtxMenu (ContextMenu.Msg CtxMenu)
+    | MsgTriggerFile
+    | MsgGotFile File

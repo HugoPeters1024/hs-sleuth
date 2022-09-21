@@ -30,6 +30,7 @@ import Servant
 import Network.Wai
 import Network.Wai.Middleware.Gzip (gzip, def)
 
+
 data HTML = HTML
 
 newtype RawHtml = RawHtml { unRaw :: BL.ByteString }

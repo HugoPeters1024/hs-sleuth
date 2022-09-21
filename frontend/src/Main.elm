@@ -23,6 +23,8 @@ import UI.Tabs as Tabs
 import ContextMenu
 
 import HsCore.Helpers exposing (..)
+import File.Select
+import File
 
 main : Program () Model Msg
 main = Browser.document
@@ -173,5 +175,7 @@ update msg model = case msg of
     MsgCtxMenu ctx -> 
         let (ctxMenu, cmd) = ContextMenu.update ctx model.ctxMenu
         in ({model | ctxMenu = ctxMenu}, Cmd.map MsgCtxMenu cmd) 
+    MsgTriggerFile -> (model, File.Select.file ["application/json"] MsgGotFile)
+    MsgGotFile file -> (Debug.log (File.name file) model, Cmd.none)
 
 

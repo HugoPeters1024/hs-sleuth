@@ -36,7 +36,7 @@ fetchSrc tid slot slug mod =
   let def = defRequest { url = "http://127.0.0.1:8080/src/" ++ slug ++ "/" ++ mod
                        , expect = Http.expectString (MsgCodeMsg tid << CodeMsgGotSrc slot)
                        }
-  in Http.request { def | tracker = Just (String.fromInt slot) }
+  in Http.request { def | tracker = Nothing }
 
 fetchSettings : Cmd Msg
 fetchSettings = Http.get { url = "http://127.0.0.1:8080/settings"

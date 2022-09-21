@@ -9,7 +9,8 @@ RUN chmod +x elm
 RUN mv elm /bin
 RUN elm --help
 
-RUN git clone --recursive https://github.com/HugoPeters1024/hs-comprehension
+COPY . /app/hs-comprehension
+# RUN git clone --recursive https://github.com/HugoPeters1024/hs-comprehension
 RUN cabal update
 # Build takes long so we do it outside the script to get a docker checkpoint
 WORKDIR /app/hs-comprehension/server
@@ -24,5 +25,5 @@ RUN cp ../frontend/index.html static
 RUN cp ../frontend/src/style.css static
 RUN cp ../frontend/src/pygments.css static
 
-CMD ["./server --direct-root ../test-project/dumps"]
+CMD ["./server", "--direct-root", "../test-project/dumps"]
 EXPOSE 8080
