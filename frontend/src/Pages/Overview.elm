@@ -5,9 +5,9 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import HtmlHelpers exposing (..)
 import Types exposing (..)
-import Loading exposing (Loading)
-import HsCore.Helpers as H
 import ElmHelpers as EH
+
+import UI.FileDropper as FileDropper
 
 import Time
 import Json.Decode
@@ -27,24 +27,26 @@ import Generated.Decoders
 lift : OverviewMsg -> Msg
 lift = Types.MsgOverViewTab
 
-init : Cmd Msg
-init = Cmd.none
+init : OverviewTab
+init = { stagedProjects = []
+       , problem = Nothing
+       , captures = []
+       , filedropper = FileDropper.init ["application/zip"]
+       }
 
 update : OverviewMsg -> OverviewTab -> (OverviewTab, Cmd Msg)
 update msg tab = case msg of
     OverviewMsgStageCapture cv -> ({tab | stagedProjects = tab.stagedProjects ++ [cv]}, Cmd.none)
-    OverviewMsgTriggerFile -> (tab, File.Select.file ["application/zip"] (lift << OverviewMsgGotFile))
-    OverviewMsgGotFile file -> (tab, Task.perform (lift << OverviewMsgReadFile (File.name file)) (File.toBytes file))
     OverviewMsgReadFile filename content -> case Zip.fromBytes content |> Maybe.map Zip.entries of
-      Nothing -> (tab, Cmd.none)
+      Nothing -> (overviewSetProblem (filename ++ " is not a valid zip archive") tab, Cmd.none)
       Just entries -> 
         let dict = Dict.fromList (EH.annotate Zip.Entry.basename entries)
         in case Dict.get "capture.json" dict of
-          Nothing -> (overviewSetProblem "the zip does not contain a capture.json file" tab, Cmd.none)
+          Nothing -> (overviewSetProblem (filename ++  " does not contain a capture.json file") tab, Cmd.none)
           Just entry -> case Zip.Entry.toString entry of
-            Err _ -> (overviewSetProblem "there was a problem reading the content of capture.json" tab, Cmd.none)
+            Err _ -> (overviewSetProblem ("there was a problem reading the content of capture.json in " ++ filename) tab, Cmd.none)
             Ok string_content -> case Json.Decode.decodeString Generated.Decoders.captureDecoder string_content of
-              Err _ -> (overviewSetProblem "there was a problem decoding the content of capture.json" tab, Cmd.none)
+              Err _ -> (overviewSetProblem ("there was a problem decoding the content of capture.json in " ++ filename) tab, Cmd.none)
               Ok capture -> 
                 let capture_view = { capture = capture
                                    , files = dict
@@ -55,6 +57,13 @@ update msg tab = case msg of
                    , Cmd.none
                    )
     OverviewMsgDismissProblem _ -> ({tab | problem = Nothing}, Cmd.none)
+    OverviewMsgFileDropper filemsg ->
+      let (filedropper, cmd, files) = FileDropper.update filemsg tab.filedropper
+          cmds = List.map (\file -> Task.perform (lift << OverviewMsgReadFile (File.name file)) (File.toBytes file)) files
+      in ( { tab | filedropper = filedropper }
+         , Cmd.batch ((Cmd.map (lift << OverviewMsgFileDropper) cmd) :: cmds)
+         )
+
 
 
 view : Model -> Html Msg
@@ -81,10 +90,10 @@ view m =
                 Alert.config
                 |> Alert.danger
                 |> Alert.dismissable (lift << OverviewMsgDismissProblem)
-                |> Alert.children
-                    [text problem]
+                |> Alert.children [text problem]
                 |> Alert.view Alert.shown
-
+           , FileDropper.viewConfig (lift << OverviewMsgFileDropper)
+                |> FileDropper.view m.overviewTab.filedropper
            , span [] [h2 [] [text "Captures"]]
            , Table.table
                { options = [Table.striped, Table.hover]
@@ -107,7 +116,6 @@ view m =
                , Button.attrs [onClick MsgOpenCodeTab]
                ] 
                [text "Open Tab"]
-           , Button.button [Button.attrs [onClick (lift OverviewMsgTriggerFile)]] [text "TRIGGER"]
            ]
 
 

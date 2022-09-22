@@ -7,6 +7,7 @@ import Generated.Types exposing (..)
 
 import UI.Tabs as Tabs
 import UI.Slider as Slider
+import UI.FileDropper as FileDropper
 import Time
 import Dict exposing (Dict)
 import Set exposing (Set)
@@ -148,6 +149,7 @@ type alias OverviewTab =
     { stagedProjects : List CaptureView
     , problem: Maybe String
     , captures : List CaptureView
+    , filedropper : FileDropper.Model
     }
 
 overviewSetProblem : String -> OverviewTab -> OverviewTab
@@ -157,13 +159,11 @@ overviewRemoveProblem : OverviewTab -> OverviewTab
 overviewRemoveProblem tab = { tab | problem = Nothing }
 
 
-
 type OverviewMsg
     = OverviewMsgStageCapture CaptureView
-    | OverviewMsgTriggerFile
-    | OverviewMsgGotFile File
     | OverviewMsgReadFile String Bytes
     | OverviewMsgDismissProblem Alert.Visibility
+    | OverviewMsgFileDropper FileDropper.Msg
 
 type Msg 
     = MsgCodeMsg TabId CodeTabMsg

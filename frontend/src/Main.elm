@@ -6,8 +6,6 @@ import Types exposing (..)
 import Browser exposing (Document)
 import Loading exposing (..)
 
-import ElmHelpers as EH
-import Generated.Decoders as DE
 import Json.Decode exposing (decodeString)
 
 import Generated.Types exposing (..)
@@ -28,11 +26,6 @@ import UI.Tabs as Tabs
 import ContextMenu
 
 import HsCore.Helpers exposing (..)
-import File.Select
-import File
-import Zip
-import Css exposing (content)
-import Zip.Entry exposing (basename)
 
 main : Program () Model Msg
 main = Browser.document
@@ -48,11 +41,7 @@ init _ =
     in (
            { pageTab = Tabs.init
            , timezone = Time.utc
-           , overviewTab =
-               { stagedProjects = []
-               , problem = Nothing
-               , captures = []
-               }
+           , overviewTab = Overview.init
            , idGen = 0
            , codeTabs = Dict.empty
            , ctxMenu = ctxMenu
