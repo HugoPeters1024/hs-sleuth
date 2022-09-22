@@ -92,6 +92,7 @@ codeViewOptionsMapVarRenames f o = { o | varRenames = f o.varRenames }
 type alias CaptureView =
     { capture: Capture
     , files: Dict String Entry
+    , filename: String
     }
 
 type alias CodeTab = 
@@ -161,7 +162,7 @@ type OverviewMsg
     = OverviewMsgStageCapture CaptureView
     | OverviewMsgTriggerFile
     | OverviewMsgGotFile File
-    | OverviewMsgReadFile Bytes
+    | OverviewMsgReadFile String Bytes
     | OverviewMsgDismissProblem Alert.Visibility
 
 type Msg 

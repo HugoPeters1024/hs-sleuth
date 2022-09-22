@@ -15,6 +15,7 @@ import Json.Decode
 import Bootstrap.Table as Table
 import Bootstrap.Button as Button
 import Bootstrap.Alert as Alert
+import File
 import File.Select exposing (file)
 import Task
 import File
@@ -33,8 +34,8 @@ update : OverviewMsg -> OverviewTab -> (OverviewTab, Cmd Msg)
 update msg tab = case msg of
     OverviewMsgStageCapture cv -> ({tab | stagedProjects = tab.stagedProjects ++ [cv]}, Cmd.none)
     OverviewMsgTriggerFile -> (tab, File.Select.file ["application/zip"] (lift << OverviewMsgGotFile))
-    OverviewMsgGotFile file -> (tab, Task.perform (lift << OverviewMsgReadFile) (File.toBytes file))
-    OverviewMsgReadFile content -> case Zip.fromBytes content |> Maybe.map Zip.entries of
+    OverviewMsgGotFile file -> (tab, Task.perform (lift << OverviewMsgReadFile (File.name file)) (File.toBytes file))
+    OverviewMsgReadFile filename content -> case Zip.fromBytes content |> Maybe.map Zip.entries of
       Nothing -> (tab, Cmd.none)
       Just entries -> 
         let dict = Dict.fromList (EH.annotate Zip.Entry.basename entries)
@@ -47,6 +48,7 @@ update msg tab = case msg of
               Ok capture -> 
                 let capture_view = { capture = capture
                                    , files = dict
+                                   , filename = filename
                                    }
                 in ( {tab | captures = tab.captures ++ [capture_view]}
                      |> overviewRemoveProblem
@@ -67,6 +69,7 @@ view m =
                         , Button.attrs [class "bi bi-arrow-bar-down", onClick (lift (OverviewMsgStageCapture cv))]
                         ] []
                     ]
+                , Table.td [] [text cv.filename]
                 , Table.td [] [text cv.capture.captureName]
                 , Table.td [] [text cv.capture.captureGhcVersion]
                 , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix cv.capture.captureDate))]
@@ -86,7 +89,8 @@ view m =
            , Table.table
                { options = [Table.striped, Table.hover]
                , thead = Table.simpleThead
-                   [ Table.th [] [text "Stage"]
+                   [ Table.th [] [text "Actions"]
+                   , Table.th [] [text "Capture Archive"]
                    , Table.th [] [text "Capture Slug"]
                    , Table.th [] [text "GHC Version"]
                    , Table.th [] [text "Captured at"]
