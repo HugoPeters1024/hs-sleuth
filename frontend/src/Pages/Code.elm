@@ -29,6 +29,7 @@ import UI.Slider as Slider
 
 import Bootstrap.Card as Card
 import Bootstrap.Spinner as Spinner
+import Bootstrap.Alert as Alert
 import Bootstrap.Card.Block as Block
 import Bootstrap.Dropdown  as Dropdown
 import Bootstrap.Button  as Button
@@ -45,12 +46,7 @@ subscriptions tab = Sub.map (MsgCodeMsg tab.id) (Dropdown.subscriptions tab.modu
 
 initCodeTabCapture : Int -> CaptureView -> ModuleName -> CodeTabCapture
 initCodeTabCapture slot capture_view modname = 
-  let default_mod = { moduleName = "LOADING", modulePhases = [] } 
-      mod = case getModuleFromView capture_view modname of
-              Nothing -> default_mod
-              Just m -> m
-  in 
-    { mod = mod
+    { phase = getPhaseFromView capture_view modname 0
     , srcLoading = Loading Nothing
     , capture_view = capture_view
     , phaseSlider = Slider.init 0
@@ -65,21 +61,12 @@ getCurrentCaptures tab = List.map .capture_view (Dict.values tab.captureSlots)
 getCurrentCaptureTabs : CodeTab -> List CodeTabCapture
 getCurrentCaptureTabs tab = Dict.values tab.captureSlots
 
-getCurrentPhase : CodeTabCapture -> Maybe Phase
-getCurrentPhase capture_tab = EH.indexList capture_tab.phaseSlider.value capture_tab.mod.modulePhases
+getPhases : CodeTab -> List Phase
+getPhases = EH.mapResult .phase << Dict.values << .captureSlots
 
 getMergedModuleNames : CodeTab -> List String
 getMergedModuleNames tab = List.map Tuple.first (List.concatMap (.captureModules << .capture) (getCurrentCaptures tab))
     |> EH.removeDuplicates
-
-getModules : CodeTab -> List Module
-getModules tab = List.map .mod (getCurrentCaptureTabs tab)
-
-getCurrentPhases : CodeTab -> List Phase
-getCurrentPhases tab =
-  let go : CodeTabCapture -> Maybe Phase
-      go capture = EH.indexList capture.phaseSlider.value capture.mod.modulePhases
-  in EH.mapMaybe go (Dict.values tab.captureSlots)
 
 getMatchedTopLevel : (TopBindingInfo -> Int) -> CodeTab -> List (List TopBindingInfo)
 getMatchedTopLevel lens tab =
@@ -94,7 +81,7 @@ getMatchedTopLevel lens tab =
       go : List TopBindingInfo -> Dict Int (List TopBindingInfo) -> Dict Int (List TopBindingInfo)
       go xs acc = List.foldl insert acc xs
 
-  in Dict.values <| List.foldl go Dict.empty (List.map getPhaseTopBinders (getCurrentPhases tab))
+  in Dict.values <| List.foldl go Dict.empty (List.map getPhaseTopBinders (getPhases tab))
 
 makeCodeTab : Model -> List CaptureView -> (Model, CodeTab, Cmd Msg)
 makeCodeTab model cvs = 
@@ -132,35 +119,34 @@ makeCodeTab model cvs =
     ( { model | idGen = model.idGen + 1 }
       , tab
       , Cmd.none
---      , Cmd.batch (List.map (\ct -> C.fetchModuleWithSrc tabId ct.slot ct.capture.captureName tab.currentModule) (Dict.values tab.captureSlots))
-
     )
 
-getModuleFromView : CaptureView -> String -> Maybe Module
-getModuleFromView cv modname = 
-  Dict.get (modname ++ ".json") cv.files
-  |> Maybe.andThen (Zip.Entry.toString >> resultToMaybe)
-  |> Maybe.andThen (Json.Decode.decodeString Generated.Decoders.moduleDecoder >> resultToMaybe)
-  |> Maybe.map Recon.reconModule
+getPhaseFromView : CaptureView -> String -> Int -> Result String Phase
+getPhaseFromView cv modname phase_id = 
+  let filename = modname ++ "_" ++ String.fromInt phase_id ++ ".json"
+  in Dict.get filename cv.files
+    |> Result.fromMaybe (filename ++ " is missing")
+    |> Result.andThen (Zip.Entry.toString >> Result.mapError (\_ -> "could not read " ++ filename))
+    |> Result.andThen (Json.Decode.decodeString Generated.Decoders.phaseDecoder >> Result.mapError (\_ -> "could not parse " ++ filename))
+    |> Result.map Recon.reconPhase
 
 update : CodeTabMsg -> CodeTab -> (CodeTab, Cmd Msg)
 update msg tab = case msg of
-    CodeMsgSetModule modname -> 
-        let resetCapture : CodeTabCapture -> CodeTabCapture
-            resetCapture x = { x | phaseSlider = Slider.init 0 }
+    CodeMsgSetModule modname ->
+        let resetSlider : CodeTabCapture -> CodeTabCapture
+            resetSlider modtab = { modtab | phaseSlider = Slider.init 0 }
 
-            setModule : CodeTabCapture -> CodeTabCapture
-            setModule x = case getModuleFromView x.capture_view modname of
-              Nothing -> x
-              Just mod -> { x | mod = mod }
+            setPhase : CodeTabCapture -> CodeTabCapture
+            setPhase modtab = { modtab | phase = getPhaseFromView modtab.capture_view modname 0 }
+
+        in ({ tab | currentModule = modname, captureSlots = Dict.map (\_ -> resetSlider >> setPhase) tab.captureSlots }, Cmd.none)
+    CodeMsgSetPhase slot phase_id -> 
+        let setPhase : CodeTabCapture -> CodeTabCapture
+            setPhase x = {x | phase = getPhaseFromView x.capture_view tab.currentModule phase_id }
         in
-        ( {tab | currentModule = modname, captureSlots = Dict.map (\_ -> resetCapture >> setModule) tab.captureSlots }
+        ( { tab | captureSlots = Dict.update slot (Maybe.map setPhase) tab.captureSlots }
         , Cmd.none
         )
-    CodeMsgSetPhase slot phase -> 
-        let setSlider : CodeTabCapture -> CodeTabCapture
-            setSlider tabmod = { tabmod | phaseSlider = Slider.init phase }
-        in ({ tab | captureSlots = Dict.update slot (Maybe.map setSlider) tab.captureSlots }, Cmd.none)
     CodeMsgSelectVar var -> ({tab | selectedVar = Just var}, Cmd.none)
     CodeMsgToggleSrc slot -> 
         let setSlider : CodeTabCapture -> CodeTabCapture
@@ -174,7 +160,13 @@ update msg tab = case msg of
     CodeMsgModuleDropdown state -> ({tab | moduleDropdown = state}, Cmd.none)
     CodeMsgSlider slot slidermsg ->
         let updateCaptureTab : CodeTabCapture -> CodeTabCapture
-            updateCaptureTab tabmod = {tabmod | phaseSlider = Slider.update slidermsg tabmod.phaseSlider }
+            updateCaptureTab tabmod = 
+              let new_slider = Slider.update slidermsg tabmod.phaseSlider
+              in
+              { tabmod 
+                | phaseSlider = new_slider
+                , phase = getPhaseFromView tabmod.capture_view tab.currentModule new_slider.value
+              }
 
         in ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
     CodeMsgRenameModalOpen var -> ({tab | renameModal = renameModalOpen var tab.renameModal}, Cmd.none)
@@ -190,8 +182,7 @@ update msg tab = case msg of
         in ({tab | captureSlots = Dict.update slot (Maybe.map updateHideSet) tab.captureSlots}, Cmd.none)
     CodeMsgHideToplevelAllBut slot ti -> 
       let allVarIds =
-            getModules tab
-            |> List.concatMap .modulePhases
+            getPhases tab
             |> List.concatMap .phaseTopBindings
             |> List.concatMap HsCore.Helpers.getTopLevelBinders
             |> List.map HsCore.Helpers.topBindingInfoToInt
@@ -322,14 +313,17 @@ renderPhase cv modname toplevelHides tabid panelid phase =
 viewCode : CodeTab -> CodeTabCapture -> Html Msg
 viewCode tab modtab = div []
         [ h4 [] [text modtab.capture_view.capture.captureName]
-        , case getCurrentPhase modtab of
-             Nothing -> text "Invalid Phase Index"
-             Just phase -> div []
+        , case modtab.phase of
+             Err problem -> Alert.simpleDanger [] [text problem]
+             Ok phase -> div []
                  [ text phase.phaseName
                  , Slider.config
                      { lift = \msg -> mkCodeMsg tab.id (CodeMsgSlider modtab.slot msg)
                      , mininum = 0
-                     , maximum = List.length modtab.mod.modulePhases - 1
+                     , maximum =
+                        EH.find (\(x,_) -> x==tab.currentModule) modtab.capture_view.capture.captureModules
+                        |> Maybe.map Tuple.second
+                        |> Maybe.withDefault 0
                      }
                      |> Slider.view modtab.phaseSlider
                  , pre [class "dark"] 
@@ -337,7 +331,7 @@ viewCode tab modtab = div []
                        Core -> code [] 
                                     [ a [class "src-toggle", onClick (mkCodeMsg tab.id (CodeMsgToggleSrc modtab.slot))] [text "view source\n\n"]
                                     , Ppr.dyn_css tab.varHighlights tab.selectedVar
-                                    , Html.Lazy.lazy6 renderPhase tab.codeViewOptions modtab.mod.moduleName modtab.toplevelHides tab.id modtab.slot phase
+                                    , Html.Lazy.lazy6 renderPhase tab.codeViewOptions tab.currentModule modtab.toplevelHides tab.id modtab.slot phase
                                     ]
                               
                        Src -> code [class "language-haskell"]

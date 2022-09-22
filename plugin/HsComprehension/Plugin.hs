@@ -233,8 +233,8 @@ coreDumpBaseDir view = case cv_direct_path view of
 coreDumpDir :: CaptureView -> String -> FilePath
 coreDumpDir view pid = coreDumpBaseDir view `FP.combine` "coredump-" ++ pid
 
-coreDumpFile :: CaptureView -> String -> String -> FilePath
-coreDumpFile view pid mod = coreDumpDir view pid `FP.combine` mod ++ ".json"
+coreDumpFile :: CaptureView -> String -> String -> Int -> FilePath
+coreDumpFile view pid mod phase_id = coreDumpDir view pid `FP.combine` mod ++ "_" ++ show phase_id ++ ".json"
 
 captureFile :: CaptureView -> String -> FilePath
 captureFile view pid = coreDumpDir view pid `FP.combine` "capture.json"
@@ -248,7 +248,7 @@ readFromFile fname = do
     Ser.deserialise . Zstd.decompress <$> BSL.readFile fname
 
 dumpPass :: IORef [Ast.Phase] -> Int -> String -> CoreToDo
-dumpPass ms_ref n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
+dumpPass ms_ref n in_phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
     let guts = in_guts { mg_binds = Uniqify.freshenUniques (mg_binds in_guts) }
 --    guts <- liftIO $ pure in_guts
 
@@ -256,8 +256,8 @@ dumpPass ms_ref n phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
     let prefix :: String = showSDocUnsafe (ppr (mg_module guts))
     liftIO $ do
         putStrLn $ "__PHASE_MARKER " ++ show n
-        let mod = cvtGhcPhase dflags n phase guts
-        modifyIORef ms_ref (mod:)
+        let phase = cvtGhcPhase dflags n in_phase guts
+        modifyIORef ms_ref (phase:)
     pure guts
 
 finalPass :: IORef [Ast.Phase] -> (String, String) -> CoreToDo
@@ -273,13 +273,13 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
               -> p {phaseFiredRules = filter
                                         ((== n) . firedRulePhase) ruleFirings}) [0..] (reverse in_phases)
 
-        let mod = Ast.Module {
-              Ast.moduleName = T.pack modName
-            , Ast.modulePhases = phases
-            }
-
-        let fname = coreDumpFile defaultCaptureView slug modName
-        writeToFile fname mod
+        --let mod = Ast.Module {
+        --      Ast.moduleName = T.pack modName
+        --    , Ast.modulePhases = phases
+        --    }
+        forM phases $ \phase -> do
+          let fname = coreDumpFile defaultCaptureView slug modName (phaseId phase)
+          writeToFile fname phase
 
         writeToFile (captureFile defaultCaptureView (T.unpack (captureName capture))) capture
     pure guts

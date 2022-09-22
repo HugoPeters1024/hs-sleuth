@@ -1,4 +1,4 @@
-module HsCore.Trafo.Reconstruct exposing (reconModule)
+module HsCore.Trafo.Reconstruct exposing (reconModule, reconPhase)
 
 import Generated.Types exposing (..)
 import HsCore.Helpers as H exposing (..)

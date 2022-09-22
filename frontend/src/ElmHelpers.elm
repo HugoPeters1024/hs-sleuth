@@ -56,7 +56,15 @@ mapMaybe f list = case list of
     x::xs -> case f x of
         Just y -> y::mapMaybe f xs
         Nothing -> mapMaybe f xs
-    []    -> []
+    [] -> []
+
+mapResult : (a -> Result x b) -> List a -> List b
+mapResult f list = case list of
+    x::xs -> case f x of
+        Ok y -> y::mapResult f xs
+        Err _ ->  mapResult f xs
+    [] -> []
+   
 
 indexList : Int -> List a -> Maybe a
 indexList n xs = List.head (List.drop n xs)
