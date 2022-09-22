@@ -125,7 +125,7 @@ pprExprParens env expr = if exprIsAtom expr then pprExpr env expr else parens (p
 
 pprExpr : CodeViewOptions -> Expr -> PP
 pprExpr env expr = case expr of
-    EVar varid -> pprBinderThunk env (varid.binderIdThunk ())
+    EVar varid -> pprBinderThunk env varid.binderIdThunk
     EVarGlobal ename -> pprVar env (VarExternal ename)
     ELit lit -> pprLit lit
     EApp f a -> if exprIsAtom a then combine [pprExpr env f, space, pprExpr env a] else hang 2 (combine [pprExpr env f, line, pprExprParens env a])
@@ -223,7 +223,7 @@ pprVar env var = Pretty.taggedString (renderVarName env var) (TagVar var)
 
 pprType : CodeViewOptions -> Type -> PP
 pprType env type_ = case type_ of
-    VarTy var -> case var.binderIdThunk () of
+    VarTy var -> case var.binderIdThunk of
         Found x -> pprBinder env x
         NotFound -> string "[UNKNOWN TYPEVAR]"
         Untouched -> string "[TYPEVAR UNTRAVERSED]"

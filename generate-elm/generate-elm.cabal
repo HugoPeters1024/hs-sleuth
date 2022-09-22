@@ -31,7 +31,6 @@ executable generate-elm
     -- other-extensions:
     build-depends:    base ^>=4.16.1.0
                     , hs-comprehension-plugin
-                    , hs-comprehension-server
                     , haskell-to-elm
                     , elm-syntax
                     , unordered-containers

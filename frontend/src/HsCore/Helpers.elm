@@ -63,7 +63,7 @@ varName var = case var of
 -- external names can refer to module local bindings
 varExternalLocalBinder : Var -> Maybe Binder
 varExternalLocalBinder var = case var of
-    VarExternal (ExternalName e) -> case e.localBinder () of
+    VarExternal (ExternalName e) -> case e.localBinder of
         Found b -> Just b
         _       -> Nothing
     _                            -> Nothing
@@ -157,7 +157,7 @@ isTyBinder b = case b of
     TyBinder _ -> True
 
 isTyBinderId : BinderId -> Bool
-isTyBinderId binderid = case binderid.binderIdThunk () of
+isTyBinderId binderid = case binderid.binderIdThunk of
     Found b -> isTyBinder b
     _       -> False
 
@@ -229,7 +229,7 @@ typeToStringParens type_ = case type_ of
 
 typeToString : Type -> String
 typeToString type_ = case type_ of
-    VarTy binderid -> case binderid.binderIdThunk () of
+    VarTy binderid -> case binderid.binderIdThunk of
         Found x -> binderName x
         NotFound -> "[UKNOWN TYPEVAR]"
         Untouched -> "[TYPEVAR NEVER TRAVERSED]"
@@ -254,6 +254,7 @@ tyLitToString tylit = case tylit of
   NumTyLit n -> String.fromInt n
   StrTyLit s -> s
   CharTyLit c -> String.fromChar c
+  UnknownLit -> "[UnknownTyLit]"
 
 topBindingMap : (TopBindingInfo -> TopBindingInfo) -> TopBinding -> TopBinding
 topBindingMap f top = case top of

@@ -50,12 +50,12 @@ type ExternalName
     , externalName : String
     , externalUnique : Unique
     , externalType : Type
-    , localBinder : () -> BinderThunk }
+    , localBinder : BinderThunk }
     | ForeignCall 
 
 
 type alias BinderId  =
-    { binderIdThunk : () -> BinderThunk,
+    { binderIdThunk : BinderThunk,
     binderIdUnique : Unique
     , binderIdRenderedUnique : String
     , binderIdDeBruijn : Int }
@@ -153,6 +153,7 @@ type TyLit
     = NumTyLit Int
     | StrTyLit String
     | CharTyLit Char
+    | UnknownLit 
 
 
 type alias FiredRule  =

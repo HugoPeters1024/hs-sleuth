@@ -41,7 +41,7 @@ toggleSrc t = case t of
 
 type alias CodeTabCapture =
     { phase : Result String Phase
-    , srcLoading : Loading String
+    , src : Result String String
     , capture_view : CaptureView
     , phaseSlider : Slider.Model
     , slot : Int

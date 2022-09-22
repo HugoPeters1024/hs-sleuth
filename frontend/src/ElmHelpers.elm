@@ -4,6 +4,7 @@ import Http
 import Set.Any
 import Set exposing (Set)
 import Html exposing (text, Html)
+import Set.Any exposing (AnySet)
 
 
 
@@ -85,6 +86,12 @@ toggleSet el set = if Set.member el set then Set.remove el set else Set.insert e
 
 setCombine : List (Set comparable) -> Set comparable
 setCombine = List.foldl Set.union Set.empty
+
+anySetIntersectMany : (x -> comparable) -> List (AnySet comparable x) -> AnySet comparable x
+anySetIntersectMany f list = case list of
+  x::[] -> x
+  [] -> Set.Any.empty f
+  x::xs -> Set.Any.intersect x (anySetIntersectMany f xs)
 
 setInsertMany : List comparable -> Set comparable -> Set comparable
 setInsertMany items set = List.foldl Set.insert set items

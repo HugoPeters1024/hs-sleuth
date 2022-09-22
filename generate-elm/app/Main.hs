@@ -5,7 +5,7 @@
 module Main where
 
 import HsComprehension.Ast
-import HsComprehension.Server.ElmDeriving
+import HsComprehension.ElmDeriving
 
 import Data.Maybe
 import Data.List.Utils (replace)
@@ -65,20 +65,22 @@ binderThunkDef = unlines [ ""
 finalizeTypes :: String -> String
 finalizeTypes = replace
                     "{ binderIdUnique : Unique"
-                    "{ binderIdThunk : () -> BinderThunk,\n    binderIdUnique : Unique"
-               . replace' "externalType : Type }" "externalType : Type\n    , localBinder : () -> BinderThunk }"
+                    "{ binderIdThunk : BinderThunk,\n    binderIdUnique : Unique"
+               . replace' "externalType : Type }" "externalType : Type\n    , localBinder : BinderThunk }"
                . replace' "TopBinding(..)" "TopBinding(..)\n    , BinderThunk(..)"
               . (++ binderThunkDef)
 
 finalizeDecoders :: String -> String
 finalizeDecoders = replace' "import Json.Decode" "import Generated.Types exposing (..)\nimport Json.Decode"
-                 . replace' "externalUnique = d" "externalUnique = d\n            , localBinder = \\_ -> Untouched"
+                 . replace' "externalUnique = d" "externalUnique = d\n            , localBinder = Untouched"
                  . replace' 
                       "    Json.Decode.succeed BinderId |>"
-                      "    Json.Decode.succeed (BinderId (\\_ -> Untouched)) |>"
+                      "    Json.Decode.succeed (BinderId Untouched) |>"
 
 main :: IO ()
 main = do
   writeFile "Types.elm" (finalizeTypes (renderDefs "Types" elmDefs))
+  putStrLn "Generated Types.elm"
   writeFile "Decoders.elm" (finalizeDecoders (renderDefs "Decoders" elmDecoders))
+  putStrLn "Generated Decoders.elm"
   putStrLn "All done!"

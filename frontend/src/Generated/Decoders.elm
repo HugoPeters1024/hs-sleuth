@@ -69,7 +69,7 @@ externalNameDecoder =
             Json.Decode.map ExternalName (Json.Decode.succeed (\b c d e -> { externalModuleName = b
             , externalName = c
             , externalUnique = d
-            , localBinder = \_ -> Untouched
+            , localBinder = Untouched
             , externalType = e }) |>
             Json.Decode.Pipeline.required "externalModuleName" Json.Decode.string |>
             Json.Decode.Pipeline.required "externalName" Json.Decode.string |>
@@ -85,7 +85,7 @@ externalNameDecoder =
 
 binderIdDecoder : Json.Decode.Decoder BinderId
 binderIdDecoder =
-    Json.Decode.succeed (BinderId (\_ -> Untouched)) |>
+    Json.Decode.succeed (BinderId Untouched) |>
     Json.Decode.Pipeline.required "binderIdUnique" uniqueDecoder |>
     Json.Decode.Pipeline.required "binderIdRenderedUnique" Json.Decode.string |>
     Json.Decode.Pipeline.required "binderIdDeBruijn" Json.Decode.int
@@ -364,6 +364,9 @@ tyLitDecoder =
 
                 _ ->
                     Json.Decode.fail "Not a char"))
+
+        "UnknownLit" ->
+            Json.Decode.succeed UnknownLit
 
         _ ->
             Json.Decode.fail "No matching constructor")

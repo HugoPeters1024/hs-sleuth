@@ -1,6 +1,5 @@
 packages: .
         , ../ghc-dump/ghc-dump-core
         , ../plugin
-        , ../server
         , ../cborg/cborg
 allow-newer: all

@@ -24,6 +24,7 @@ import PprRender as Ppr
 import Loading exposing (Loading(..))
 
 import Set exposing (Set)
+import Set.Any exposing (AnySet)
 
 import UI.Slider as Slider
 
@@ -47,7 +48,7 @@ subscriptions tab = Sub.map (MsgCodeMsg tab.id) (Dropdown.subscriptions tab.modu
 initCodeTabCapture : Int -> CaptureView -> ModuleName -> CodeTabCapture
 initCodeTabCapture slot capture_view modname = 
     { phase = getPhaseFromView capture_view modname 0
-    , srcLoading = Loading Nothing
+    , src = getSrcFromView capture_view modname
     , capture_view = capture_view
     , phaseSlider = Slider.init 0
     , slot = slot
@@ -67,6 +68,14 @@ getPhases = EH.mapResult .phase << Dict.values << .captureSlots
 getMergedModuleNames : CodeTab -> List String
 getMergedModuleNames tab = List.map Tuple.first (List.concatMap (.captureModules << .capture) (getCurrentCaptures tab))
     |> EH.removeDuplicates
+
+
+getCommonToplevelIds : CodeTab -> AnySet Int TopBindingInfo
+getCommonToplevelIds tab =
+   let phaseSet : Phase -> AnySet Int TopBindingInfo
+       phaseSet phase = getPhaseTopBinders phase |> Set.Any.fromList .topBindingHash
+       
+   in EH.anySetIntersectMany .topBindingHash (List.map phaseSet (getPhases tab))
 
 getMatchedTopLevel : (TopBindingInfo -> Int) -> CodeTab -> List (List TopBindingInfo)
 getMatchedTopLevel lens tab =
@@ -121,14 +130,22 @@ makeCodeTab model cvs =
       , Cmd.none
     )
 
+readFileFromView : CaptureView -> String -> Result String String
+readFileFromView cv filename =
+  Dict.get filename cv.files
+  |> Result.fromMaybe (filename ++ " is missing")
+  |> Result.andThen (Zip.Entry.toString >> Result.mapError (\_ -> "could not read " ++ filename))
+
+
 getPhaseFromView : CaptureView -> String -> Int -> Result String Phase
 getPhaseFromView cv modname phase_id = 
   let filename = modname ++ "_" ++ String.fromInt phase_id ++ ".json"
-  in Dict.get filename cv.files
-    |> Result.fromMaybe (filename ++ " is missing")
-    |> Result.andThen (Zip.Entry.toString >> Result.mapError (\_ -> "could not read " ++ filename))
-    |> Result.andThen (Json.Decode.decodeString Generated.Decoders.phaseDecoder >> Result.mapError (\_ -> "could not parse " ++ filename))
-    |> Result.map Recon.reconPhase
+  in readFileFromView cv filename
+      |> Result.andThen (Json.Decode.decodeString Generated.Decoders.phaseDecoder >> Result.mapError (\_ -> "could not parse " ++ filename))
+      |> Result.map Recon.reconPhase
+
+getSrcFromView : CaptureView -> String -> Result String String
+getSrcFromView cv modname = readFileFromView cv (modname ++ ".hs")
 
 update : CodeTabMsg -> CodeTab -> (CodeTab, Cmd Msg)
 update msg tab = case msg of
@@ -139,7 +156,10 @@ update msg tab = case msg of
             setPhase : CodeTabCapture -> CodeTabCapture
             setPhase modtab = { modtab | phase = getPhaseFromView modtab.capture_view modname 0 }
 
-        in ({ tab | currentModule = modname, captureSlots = Dict.map (\_ -> resetSlider >> setPhase) tab.captureSlots }, Cmd.none)
+            setSrc : CodeTabCapture -> CodeTabCapture
+            setSrc modtab = { modtab | src = getSrcFromView modtab.capture_view modname }
+
+        in ({ tab | currentModule = modname, captureSlots = Dict.map (\_ -> resetSlider >> setPhase >> setSrc) tab.captureSlots }, Cmd.none)
     CodeMsgSetPhase slot phase_id -> 
         let setPhase : CodeTabCapture -> CodeTabCapture
             setPhase x = {x | phase = getPhaseFromView x.capture_view tab.currentModule phase_id }
@@ -168,7 +188,7 @@ update msg tab = case msg of
                 , phase = getPhaseFromView tabmod.capture_view tab.currentModule new_slider.value
               }
 
-        in ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
+        in Debug.log "ping" <| ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
     CodeMsgRenameModalOpen var -> ({tab | renameModal = renameModalOpen var tab.renameModal}, Cmd.none)
     CodeMsgRenameModalClose -> ({tab | renameModal = renameModalClose tab.renameModal}, Cmd.none)
     CodeMsgRenameModalStagingText txt -> ({tab | renameModal = renameModalSetStagingText txt tab.renameModal}, Cmd.none)
@@ -207,15 +227,14 @@ update msg tab = case msg of
             pred xs = List.length xs >= Dict.size tab.captureSlots-- && EH.allSame xs
 
             hideSet : Set Int
-            hideSet = 
-              getMatchedTopLevel .topBindingHash tab
+            hideSet = getMatchedTopLevel .topBindingHash tab 
               |> List.filter pred
               |> List.concat
               |> List.map topBindingInfoToInt
               |> Set.fromList
 
             updateHideSet : CodeTabCapture -> CodeTabCapture
-            updateHideSet tabmod = {tabmod | toplevelHides = hideSet }
+            updateHideSet tabmod = {tabmod | toplevelHides = Set.union tabmod.toplevelHides hideSet }
         in ({tab | captureSlots = Dict.map (\_ c -> updateHideSet c) tab.captureSlots}, Cmd.none)
     CodeMsgUnhideAll ->
       let updateHideSet : CodeTabCapture -> CodeTabCapture
@@ -336,33 +355,14 @@ viewCode tab modtab = div []
                               
                        Src -> code [class "language-haskell"]
                                    [ a [class "src-toggle", onClick (mkCodeMsg tab.id (CodeMsgToggleSrc modtab.slot))] [text "view core\n\n"]
-                                   , Loading.renderLoading modtab.srcLoading text
+                                   , case modtab.src of
+                                        Err problem -> Alert.simpleDanger [] [text problem]
+                                        Ok src -> text src
                                    ]
                    ]
                  ]
         ]
 
-
-processDiff : CodeTab -> Phase -> Phase
-processDiff tab phase = case tab.selectedTopLevels of
-    [lhs, rhs] -> 
-        let go : TopBindingInfo -> TopBindingInfo
-            go tb = 
-                if topBindingInfoToInt tb == topBindingInfoToInt lhs && binderPhaseId tb.topBindingBinder == binderPhaseId lhs.topBindingBinder
-                then Tuple.first (Diff.anotateTopBindingInfo (lhs, rhs)) 
-                else (
-                    if topBindingInfoToInt tb == topBindingInfoToInt rhs && binderPhaseId tb.topBindingBinder == binderPhaseId rhs.topBindingBinder
-                    then Tuple.second (Diff.anotateTopBindingInfo (lhs, rhs))
-                    else tb
-                )
-                    
-        in { phase | phaseTopBindings = List.map (topBindingMap go) phase.phaseTopBindings }
-    _          -> phase
-
-fromMaybe : a -> Maybe a -> a
-fromMaybe def m = case m of
-    Just x -> x
-    Nothing -> def
 
 viewInfo : Model -> CodeTab -> Html CodeTabMsg
 viewInfo model tab = 
@@ -379,7 +379,7 @@ viewInfo model tab =
               , checkbox tab.codeViewOptions.hideUndemanded CodeMsgToggleHideUndemanded "Render Undemanded Variables as _"
               , hr [] []
               , h4 [] [text "Selected Variable"]
-              , fromMaybe (h5 [] [text "No term selected"]) (Maybe.map (viewVarInfo tab) tab.selectedVar)
+              , Maybe.withDefault (h5 [] [text "No term selected"]) (Maybe.map (viewVarInfo tab) tab.selectedVar)
               , hr [] []
               , viewHideOptions model tab
               , hr [] []

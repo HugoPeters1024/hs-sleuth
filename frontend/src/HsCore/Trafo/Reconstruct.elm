@@ -13,8 +13,8 @@ withBinding bndr env = Dict.insert (H.binderToInt bndr) bndr env
 withBindingN : List Binder -> Env -> Env
 withBindingN bs env = List.foldl withBinding env bs
 
-lookupBinder : Env -> Unique -> (() -> BinderThunk)
-lookupBinder env u = \_ -> case Dict.get (H.uniqueToInt u) env of
+lookupBinder : Env -> Unique -> BinderThunk
+lookupBinder env u = case Dict.get (H.uniqueToInt u) env of
     Just x -> Found x
     Nothing -> NotFound
 
@@ -53,7 +53,7 @@ reconBinder env binder = case binder of
 reconExpr : Env -> Expr -> Expr
 reconExpr env expr = case expr of
     EVar binderid -> 
-        let thunk = \_ -> case lookupBinder env binderid.binderIdUnique () of
+        let thunk = case lookupBinder env binderid.binderIdUnique of
                 Found x -> Found (H.binderUpdateId (\id -> { id | binderIdDeBruijn = binderid.binderIdDeBruijn}) x)
                 e       -> e
         in (EVar {binderid | binderIdThunk = thunk})
@@ -97,7 +97,7 @@ reconAlt env alt = case alt.altBinders of
 reconType : Env -> Type -> Type
 reconType env type_ = case type_ of
     VarTy binderid -> 
-        let thunk = \_ -> case lookupBinder env binderid.binderIdUnique () of
+        let thunk = case lookupBinder env binderid.binderIdUnique of
                 Found x -> Found (H.binderUpdateId (\_ -> binderid) x)
                 e       -> e
         in (VarTy {binderid | binderIdThunk = thunk})
