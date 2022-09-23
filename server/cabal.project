@@ -1,5 +1,0 @@
-packages: .
-        , ../plugin
-        , ../ghc-dump/ghc-dump-core
-        , ../cborg/cborg
-allow-newer: all
