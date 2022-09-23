@@ -103,7 +103,7 @@ makeCodeTab model cvs =
         tab : CodeTab
         tab =
           { id = tabId
-          , name = "Code-" ++ String.fromInt tabId
+          , name = "Inspection" ++ String.fromInt tabId
           , captureSlots = Dict.fromList (List.map (\(i, c) -> (i, initCodeTabCapture i c currentModule)) (EH.enumerate cvs))
           , currentModule = currentModule
           , selectedVar = Nothing
@@ -188,7 +188,7 @@ update msg tab = case msg of
                 , phase = getPhaseFromView tabmod.capture_view tab.currentModule new_slider.value
               }
 
-        in Debug.log "ping" <| ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
+        in ({tab | captureSlots = Dict.update slot (Maybe.map updateCaptureTab) tab.captureSlots}, Cmd.none)
     CodeMsgRenameModalOpen var -> ({tab | renameModal = renameModalOpen var tab.renameModal}, Cmd.none)
     CodeMsgRenameModalClose -> ({tab | renameModal = renameModalClose tab.renameModal}, Cmd.none)
     CodeMsgRenameModalStagingText txt -> ({tab | renameModal = renameModalSetStagingText txt tab.renameModal}, Cmd.none)

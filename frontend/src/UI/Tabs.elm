@@ -36,6 +36,9 @@ update action model =
 config : (Msg -> msg) -> BTab.Config msg
 config lift = BTab.config (lift << TabMsg)
 
+setTab : String -> Model -> Model
+setTab tab _ = BTab.customInitialState tab
+
 items = BTab.items
 
 item = toBTab

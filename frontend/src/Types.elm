@@ -179,3 +179,4 @@ type Msg
     | MsgOpenCodeTab
     | MsgAdjustTimeZone Time.Zone
     | MsgCtxMenu (ContextMenu.Msg CtxMenu)
+    | MsgOpenBrowserTab String

@@ -117,7 +117,7 @@ view m =
                   [ Button.button
                       [ Button.secondary
                       , Button.warning
-                      , Button.attrs [class "bi bi-arrow-bar-up", onClick (lift (OverviewMsgUnstageCapture i))]
+                      , Button.attrs [class "bi bi-arrow-bar-left", onClick (lift (OverviewMsgUnstageCapture i))]
                       ] []
                   ]
             , Table.td [] [text cv.capture.captureName]
@@ -177,7 +177,7 @@ view m =
                , Button.disabled (List.isEmpty m.overviewTab.stagedProjects)
                , Button.attrs [onClick MsgOpenCodeTab]
                ] 
-               [text "Open Tab"]
+               [text ("Open Tab With " ++ String.fromInt (List.length m.overviewTab.stagedProjects) ++ " Panel(s)")]
            ]
 
 

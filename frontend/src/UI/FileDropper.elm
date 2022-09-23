@@ -67,6 +67,6 @@ view model opt = Html.map opt.lift <|
     , hijackOn "dragleave" (D.succeed MsgDragLeave)
     , hijackOn "drop" dropDecoder
     ]
-    [ button [ onClick MsgPick ] [ text "Upload Dump Zip(s)" ]
+    [ button [ onClick MsgPick ] [ text "Load Dump Zip(s)" ]
     ] 
 

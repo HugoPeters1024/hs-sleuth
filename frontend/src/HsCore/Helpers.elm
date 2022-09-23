@@ -46,6 +46,7 @@ varPhaseId var = case var of
     VarTop b -> binderPhaseId b.topBindingBinder
     VarExternal _ -> -1
 
+
 topBindingInfoToInt : TopBindingInfo -> Int
 topBindingInfoToInt = binderToInt << .topBindingBinder
 

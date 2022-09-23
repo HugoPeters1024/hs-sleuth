@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Types exposing (..)
 import Browser exposing (Document)
+import Url.Builder as Url
 import Loading exposing (..)
 
 import Json.Decode exposing (decodeString)
@@ -18,6 +19,7 @@ import Set exposing (Set)
 
 import Pages.Code as Code
 import Pages.Overview as Overview
+import Ports
 
 import Bootstrap.CDN as CDN
 import Bootstrap.Alert as Alert
@@ -55,6 +57,9 @@ init _ =
 addCodeTab : CodeTab -> Model -> Model
 addCodeTab tab model = { model | codeTabs = Dict.insert tab.id tab model.codeTabs }
 
+setCodeTabOpen : CodeTab -> Model -> Model
+setCodeTabOpen tab model = { model | pageTab = Tabs.setTab tab.name model.pageTab }
+
 subscriptions : Model -> Sub Msg
 subscriptions model = 
     Sub.batch 
@@ -74,12 +79,18 @@ viewCodeTabs model =
                 }
     in List.map renderTab (Dict.values model.codeTabs)
 
+varToHoogleQuery : Var -> String
+varToHoogleQuery var = 
+  let goodtype = String.replace "." " ." (typeToString (varType var))
+  in Url.crossOrigin "https://hoogle.haskell.org" [] [Url.string "hoogle" (varName var ++ " :: " ++ goodtype)]
+
 getCtxMenuItems : CtxMenu -> List (List (ContextMenu.Item, Msg))
 getCtxMenuItems context = case context of
     CtxCodeVar tabid slot var -> 
         let always = 
               [ (ContextMenu.item "Rename", Code.mkCodeMsg tabid (CodeMsgRenameModalOpen var))
               , (ContextMenu.item "Toggle Highlight", Code.mkCodeMsg tabid (CodeMsgHighlightVar var))
+              , (ContextMenu.item "Query on Hoogle", MsgOpenBrowserTab (varToHoogleQuery var))
               ]
             onBinder = 
                 let wBinder bndr = case bndr of
@@ -113,6 +124,7 @@ ctxConfig =
         , invertText = True
         , cursor = ContextMenu.Arrow
         , rounded = True
+        , fontFamily = "inherit"
     }
 
 view : Model -> Document Msg
@@ -149,6 +161,7 @@ updateDictWithEffect f dict key = Dict.get key dict
    |> Maybe.map (\v -> let (nv, e) = f v in (Dict.insert key nv dict, e))
 
 
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
     MsgPageTab tabmsg -> ({model | pageTab = Tabs.update tabmsg model.pageTab}, Cmd.none)
@@ -164,8 +177,9 @@ update msg model = case msg of
         then (model, Cmd.none)
         else
             let (nmodel, codeTab, cmd) = Code.makeCodeTab model model.overviewTab.stagedProjects
-            in (addCodeTab codeTab nmodel, cmd)
+            in (setCodeTabOpen codeTab (addCodeTab codeTab nmodel), cmd)
     MsgCtxMenu ctx -> 
         let (ctxMenu, cmd) = ContextMenu.update ctx model.ctxMenu
-        in ({model | ctxMenu = ctxMenu}, Cmd.map MsgCtxMenu cmd) 
+        in ({model | ctxMenu = ctxMenu}, Cmd.map MsgCtxMenu cmd)
+    MsgOpenBrowserTab url -> (model, Ports.openBrowserTab url)
 

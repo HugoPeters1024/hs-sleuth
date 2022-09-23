@@ -28,8 +28,10 @@ type alias PprRenderEnv =
     , codeTabSlotId : SlotId
     }
 
-varHighlightClass : PprRenderEnv -> Var -> String
-varHighlightClass env o = "var" ++ String.fromInt (varToInt o)
+varHighlightClass : Var -> String
+varHighlightClass o = case o of
+  VarExternal _ -> "evar" ++ String.fromInt (varToInt o)
+  _ -> "var" ++ String.fromInt (varToInt o)
 
 renderVar : PprRenderEnv -> String -> Var -> Html Msg
 renderVar env content var = 
@@ -41,7 +43,7 @@ renderVar env content var =
               _ -> ("", "")
     in a [class "no-style", onClick (MsgCodeMsg env.codeTabId (CodeMsgSelectVar var))]
          [span 
-            [ctxMenu, class className, class (varHighlightClass env var), title (typeToString (varType var))] 
+            [ctxMenu, class className, class (varHighlightClass var), title (typeToString (varType var))] 
             [span [class "nc"] [text prefix], text base_name]]
 
 htmlTagged : PprRenderEnv -> Tag -> String -> List (Html Msg) -> List (Html Msg)
@@ -70,7 +72,7 @@ htmlRenderer env =
 
 dyn_css : Set Int -> Maybe Var -> Html msg
 dyn_css var_highlights selectedVar = 
-  let highlight_selected var = Css.Global.class ("var" ++ String.fromInt (varToInt var)) [Css.backgroundColor (Css.rgb 53 100 30)]
+  let highlight_selected var = Css.Global.class (varHighlightClass var) [Css.backgroundColor (Css.rgb 53 100 30)]
       highlights = 
         var_highlights
         |> Set.toList

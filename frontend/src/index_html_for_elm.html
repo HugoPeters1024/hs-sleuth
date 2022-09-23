@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>HsComprehension</title>
+  <script type="text/javascript" src="main.js"></script>
+  <script src="./highlight.min.js"></script>
+  <script>
+  hljs.configure({
+      throwUnescapedHTML: false
+  });
+  </script>
+</head>
+
+<body>
+    <div id="myapp"></div>
+</body>
+
+<script type="text/javascript">
+
+// Start the Elm application.
+var app = Elm.Main.init({
+    node: document.getElementById('myapp')
+});
+
+app.ports.openBrowserTab.subscribe(function(url) {
+    window.open(url);
+});
+
+app.ports.triggerHighlight.subscribe(function(x) {
+    hljs.highlightAll();
+});
+
+</script>
+
+</html>
