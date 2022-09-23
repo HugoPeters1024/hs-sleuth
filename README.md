@@ -1,6 +1,8 @@
 ## Haskell Comprehension
 
-Haskell Comprehension is a tool to inspect/verify/debug the interaction your haskell source code has with the GHC Core2Core optimization pipeline. It uses a plugin to make a snapshot of each intermediate AST which can interactively be explored in a browser using the frontend app.
+Haskell Comprehension is a tool to inspect/verify/debug the interaction your haskell source code has with the GHC Core2Core optimization pipeline.
+It uses a plugin to make a snapshot of each intermediate AST which can interactively be explored in a browser using the frontend app.
+The frontend app is also hosted at http://core.hugopeters.me
 
 ## Requirements
 
@@ -35,26 +37,13 @@ The project is currently not on hackage so you need to add this repo as a local 
 
 - :floppy_disk: Now whenever you build dump files are created in `dist-newstyle/coredump-MyCapture001/`
 
+- To create a zip archive you can run `cabal run hs-comprehension-zip -- MyCapture001`
 
 # Inspecting dumps
 
 
-- :female_detective: To inspect the dumps with the frontend, you need to run the server:
-    ```sh
-    -- when building the server yourself (GHC 9.2+)
-    -- Make sure to install Elm: https://guide.elm-lang.org/install/elm.html
-    -- You can also opt to not install elm and extract the html and css files from the release
-    cd hs-comprehension/
-    ./make_release.sh
-    cd release/
-    ./server --project-root PATH/TO/YOUR/PROJECT
+- :female_detective: To inspect the dumps with the frontend got to http://core.hugopeters.me
 
-
-    -- when using the released build (https://github.com/HugoPeters1024/hs-comprehension/releases)
-    ./server --project-root PATH/TO/YOUR/PROJECT
-
-    -- the server will serve at port 8080
-    ```
 
 That should be all!
 
@@ -68,8 +57,7 @@ That should be all!
     - Definition Analysis, in which phase has this binder been observed for the first time
 
 ### Exploration
-1. The server binary acts as a json api interface to the made captures
-2. The frontend fetches the data from the server per module on a need to know basis.
+2. The frontend fetches the data from the zip on a per module and per phase basis
 
 ## Current Capabilities
 
@@ -80,21 +68,19 @@ That should be all!
 - Variable highlighting for easy scope exploration
 - Variable renaming (generated names are often not informative)
 - Click to jump to phase of first occurrence
+- Click to query hoogle
 - Inspect which rewrite rules have fired in which order at each phase.
 
 
 ## Possible Future Capabilities/Goals
 
-- Capture the dflags used to configure the compiler
+- <del>Capture the dflags used to configure the compiler</del> Done
 - Productively explore the unfolding of a variable (it is currently not clear what that means)
     - We need a use case/example for this feature
-- For the comparison of captures, hide toplevel definitions that are identical. A feature that could possible utilize an alpha-equivalent hashing scheme: https://simon.peytonjones.org/hashing-modulo-alpha/
-- A stress tested frontend with enormous modules along with an answer to the question if it is possible to provide a degraded feature set instead of none.
-- Click to go the module (for external names in the same project)
-- Qualify module names to reduce syntactical noise. 
+    - `HsComprehension/Cvt.hs` has the unfolding currently disabled to save space and improve performance
+- <del>For the comparison of captures, hide toplevel definitions that are identical. A feature that could possible utilize an alpha-equivalent hashing scheme: https://simon.peytonjones.org/hashing-modulo-alpha/</del> Done
+- <del>Qualify module names to reduce syntactical noise.</del> Done
 - Parse the strictness analysis of binders to present it more clearly
-- Trigger recompilation/recapture from the frontend whilst allowing changing compiler flags
-    - Can this be done on a per module basis?
 
 ## Identified Limitations
 
