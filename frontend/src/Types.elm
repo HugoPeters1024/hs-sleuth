@@ -20,6 +20,8 @@ import ContextMenu exposing (ContextMenu)
 import Bootstrap.Dropdown  as Dropdown
 import Bootstrap.Modal as Modal
 import Bootstrap.Alert as Alert
+import Bootstrap.Popover as Popover
+
 import File exposing (File)
 import Zip
 import Zip.Entry exposing (Entry)
@@ -150,6 +152,8 @@ type alias OverviewTab =
     , problem: Maybe String
     , captures : List CaptureView
     , filedropper : FileDropper.Model
+    , capturesPopover : Popover.State
+    , stagedPopover : Popover.State
     }
 
 overviewSetProblem : String -> OverviewTab -> OverviewTab
@@ -161,9 +165,12 @@ overviewRemoveProblem tab = { tab | problem = Nothing }
 
 type OverviewMsg
     = OverviewMsgStageCapture CaptureView
+    | OverviewMsgUnstageCapture Int
     | OverviewMsgReadFile String Bytes
     | OverviewMsgDismissProblem Alert.Visibility
     | OverviewMsgFileDropper FileDropper.Msg
+    | OverviewMsgStagedPopover Popover.State
+    | OverviewMsgCapturePopover Popover.State
 
 type Msg 
     = MsgCodeMsg TabId CodeTabMsg

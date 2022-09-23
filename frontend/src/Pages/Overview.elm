@@ -15,6 +15,8 @@ import Json.Decode
 import Bootstrap.Table as Table
 import Bootstrap.Button as Button
 import Bootstrap.Alert as Alert
+import Bootstrap.Popover as Popover
+
 import File
 import File.Select exposing (file)
 import Task
@@ -32,11 +34,14 @@ init = { stagedProjects = []
        , problem = Nothing
        , captures = []
        , filedropper = FileDropper.init ["application/zip"]
+       , capturesPopover = Popover.initialState
+       , stagedPopover = Popover.initialState
        }
 
 update : OverviewMsg -> OverviewTab -> (OverviewTab, Cmd Msg)
 update msg tab = case msg of
     OverviewMsgStageCapture cv -> ({tab | stagedProjects = tab.stagedProjects ++ [cv]}, Cmd.none)
+    OverviewMsgUnstageCapture index -> ({tab | stagedProjects = EH.removeAtIndex index tab.stagedProjects}, Cmd.none)
     OverviewMsgReadFile filename content -> case Zip.fromBytes content |> Maybe.map Zip.entries of
       Nothing -> (overviewSetProblem (filename ++ " is not a valid zip archive") tab, Cmd.none)
       Just entries -> 
@@ -63,28 +68,70 @@ update msg tab = case msg of
       in ( { tab | filedropper = filedropper }
          , Cmd.batch ((Cmd.map (lift << OverviewMsgFileDropper) cmd) :: cmds)
          )
+    OverviewMsgStagedPopover state -> ({tab | stagedPopover = state }, Cmd.none)
+    OverviewMsgCapturePopover state -> ({tab | capturesPopover = state }, Cmd.none)
 
+
+
+helpPopover : Popover.State -> (Popover.State -> msg) -> String -> String -> Html msg
+helpPopover m action title content = 
+  Popover.config
+       ( Button.button
+            [ Button.small
+            , Button.outlinePrimary
+            , Button.attrs <|
+                Popover.onClick m action
+
+            ]
+            [ span [class "bi bi-question-circle-fill"] []
+            ]
+        )
+        |> Popover.right
+        |> Popover.titleH4 [] [ text title ]
+        |> Popover.content []
+            [ text content ]
+        |> Popover.view m
 
 
 view : Model -> Html Msg
 view m = 
-    let
-        mkRow cv = 
-            Table.tr []
-                [ Table.td [] 
-                    [ Button.button 
-                        [ Button.secondary
-                        , Button.success
-                        , Button.attrs [class "bi bi-arrow-bar-down", onClick (lift (OverviewMsgStageCapture cv))]
-                        ] []
-                    ]
-                , Table.td [] [text cv.filename]
-                , Table.td [] [text cv.capture.captureName]
-                , Table.td [] [text cv.capture.captureGhcVersion]
-                , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix cv.capture.captureDate))]
-                ] 
+  let
+      mkCaptureRow cv = 
+        Table.tr []
+          [ Table.td [] 
+              [ Button.button 
+                  [ Button.secondary
+                  , Button.success
+                    , Button.attrs [class "bi bi-arrow-bar-down", onClick (lift (OverviewMsgStageCapture cv))]
+                    ] []
+                ]
+            , Table.td [] [text cv.filename]
+            , Table.td [] [text cv.capture.captureName]
+            , Table.td [] [text cv.capture.captureGhcVersion]
+            , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix cv.capture.captureDate))]
+            ] 
+
+      mkStagedRow (i, cv) =
+          Table.tr []
+            [ Table.td []
+                  [ Button.button
+                      [ Button.secondary
+                      , Button.warning
+                      , Button.attrs [class "bi bi-arrow-bar-up", onClick (lift (OverviewMsgUnstageCapture i))]
+                      ] []
+                  ]
+            , Table.td [] [text cv.capture.captureName]
+            ]
     in div []
            [ h1 [] [text "Overview"]
+           , p []
+              [ text "This application can be used to explore haskell core snapshots made using the HsComprehension "
+              , a [href "https://github.com/HugoPeters1024/hs-comprehension", target "_blank"] [text "plugin."]
+              ]
+           , p []
+              [ text "You can also test it out first by downloading some "
+              , a [href "http://core.hugopeters.me/examples", target "_blank"] [text "example captures."]
+              ]
            , hr [] []
            , EH.maybeHtml m.overviewTab.problem <| \problem -> 
                 Alert.config
@@ -94,7 +141,10 @@ view m =
                 |> Alert.view Alert.shown
            , FileDropper.viewConfig (lift << OverviewMsgFileDropper)
                 |> FileDropper.view m.overviewTab.filedropper
-           , span [] [h2 [] [text "Captures"]]
+           , h2 [] 
+              [ text "Captures "
+              , helpPopover m.overviewTab.capturesPopover (lift << OverviewMsgCapturePopover) "Capture area" "Capture archives that are loaded in the app are shown here. Before viewing them you have to stage them below"
+              ]
            , Table.table
                { options = [Table.striped, Table.hover]
                , thead = Table.simpleThead
@@ -104,11 +154,23 @@ view m =
                    , Table.th [] [text "GHC Version"]
                    , Table.th [] [text "Captured at"]
                    ]
-               , tbody = Table.tbody [] (List.map mkRow m.overviewTab.captures)
+               , tbody = Table.tbody [] (List.map mkCaptureRow m.overviewTab.captures)
                }
            , hr [] []
-           , h2 [] [text "Staged"]
-           , HtmlHelpers.list (List.map (text << .captureName << .capture) m.overviewTab.stagedProjects)
+
+
+           , h2 [] 
+              [ text "Staged "
+              , helpPopover m.overviewTab.stagedPopover (lift << OverviewMsgStagedPopover) "Staging area" "Captures referenced in this list will be opened side by side"
+              ]
+           , Table.table
+              { options = [Table.striped, Table.hover]
+              , thead = Table.simpleThead
+                  [ Table.th [] [text "Actions"]
+                  , Table.th [] [text "Slug"]
+                  ]
+              , tbody = Table.tbody [] (List.map mkStagedRow (EH.enumerate m.overviewTab.stagedProjects))
+              }
            , hr [] []
            , Button.button 
                [ Button.primary

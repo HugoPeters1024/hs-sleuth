@@ -13,6 +13,13 @@ popLast xs =
   let n = List.length xs - 1
   in Maybe.map (\x -> (List.take n xs, x)) (List.head (List.drop n xs))
 
+removeAtIndex : Int -> List a -> List a
+removeAtIndex n list = case (n, list) of
+  (0, _::xs) -> xs
+  (0, []) -> list
+  (_, []) -> list
+  (_, x::xs) -> x :: removeAtIndex (n - 1) xs
+
 zip : List a -> List b -> List (a, b)
 zip lhs rhs = case (lhs, rhs) of
     (x::xs, y::ys) -> (x,y) :: zip xs ys
@@ -34,6 +41,7 @@ allSame : List comparable -> Bool
 allSame xxs = case xxs of
   [] -> True
   (x::xs) -> List.all (\y -> x == y) xs
+
 
 
 zipWith : (a -> b -> c) -> List a -> List b -> List c
