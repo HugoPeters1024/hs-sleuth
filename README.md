@@ -41,15 +41,18 @@ The project is currently not on hackage so you need to add this repo as a local 
 
 # Inspecting dumps
 
-
 - :female_detective: To inspect the dumps with the frontend got to http://core.hugopeters.me
 
+- :hammer: Alternatively you build the frontend yourself by running the `make_release.sh` script. This script requires a few dependencies.
+    1. [Elm](https://guide.elm-lang.org/install/elm.html)
+    2. [uglify-js](https://www.npmjs.com/package/uglify-js) (which transitively requires npm)
 
-That should be all!
+  This creates the `release` directory with the required files, most notably an index html. This file will not work when opened directoy in a browser but has to be served over http. The fastest way to do this is by running `python3 -m http.server` in the release directory. I don't think this is recommend for production applications that actually face the internet but on localhost it is fine.
 
 ## How it works
 
 ### Capture
+
 1. The plugin intersperses the core2core pipeline with snapshot phases.
 2. Each snapshot phase ensures that all binders are a unique identifier for that given module. This means that the plugin is not entirely noninvasive. Therefore, whilst the result should be exactly the same, I would not recommend using plugin while building for a release.
 3. The phases are then converted to a version agnostic representation
@@ -57,7 +60,8 @@ That should be all!
     - Definition Analysis, in which phase has this binder been observed for the first time
 
 ### Exploration
-2. The frontend fetches the data from the zip on a per module and per phase basis
+
+The frontend fetches the data from the zip on a per module and per phase basis.
 
 ## Current Capabilities
 
