@@ -57,5 +57,19 @@ library
                     , bound
                     , generics-sop
                     , aeson
-    hs-source-dirs: .
+    hs-source-dirs: lib
     default-language: Haskell2010
+
+executable hs-comprehension-zip
+  build-depends:      base
+                    , hs-comprehension-plugin
+                    , zip-archive
+                    , bytestring
+                    , filepath
+                    , directory
+
+
+  hs-source-dirs: src
+
+  main-is: Zip.hs
+  default-language: Haskell2010

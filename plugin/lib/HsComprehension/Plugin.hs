@@ -236,6 +236,9 @@ coreDumpDir view pid = coreDumpBaseDir view `FP.combine` "coredump-" ++ pid
 coreDumpFile :: CaptureView -> String -> String -> Int -> FilePath
 coreDumpFile view pid mod phase_id = coreDumpDir view pid `FP.combine` mod ++ "_" ++ show phase_id ++ ".json"
 
+coreDumpArchive :: CaptureView -> String -> FilePath
+coreDumpArchive view slug = coreDumpBaseDir view `FP.combine` slug ++ ".zip"
+
 captureFile :: CaptureView -> String -> FilePath
 captureFile view pid = coreDumpDir view pid `FP.combine` "capture.json"
 
@@ -250,7 +253,6 @@ readFromFile fname = do
 dumpPass :: IORef [Ast.Phase] -> Int -> String -> CoreToDo
 dumpPass ms_ref n in_phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
     let guts = in_guts { mg_binds = Uniqify.freshenUniques (mg_binds in_guts) }
---    guts <- liftIO $ pure in_guts
 
     dflags <- getDynFlags
     let prefix :: String = showSDocUnsafe (ppr (mg_module guts))
@@ -266,6 +268,9 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
         (_, thief, capture) <- readIORef projectState
         in_phases <- readIORef ms_ref
         r <- readStdoutThief thief
+        putStrLn "||||||||||||||||||||||||||||||"
+        putStrLn r
+        putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
         let ruleFirings = parseStdout r
         putStrLn r
 
@@ -273,15 +278,15 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
               -> p {phaseFiredRules = filter
                                         ((== n) . firedRulePhase) ruleFirings}) [0..] (reverse in_phases)
 
-        --let mod = Ast.Module {
-        --      Ast.moduleName = T.pack modName
-        --    , Ast.modulePhases = phases
-        --    }
         forM phases $ \phase -> do
           let fname = coreDumpFile defaultCaptureView slug modName (phaseId phase)
           writeToFile fname phase
 
+
         writeToFile (captureFile defaultCaptureView (T.unpack (captureName capture))) capture
+
+
+
     pure guts
 
 parsedPlugin :: [CommandLineOption] -> ModSummary -> HsParsedModule -> Hsc HsParsedModule

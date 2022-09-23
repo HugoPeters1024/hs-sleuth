@@ -76,7 +76,7 @@ cvtBinderId env (GHCD.BinderId unique) = BinderId
 
 cvtIdInfo :: CvtEnv -> GHCD.IdInfo GHCD.SBinder GHCD.BinderId -> IdInfo
 cvtIdInfo env GHCD.IdInfo {..} = IdInfo
-    { idiUnfolding = cvtUnfolding env idiUnfolding
+    { idiUnfolding = NoUnfolding --TODO: figure out a way to include the unfolding cvtUnfolding env idiUnfolding
     , ..
     }
 
