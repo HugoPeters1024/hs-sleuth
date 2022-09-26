@@ -1,4 +1,4 @@
-module HsCore.Trafo.Reconstruct exposing (reconModule, reconPhase)
+module HsCore.Trafo.Reconstruct exposing (reconPhase)
 
 import Generated.Types exposing (..)
 import HsCore.Helpers as H exposing (..)
@@ -17,9 +17,6 @@ lookupBinder : Env -> Unique -> BinderThunk
 lookupBinder env u = case Dict.get (H.uniqueToInt u) env of
     Just x -> Found x
     Nothing -> NotFound
-
-reconModule : Module -> Module
-reconModule mod = { mod | modulePhases = List.map reconPhase mod.modulePhases }
 
 reconPhase : Phase -> Phase
 reconPhase mod = 

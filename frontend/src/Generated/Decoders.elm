@@ -1,5 +1,6 @@
 module Generated.Decoders exposing
     ( captureDecoder
+    , moduleMetaDecoder
     , uniqueDecoder
     , externalNameDecoder
     , binderIdDecoder
@@ -14,7 +15,6 @@ module Generated.Decoders exposing
     , tyLitDecoder
     , firedRuleDecoder
     , phaseDecoder
-    , moduleDecoder
     , exprDecoder
     , altDecoder
     , altConDecoder
@@ -39,6 +39,12 @@ captureDecoder =
     Json.Decode.Pipeline.required "captureDate" Json.Decode.int |>
     Json.Decode.Pipeline.required "captureGhcVersion" Json.Decode.string |>
     Json.Decode.Pipeline.required "captureModules" (Json.Decode.list (Json.Decode.map2 Tuple.pair (Json.Decode.index 0 Json.Decode.string) (Json.Decode.index 1 Json.Decode.int)))
+
+
+moduleMetaDecoder : Json.Decode.Decoder ModuleMeta
+moduleMetaDecoder =
+    Json.Decode.succeed ModuleMeta |>
+    Json.Decode.Pipeline.required "toplevels" (Json.Decode.dict Json.Decode.string)
 
 
 uniqueDecoder : Json.Decode.Decoder Unique
@@ -380,13 +386,6 @@ phaseDecoder =
     Json.Decode.Pipeline.required "phaseId" Json.Decode.int |>
     Json.Decode.Pipeline.required "phaseTopBindings" (Json.Decode.list topBindingDecoder) |>
     Json.Decode.Pipeline.required "phaseFiredRules" (Json.Decode.list firedRuleDecoder)
-
-
-moduleDecoder : Json.Decode.Decoder Module
-moduleDecoder =
-    Json.Decode.succeed Module |>
-    Json.Decode.Pipeline.required "moduleName" Json.Decode.string |>
-    Json.Decode.Pipeline.required "modulePhases" (Json.Decode.list phaseDecoder)
 
 
 exprDecoder : Json.Decode.Decoder Expr

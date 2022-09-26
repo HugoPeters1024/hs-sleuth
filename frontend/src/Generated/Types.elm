@@ -1,5 +1,6 @@
 module Generated.Types exposing
     ( Capture
+    , ModuleMeta
     , Unique(..)
     , ExternalName(..)
     , BinderId
@@ -14,7 +15,6 @@ module Generated.Types exposing
     , TyLit(..)
     , FiredRule
     , Phase
-    , Module
     , Expr(..)
     , Alt
     , AltCon(..)
@@ -27,6 +27,7 @@ module Generated.Types exposing
     , CoreStats
     )
 
+import Dict
 
 
 type alias Capture  =
@@ -34,6 +35,10 @@ type alias Capture  =
     , captureDate : Int
     , captureGhcVersion : String
     , captureModules : List (String , Int) }
+
+
+type alias ModuleMeta  =
+    { toplevels : Dict.Dict String String }
 
 
 type Unique 
@@ -160,10 +165,6 @@ type alias Phase  =
     , phaseId : Int
     , phaseTopBindings : List TopBinding
     , phaseFiredRules : List FiredRule }
-
-
-type alias Module  =
-    { moduleName : String, modulePhases : List Phase }
 
 
 type Expr 

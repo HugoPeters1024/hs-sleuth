@@ -17,7 +17,9 @@ import GHC.TypeLits (Symbol, KnownSymbol, symbolVal)
 import qualified Generics.SOP as SOP
 
 import qualified Data.Aeson as Aeson
+import Data.Text (Text)
 import qualified Data.Text as Text
+import Data.Map (Map)
 
 import qualified Language.Elm.Name as Name
 import qualified Language.Elm.Pretty as Pretty
@@ -128,3 +130,9 @@ instance (HasElmDecoder Aeson.Value a, HasElmDecoder Aeson.Value b, HasElmDecode
       , Expression.apps "Json.Decode.index" [Expression.Int 2, elmDecoder @Aeson.Value @c]
       ]
 
+instance HasElmType v => HasElmType (Map Text v) where
+  elmType = Type.apps "Dict.Dict" [elmType @Text, elmType @v]
+
+instance (HasElmDecoder Aeson.Value v) => HasElmDecoder Aeson.Value (Map Text v) where
+  elmDecoder = Expression.apps "Json.Decode.dict" [elmDecoder @Aeson.Value @v]
+    

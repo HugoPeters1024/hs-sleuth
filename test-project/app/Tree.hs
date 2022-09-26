@@ -7,7 +7,7 @@ data Tree a = Leaf a
             deriving Show
 
 {-# Rules
-   "mapTree mapTree"   forall f g.   mapTree f . mapTree g    = mapTree (f. g)   ;
+   "mapTree/mapTree"   forall f g.   mapTree f . mapTree g    = mapTree (f. g)   ;
 #-}
 
 mapTree :: (a -> b) -> Tree a -> Tree b

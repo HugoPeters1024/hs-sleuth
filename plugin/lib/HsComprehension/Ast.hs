@@ -1,8 +1,10 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module HsComprehension.Ast
     ( Capture (..)
+    , ModuleMeta (..)
     , ExternalName (..)
     , Binder (..)
     , IdInfo (..)
@@ -11,7 +13,6 @@ module HsComprehension.Ast
     , Type (..)
     , FiredRule (..)
     , Phase (..)
-    , Module (..)
     , Expr (..)
     , Alt (..)
     , AltCon (..)
@@ -28,6 +29,10 @@ module HsComprehension.Ast
     , Tick (..)
     , CoreStats (..)
     , TyLit (..)
+    , get_binderIdUniqueNum
+    , get_binderUniqueNum
+    , get_binderName
+    , getPhaseTopLevels
     ) where
 
 import GHC.Generics
@@ -39,6 +44,8 @@ import qualified Data.ByteString as BS
 import Codec.Serialise (Serialise)
 import Data.Hashable
 
+import Data.Map (Map)
+
 import GhcDump.Ast (Unique(..), IdDetails(..), TyCon(..), SrcSpan(..), LineCol(..), OccInfo(..), Tick(..), CoreStats(..), TyLit(..))
 
 data Capture = Capture
@@ -48,6 +55,10 @@ data Capture = Capture
     , captureModules :: [(Text, Int)]
     }
     deriving (Generic, Serialise, Show)
+
+data ModuleMeta = ModuleMeta
+  { toplevels :: Map Text Text
+  } deriving (Generic, Serialise, Show)
 
 data ExternalName = ExternalName
     { externalModuleName :: Text
@@ -63,6 +74,12 @@ data BinderId = BinderId
     , binderIdRenderedUnique :: Text
     , binderIdDeBruijn :: Int
     } deriving (Generic, Serialise, Show)
+
+get_uniqueNum :: Unique -> Int
+get_uniqueNum (Unique _ i) = i
+
+get_binderIdUniqueNum :: BinderId -> Int
+get_binderIdUniqueNum = get_uniqueNum . binderIdUnique
 
 instance Eq BinderId where
     lhs == rhs = binderIdUnique lhs == binderIdUnique rhs
@@ -88,6 +105,14 @@ data Binder = Binder
              }
 
     deriving (Generic, Serialise, Show)
+
+get_binderName :: Binder -> Text
+get_binderName (Binder {..}) = binderName
+get_binderName (TyBinder {..}) = binderName
+
+get_binderUniqueNum :: Binder -> Int
+get_binderUniqueNum (Binder {..}) = get_binderIdUniqueNum binderId
+get_binderUniqueNum (TyBinder {..}) = get_binderIdUniqueNum binderId
 
 data IdInfo = IdInfo
     { idiArity         :: !Int
@@ -148,11 +173,6 @@ data FiredRule = FiredRule
     , firedRulePhase :: Int
     } deriving (Generic, Serialise, Show)
 
-data Module = Module
-    { moduleName :: Text
-    , modulePhases :: [Phase]
-    } deriving (Generic, Serialise, Show)
-
 data Phase = Phase
     { phaseName :: Text
     , phaseId :: Int
@@ -203,3 +223,10 @@ data TopBinding
     = NonRecTopBinding TopBindingInfo
     | RecTopBinding [TopBindingInfo]
     deriving (Generic, Serialise, Show)
+
+getPhaseTopLevels :: Phase -> [TopBindingInfo]
+getPhaseTopLevels phase = concatMap go (phaseTopBindings phase)
+  where go :: TopBinding -> [TopBindingInfo]
+        go (NonRecTopBinding ti) = [ti]
+        go (RecTopBinding tis) = tis
+

@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RecordWildCards #-}
 module HsComprehension.Plugin where
 
 import Prelude as P
@@ -115,8 +116,6 @@ parseStdout inp = case Parsec.runParser stdoutParser () "stdout" inp of
   Left e -> error $ "Failed to parse rewrite rule output from stdout: " ++ show e
 
   
-
-
 data CaptureView = CaptureView
   { cv_project_root :: FilePath
   , cv_direct_path :: Maybe FilePath
@@ -238,6 +237,9 @@ coreDumpDir view pid = coreDumpBaseDir view `FP.combine` "coredump-" ++ pid
 coreDumpFile :: CaptureView -> String -> String -> Int -> FilePath
 coreDumpFile view pid mod phase_id = coreDumpDir view pid `FP.combine` mod ++ "_" ++ show phase_id ++ ".json"
 
+coreDumpMetaFile :: CaptureView -> String -> String -> FilePath
+coreDumpMetaFile view pid mod = coreDumpDir view pid `FP.combine` mod ++ "_meta.json"
+
 coreDumpArchive :: CaptureView -> String -> FilePath
 coreDumpArchive view slug = coreDumpBaseDir view `FP.combine` slug ++ ".zip"
 
@@ -270,9 +272,6 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
         (_, thief, capture) <- readIORef projectState
         in_phases <- readIORef ms_ref
         r <- readStdoutThief thief
-        putStrLn "||||||||||||||||||||||||||||||"
-        putStrLn r
-        putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
         let ruleFirings = parseStdout r
         putStrLn r
 
@@ -280,12 +279,22 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
               -> p {phaseFiredRules = filter
                                         ((== n) . firedRulePhase) ruleFirings}) [0..] (reverse in_phases)
 
+        let toplevels 
+              = M.fromList
+              $ map (\Ast.TopBindingInfo {..} -> (Cvt.showText (Ast.get_binderUniqueNum topBindingBinder), Ast.get_binderName topBindingBinder))
+              $ concatMap getPhaseTopLevels phases
+
+        let module_meta = ModuleMeta { toplevels = toplevels
+                                     }
+
+        writeToFile (coreDumpMetaFile defaultCaptureView slug modName) module_meta
+
         forM phases $ \phase -> do
           let fname = coreDumpFile defaultCaptureView slug modName (phaseId phase)
           writeToFile fname phase
 
-
         writeToFile (captureFile defaultCaptureView (T.unpack (captureName capture))) capture
+
     pure guts
 
 parsedPlugin :: [CommandLineOption] -> ModSummary -> HsParsedModule -> Hsc HsParsedModule

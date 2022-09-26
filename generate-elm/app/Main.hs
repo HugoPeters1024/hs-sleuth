@@ -24,6 +24,7 @@ elmDefsFor = (,) <$> elmDefinition @a <*> elmDecoderDefinition @Aeson.Value @a
 
 (elmDefs, elmDecoders) = unzip $ catMaybes 
     [ elmDefsFor @Capture
+    , elmDefsFor @ModuleMeta
     , elmDefsFor @Unique
     , elmDefsFor @ExternalName
     , elmDefsFor @BinderId
@@ -38,7 +39,6 @@ elmDefsFor = (,) <$> elmDefinition @a <*> elmDecoderDefinition @Aeson.Value @a
     , elmDefsFor @TyLit
     , elmDefsFor @FiredRule
     , elmDefsFor @Phase
-    , elmDefsFor @Module 
     , elmDefsFor @Expr 
     , elmDefsFor @Alt 
     , elmDefsFor @AltCon 

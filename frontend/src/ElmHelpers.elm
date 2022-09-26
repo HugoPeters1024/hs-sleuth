@@ -7,6 +7,16 @@ import Html exposing (text, Html)
 import Set.Any exposing (AnySet)
 
 
+maybeTraverse : List (Maybe a) -> Maybe (List a)
+maybeTraverse list = case list of
+  [] -> Just []
+  x::xs -> Maybe.map2 (::) x (maybeTraverse xs)
+
+resultTraverse : List (Result x a) -> Result x (List a)
+resultTraverse list = case list of
+  [] -> Ok []
+  x::xs -> Result.map2 (::) x (resultTraverse xs)
+
 
 popLast : List a -> Maybe (List a, a)
 popLast xs = 

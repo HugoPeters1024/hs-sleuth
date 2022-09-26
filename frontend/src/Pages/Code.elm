@@ -211,14 +211,16 @@ update msg tab = case msg of
         in ({tab | captureSlots = Dict.update slot (Maybe.map updateHideSet) tab.captureSlots}, Cmd.none)
     CodeMsgHideToplevelAllBut slot ti -> 
       let allVarIds =
-            getPhases tab
-            |> List.concatMap .phaseTopBindings
-            |> List.concatMap HsCore.Helpers.getTopLevelBinders
-            |> List.map HsCore.Helpers.topBindingInfoToInt
+            getCurrentCaptures tab
+            |> EH.mapMaybe (.module_metas >> Dict.get tab.currentModule)
+            |> Debug.log "ping"
+            |> List.map .toplevels
+            |> List.concatMap Dict.keys
+            |> EH.mapMaybe String.toInt
             |> Set.fromList
-
+            
           updateHideSet : CodeTabCapture -> CodeTabCapture
-          updateHideSet tabmod = {tabmod | toplevelHides = EH.toggleSet (topBindingInfoToInt ti) allVarIds}
+          updateHideSet tabmod = {tabmod | toplevelHides = Set.remove (topBindingInfoToInt ti) allVarIds}
       in ({tab | captureSlots = Dict.update slot (Maybe.map updateHideSet) tab.captureSlots}, Cmd.none)
 
     CodeMsgUnhideTransitively slot ti -> 

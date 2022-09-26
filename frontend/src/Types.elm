@@ -94,6 +94,7 @@ codeViewOptionsMapVarRenames f o = { o | varRenames = f o.varRenames }
 
 type alias CaptureView =
     { capture: Capture
+    , module_metas: Dict String ModuleMeta
     , files: Dict String Entry
     , filename: String
     }
@@ -166,7 +167,7 @@ overviewRemoveProblem tab = { tab | problem = Nothing }
 type OverviewMsg
     = OverviewMsgStageCapture CaptureView
     | OverviewMsgUnstageCapture Int
-    | OverviewMsgReadFile String Bytes
+    | OverviewMsgReadDump String Bytes
     | OverviewMsgDismissProblem Alert.Visibility
     | OverviewMsgFileDropper FileDropper.Msg
     | OverviewMsgStagedPopover Popover.State

@@ -21,6 +21,13 @@ deriving via CaptureElm instance Aeson.ToJSON Capture
 deriving via CaptureElm instance HasElmType Capture
 deriving via CaptureElm instance HasElmDecoder Aeson.Value Capture
 
+deriving instance SOP.Generic ModuleMeta
+deriving instance SOP.HasDatatypeInfo ModuleMeta
+type ModuleMetaElm = ElmType "Generated.TODO.ModuleMeta" ModuleMeta
+deriving via ModuleMetaElm instance Aeson.ToJSON ModuleMeta
+deriving via ModuleMetaElm instance HasElmType ModuleMeta
+deriving via ModuleMetaElm instance HasElmDecoder Aeson.Value ModuleMeta
+
 deriving instance SOP.Generic ExternalName
 deriving instance SOP.HasDatatypeInfo ExternalName
 type ExternalNameElm = ElmType "Generated.TODO.ExternalName" ExternalName
@@ -83,13 +90,6 @@ type PhaseElm = ElmType "Generated.TODO.Phase" Phase
 deriving via PhaseElm instance Aeson.ToJSON Phase
 deriving via PhaseElm instance HasElmType Phase
 deriving via PhaseElm instance HasElmDecoder Aeson.Value Phase
-
-deriving instance SOP.Generic Module
-deriving instance SOP.HasDatatypeInfo Module
-type ModuleElm = ElmType "Generated.TODO.Module" Module
-deriving via ModuleElm instance Aeson.ToJSON Module
-deriving via ModuleElm instance HasElmType Module
-deriving via ModuleElm instance HasElmDecoder Aeson.Value Module
 
 deriving instance SOP.Generic Expr
 deriving instance SOP.HasDatatypeInfo Expr

@@ -7,7 +7,8 @@ The frontend app is also hosted at http://core.hugopeters.me
 ## Requirements
 
 * GHC >= 8.4
-* zlib (`sudo apt install zlib1g-dev`)
+* zlib (apt: `zlib1g-dev`)
+* pygmentize (apt: `python3-pygments`)
 
 ## Using the plugin & Creating dumps
 
@@ -37,11 +38,11 @@ The project is currently not on hackage so you need to add this repo as a local 
 
 - :floppy_disk: Now whenever you build dump files are created in `dist-newstyle/coredump-MyCapture001/`
 
-- To create a zip archive you can run `cabal run hs-comprehension-zip -- MyCapture001`
+- To create a zip archive you can run `cabal run hs-comprehension-zip -- MyCapture001`.
 
 # Inspecting dumps
 
-- :female_detective: To inspect the dumps with the frontend got to http://core.hugopeters.me
+- :female_detective: To inspect the dumps with the frontend got to http://core.hugopeters.me. Note that dump files are exclusively read locally and are not send over the network.
 
 - :hammer: Alternatively you build the frontend yourself by running the `make_release.sh` script. This script requires a few dependencies.
     1. [Elm](https://guide.elm-lang.org/install/elm.html)
