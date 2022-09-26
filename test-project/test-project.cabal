@@ -28,6 +28,8 @@ executable hs-plugin-test
     other-modules:    Channable
                     , Factorial
                     , Quicksort
+                    , Peano
+                    , Tree
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

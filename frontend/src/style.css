@@ -10,14 +10,14 @@ a.no-style, a.no-style:hover, a.no-style:visited, a.no-style:focus, a.no-style:a
   cursor: pointer;
 }
 
-pre.dark { 
+.dark { 
     width: 100%;
     max-width: 100%;
     min-height: 1024px;
     color: #FFFFFF;
     background-color: #303444;
     padding: 1em;
-    font-size: 12pt; 
+    font-size: 11pt; 
     box-sizing: border-box;
     margin: 0;
     overflow: scroll;

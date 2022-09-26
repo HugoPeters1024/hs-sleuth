@@ -167,7 +167,7 @@ pprExpr env expr = case expr of
     ETick _ _ -> string "tick"
     EType t -> 
         taggedString "@" TagOperator
-        |> a (pprType env t)
+        |> a (pprTypeParens env t)
     ECoercion -> string "coercion"
     EMarkDiff e -> pprExpr env e
 

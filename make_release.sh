@@ -5,7 +5,7 @@ mkdir release
 
 echo "Building Elm Frontend"
 cd ./frontend/
-elm make --optimize src/Main.elm --output main.js
+elm make src/Main.elm --optimize --output main.js
 cd ../
 
 mv ./frontend/main.js release
@@ -14,5 +14,4 @@ uglifyjs release/main.js --compress 'pure_funcs="F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A
 cp ./frontend/src/index_html_for_elm.html release/index.html
 cp ./frontend/src/style.css release
 cp ./frontend/src/pygments.css release
-cp ./frontend/src/highlight.min.js release
 

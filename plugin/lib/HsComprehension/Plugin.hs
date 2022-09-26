@@ -39,6 +39,8 @@ import System.IO.Unsafe (unsafePerformIO)
 import GHC.IO.Handle
 import Data.IORef
 
+import System.Process as Proc
+
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Map (Map)
@@ -284,24 +286,28 @@ finalPass ms_ref (slug, modName) = CoreDoPluginPass "Finalize Snapshots" $ \guts
 
 
         writeToFile (captureFile defaultCaptureView (T.unpack (captureName capture))) capture
-
-
-
     pure guts
 
 parsedPlugin :: [CommandLineOption] -> ModSummary -> HsParsedModule -> Hsc HsParsedModule
-parsedPlugin options modsum parsed = do
+parsedPlugin options modsum parsed = liftIO $ do
+  pygmentize_exists <- isJust <$> FP.findExecutable "pygmentize"
+  when (not pygmentize_exists) $ do
+    error "pygmentize is not installed"
+
   let slug = parseCmdLineOptions options
-  liftIO $ FP.createDirectoryIfMissing True (coreDumpDir defaultCaptureView slug)
+  FP.createDirectoryIfMissing True (coreDumpDir defaultCaptureView slug)
   case ml_hs_file (ms_location modsum) of
     Just loc -> do
       let src_loc = cv_project_root defaultCaptureView `FP.combine` loc
-      exists <- liftIO $ FP.doesFileExist src_loc
+      exists <- FP.doesFileExist src_loc
       when exists $ do
         let mod_name = Plugins.moduleNameString (Plugins.moduleName (ms_mod modsum))
         let dst_loc = coreDumpDir defaultCaptureView slug `FP.combine` (mod_name ++ ".hs")
-        liftIO $ putStrLn $ "copying " ++ src_loc ++ " to " ++ dst_loc
-        liftIO $ FP.copyFile src_loc dst_loc
+        let dst_loc_html = coreDumpDir defaultCaptureView slug `FP.combine` (mod_name ++ ".html")
+        putStrLn $ "copying " ++ src_loc ++ " to " ++ dst_loc
+        FP.copyFile src_loc dst_loc
+        putStrLn $ "pygmentizing..."
+        Proc.callCommand $ "pygmentize -o " ++ dst_loc_html ++ " " ++ dst_loc
     Nothing -> pure ()
   pure parsed
 

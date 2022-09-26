@@ -85,5 +85,5 @@ renderHtml tabid slotid content =
         { codeTabId = tabid
         , codeTabSlotId = slotid
         }
-  in Pretty.Renderer.pretty 80 (htmlRenderer env) content
+  in Pretty.Renderer.pretty 120 (htmlRenderer env) content
 

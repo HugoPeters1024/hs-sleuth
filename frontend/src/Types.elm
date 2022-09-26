@@ -1,6 +1,6 @@
 module Types exposing (..)
 
-import Http
+import Html exposing (Html)
 import Loading exposing (Loading(..))
 
 import Generated.Types exposing (..)
@@ -44,7 +44,7 @@ toggleSrc t = case t of
 
 type alias CodeTabCapture =
     { phase : Result String Phase
-    , src : Result String String
+    , src : Result String (Html Msg)
     , capture_view : CaptureView
     , phaseSlider : Slider.Model
     , slot : Int

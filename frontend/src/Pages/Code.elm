@@ -3,8 +3,11 @@ module Pages.Code exposing (..)
 import ElmHelpers as EH
 
 import Http
+import Json.Encode
 import Html exposing (..)
 import Html.Lazy
+import Html.Parser
+import Html.Parser.Util
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import HtmlHelpers exposing (..)
@@ -25,6 +28,7 @@ import Loading exposing (Loading(..))
 
 import Set exposing (Set)
 import Set.Any exposing (AnySet)
+import Ports
 
 import UI.Slider as Slider
 
@@ -144,8 +148,12 @@ getPhaseFromView cv modname phase_id =
       |> Result.andThen (Json.Decode.decodeString Generated.Decoders.phaseDecoder >> Result.mapError (\_ -> "could not parse " ++ filename))
       |> Result.map Recon.reconPhase
 
-getSrcFromView : CaptureView -> String -> Result String String
-getSrcFromView cv modname = readFileFromView cv (modname ++ ".hs")
+getSrcFromView : CaptureView -> String -> Result String (Html msg)
+getSrcFromView cv modname = 
+  readFileFromView cv (modname ++ ".html")
+  |> Result.andThen (\txt -> Html.Parser.run txt |> Result.mapError (\_ -> "Cannot parse the html src"))
+  |> Result.map Html.Parser.Util.toVirtualDom
+  |> Result.map (span [])
 
 update : CodeTabMsg -> CodeTab -> (CodeTab, Cmd Msg)
 update msg tab = case msg of
@@ -171,6 +179,7 @@ update msg tab = case msg of
     CodeMsgToggleSrc slot -> 
         let setSlider : CodeTabCapture -> CodeTabCapture
             setSlider tabmod = { tabmod | srcToggle = toggleSrc tabmod.srcToggle }
+
         in ({ tab | captureSlots = Dict.update slot (Maybe.map setSlider) tab.captureSlots }, Cmd.none)
     CodeMsgToggleHideTypes -> ({tab | codeViewOptions = codeViewOptionsToggleHideTypes tab.codeViewOptions}, Cmd.none)
     CodeMsgToggleHideModules -> ({tab | codeViewOptions = codeViewOptionsToggleHideModules tab.codeViewOptions}, Cmd.none)
@@ -353,11 +362,11 @@ viewCode tab modtab = div []
                                     , Html.Lazy.lazy6 renderPhase tab.codeViewOptions tab.currentModule modtab.toplevelHides tab.id modtab.slot phase
                                     ]
                               
-                       Src -> code [class "language-haskell"]
+                       Src -> code []
                                    [ a [class "src-toggle", onClick (mkCodeMsg tab.id (CodeMsgToggleSrc modtab.slot))] [text "view core\n\n"]
                                    , case modtab.src of
                                         Err problem -> Alert.simpleDanger [] [text problem]
-                                        Ok src -> text src
+                                        Ok src -> src
                                    ]
                    ]
                  ]

@@ -65,8 +65,7 @@ subscriptions model =
     Sub.batch 
         (
             (Sub.map MsgCtxMenu (ContextMenu.subscriptions model.ctxMenu))
-            ::
-            (List.map Code.subscriptions (Dict.values model.codeTabs))
+            :: (List.map Code.subscriptions (Dict.values model.codeTabs))
         )
 
 
