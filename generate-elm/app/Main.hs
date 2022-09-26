@@ -23,8 +23,7 @@ elmDefsFor :: forall a. (HasElmType a, HasElmDecoder Aeson.Value a) => Maybe (De
 elmDefsFor = (,) <$> elmDefinition @a <*> elmDecoderDefinition @Aeson.Value @a
 
 (elmDefs, elmDecoders) = unzip $ catMaybes 
-    [ elmDefsFor @ServerSettings
-    , elmDefsFor @Capture
+    [ elmDefsFor @Capture
     , elmDefsFor @Unique
     , elmDefsFor @ExternalName
     , elmDefsFor @BinderId
