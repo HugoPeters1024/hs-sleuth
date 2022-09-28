@@ -7,23 +7,16 @@ module HsComprehension.Uniqify
 -- Adapted from: https://gitlab.haskell.org/ghc/ghc/-/blob/aa3e0154f04a1d3a0c570f77d8f877e0f1222c87/compiler/GHC/Core/FreshenUniques.hs
 -- Changes mostly to backport GHC 8
 
-#if MIN_VERSION_ghc(9,2,0)
+#if MIN_VERSION_ghc(9,0,0)
 import GHC.Prelude
 #else
 import GhcPrelude
 #endif
 
 #if MIN_VERSION_ghc(9,0,0)
-import GHC.Core
-import GHC.Core.Subst
-
-import GHC.Types.Id
-import GHC.Types.Var.Set
-import GHC.Types.Var.Env
-
-import GHC.Utils.Outputable
+import GHC.Plugins as Plugins
 #else
-import GhcPlugins
+import GhcPlugins as Plugins
 #endif
 
 import Control.Monad

@@ -66,5 +66,6 @@ panel data =
         template = String.join " " (List.map renderColumn frs)
     in div [ style "display" "grid"
            , style "width" "100%"
+           , style "column-gap" "1rem"
            , style "grid-template-columns" template
            ] els 

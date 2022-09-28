@@ -119,6 +119,7 @@ makeCodeTab model cvs =
             , hideDisambiguation = True
             , hideRecursiveGroups = True
             , hideUndemanded = True
+            , desugarLeadingLambdas = True
             , varRenames = Dict.empty
           }
           , selectedTopLevels = []
@@ -170,7 +171,7 @@ update msg tab = case msg of
         in ({ tab | currentModule = modname, captureSlots = Dict.map (\_ -> resetSlider >> setPhase >> setSrc) tab.captureSlots }, Cmd.none)
     CodeMsgSetPhase slot phase_id -> 
         let setPhase : CodeTabCapture -> CodeTabCapture
-            setPhase x = {x | phase = getPhaseFromView x.capture_view tab.currentModule phase_id }
+            setPhase x = {x | phase = getPhaseFromView x.capture_view tab.currentModule phase_id, phaseSlider = Slider.init phase_id }
         in
         ( { tab | captureSlots = Dict.update slot (Maybe.map setPhase) tab.captureSlots }
         , Cmd.none
@@ -186,6 +187,7 @@ update msg tab = case msg of
     CodeMsgToggleHideDisambiguation -> ({tab | codeViewOptions = codeViewOptionsToggleHideDisambiguation tab.codeViewOptions}, Cmd.none)
     CodeMsgToggleHideRecursiveGroups -> ({tab | codeViewOptions = codeViewOptionsToggleHideRecursiveGroups tab.codeViewOptions}, Cmd.none)
     CodeMsgToggleHideUndemanded -> ({tab | codeViewOptions = codeViewOptionsToggleHideUndemanded tab.codeViewOptions}, Cmd.none)
+    CodeMsgToggleDesugarLeadingLambdas -> ({tab | codeViewOptions = codeViewOptionsToggleDesugarLeadingLambdas tab.codeViewOptions}, Cmd.none)
     CodeMsgModuleDropdown state -> ({tab | moduleDropdown = state}, Cmd.none)
     CodeMsgSlider slot slidermsg ->
         let updateCaptureTab : CodeTabCapture -> CodeTabCapture
@@ -213,7 +215,6 @@ update msg tab = case msg of
       let allVarIds =
             getCurrentCaptures tab
             |> EH.mapMaybe (.module_metas >> Dict.get tab.currentModule)
-            |> Debug.log "ping"
             |> List.map .toplevels
             |> List.concatMap Dict.keys
             |> EH.mapMaybe String.toInt
@@ -257,12 +258,13 @@ update msg tab = case msg of
 
 
 
+
 view : Model -> CodeTab -> Html Msg
 view model = Html.Lazy.lazy <| \tab ->
     div [] [ viewHeader model tab
            , panel
                 (
-                    (Pixels 500, Html.map (mkCodeMsg tab.id) (viewInfo model tab))
+                    (Pixels 300, Html.map (mkCodeMsg tab.id) (viewInfo model tab))
                     ::
                     (foreach (Dict.values tab.captureSlots) <| \mod ->
                         (Fraction 4, viewCode tab mod)
@@ -279,11 +281,11 @@ selectedTermId tab = Maybe.map varToInt tab.selectedVar
 viewHeader : Model -> CodeTab -> Html Msg
 viewHeader _ tab = 
     div []
-        [ h3 []  [text tab.currentModule]
+        [ p [] []
         , Dropdown.dropdown tab.moduleDropdown
             { options = []
             , toggleMsg = \s -> mkCodeMsg tab.id (CodeMsgModuleDropdown s)
-            , toggleButton = Dropdown.toggle [Button.primary] [text "Module"]
+            , toggleButton = Dropdown.toggle [Button.primary] [text tab.currentModule]
             , items = List.map 
                 (\modname -> Dropdown.buttonItem [onClick (mkCodeMsg tab.id (CodeMsgSetModule modname))] [text modname]) 
                 (getMergedModuleNames tab)
@@ -388,6 +390,7 @@ viewInfo model tab =
               , checkbox tab.codeViewOptions.hideDisambiguation CodeMsgToggleHideDisambiguation "Hide Uniques"
               , checkbox tab.codeViewOptions.hideRecursiveGroups   CodeMsgToggleHideRecursiveGroups "Hide Recursive Grouping"
               , checkbox tab.codeViewOptions.hideUndemanded CodeMsgToggleHideUndemanded "Render Undemanded Variables as _"
+              , checkbox tab.codeViewOptions.desugarLeadingLambdas CodeMsgToggleDesugarLeadingLambdas "Desugar Leading Lambdas"
               , hr [] []
               , h4 [] [text "Selected Variable"]
               , Maybe.withDefault (h5 [] [text "No term selected"]) (Maybe.map (viewVarInfo tab) tab.selectedVar)

@@ -23,8 +23,8 @@ import Ports
 
 import Bootstrap.CDN as CDN
 import Bootstrap.Alert as Alert
+import Bootstrap.Tab as Tab
 
-import UI.Tabs as Tabs
 import ContextMenu
 
 import HsCore.Helpers exposing (..)
@@ -41,7 +41,7 @@ init : () -> (Model, Cmd Msg)
 init _ = 
     let (ctxMenu, ctxCmd) = ContextMenu.init
     in (
-           { pageTab = Tabs.init
+           { pageTab = Tab.initialState
            , timezone = Time.utc
            , overviewTab = Overview.init
            , idGen = 0
@@ -58,7 +58,7 @@ addCodeTab : CodeTab -> Model -> Model
 addCodeTab tab model = { model | codeTabs = Dict.insert tab.id tab model.codeTabs }
 
 setCodeTabOpen : CodeTab -> Model -> Model
-setCodeTabOpen tab model = { model | pageTab = Tabs.setTab tab.name model.pageTab }
+setCodeTabOpen tab model = { model | pageTab = Tab.customInitialState tab.name }
 
 subscriptions : Model -> Sub Msg
 subscriptions model = 
@@ -72,9 +72,10 @@ subscriptions model =
 viewCodeTabs model =
     let 
         renderTab tab = 
-            Tabs.item
-                { name = tab.name
-                , content = Code.view model tab
+            Tab.item
+                { id = tab.name
+                , link = Tab.link [] [text tab.name]
+                , pane = Tab.pane [] [Code.view model tab]
                 }
     in List.map renderTab (Dict.values model.codeTabs)
 
@@ -141,17 +142,18 @@ view m =
                     getCtxMenuItems
                     m.ctxMenu
                 ]
-             , Tabs.config MsgPageTab
-                 |> Tabs.items
+             , Tab.config MsgPageTab
+                 |> Tab.items
                      (
-                     [ Tabs.item
-                         { name = "Overview"
-                         , content = Overview.view m
+                     [ Tab.item
+                         { id = "Overview"
+                         , link = Tab.link [] [text "Overview"]
+                         , pane = Tab.pane [] [Overview.view m]
                          }
                      ]
                      ++ viewCodeTabs m
                      )
-                 |> Tabs.view m.pageTab
+                 |> Tab.view m.pageTab
              ] 
     }
 
@@ -163,7 +165,7 @@ updateDictWithEffect f dict key = Dict.get key dict
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
-    MsgPageTab tabmsg -> ({model | pageTab = Tabs.update tabmsg model.pageTab}, Cmd.none)
+    MsgPageTab pageTab -> ({model | pageTab = pageTab}, Cmd.none)
     MsgAdjustTimeZone zone -> ({model | timezone = zone}, Cmd.none)
     MsgCodeMsg tid codemsg -> case updateDictWithEffect (Code.update codemsg) model.codeTabs tid of
         Just (ntabs, cmd) ->({model | codeTabs = ntabs}, cmd)

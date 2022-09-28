@@ -1,5 +1,4 @@
 packages: .
         , ../ghc-dump/ghc-dump-core
         , ../ghc-dump/ghc-dump-util
-        , ../cborg/cborg
 allow-newer: all

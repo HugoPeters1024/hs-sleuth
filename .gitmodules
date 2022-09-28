@@ -1,6 +1,3 @@
 [submodule "ghc-dump"]
 	path = ghc-dump
 	url = https://github.com/HugoPeters1024/ghc-dump
-[submodule "cborg"]
-	path = cborg
-	url = https://github.com/well-typed/cborg.git

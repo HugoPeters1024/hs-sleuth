@@ -42,7 +42,6 @@ library
                     , bytestring
                     , filepath
                     , directory
-                    , serialise
                     , zstd
                     , containers
                     , mtl

@@ -8,6 +8,7 @@ data Tree a = Leaf a
 
 {-# Rules
    "mapTree/mapTree"   forall f g.   mapTree f . mapTree g    = mapTree (f. g)   ;
+   "mapTree/id"                      mapTree id               = id               ;
 #-}
 
 mapTree :: (a -> b) -> Tree a -> Tree b

@@ -10,7 +10,10 @@ import Set exposing (Set)
 exprVarOccs : Expr -> Set Int
 exprVarOccs expr = case expr of
   EVar v -> Set.singleton (binderIdToInt v)
-  EVarGlobal _ -> Set.empty
+  EVarGlobal (ExternalName e) -> case e.localBinder of
+    Found var -> Set.singleton (binderToInt var)
+    _         -> Set.empty
+  EVarGlobal ForeignCall -> Set.empty
   ELit _ -> Set.empty
   EApp f a -> Set.union (exprVarOccs f) (exprVarOccs a)
   ETyLam b e -> Set.insert (binderToInt b) (exprVarOccs e)

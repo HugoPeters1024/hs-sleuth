@@ -103,7 +103,7 @@ pprTopBindingInfo env tb = combine
 
 pprBinding_ : CodeViewOptions -> (Var, Expr) -> PP
 pprBinding_ env (var, expr) = 
-    let (fexpr, bs) = leadingLambdas expr
+    let (fexpr, bs) = if env.desugarLeadingLambdas then leadingLambdas expr else (expr, [])
     in nest 2 <| combine
         [ words (List.map (pprVar env) (var :: List.map VarBinder bs)) 
         , string " = "
@@ -126,12 +126,15 @@ pprExprParens env expr = if exprIsAtom expr then pprExpr env expr else parens (p
 pprExpr : CodeViewOptions -> Expr -> PP
 pprExpr env expr = case expr of
     EVar varid -> pprBinderThunk env varid.binderIdThunk
-    EVarGlobal ename -> pprVar env (VarExternal ename)
+    EVarGlobal (ExternalName e) -> case e.localBinder of
+      Found binder -> pprVar env (VarBinder binder)
+      _            -> pprVar env (VarExternal (ExternalName e))
+    EVarGlobal ForeignCall -> pprVar env (VarExternal ForeignCall)
     ELit lit -> pprLit lit
     EApp f a -> if exprIsAtom a then combine [pprExpr env f, space, pprExpr env a] else hang 2 (combine [pprExpr env f, line, pprExprParens env a])
     ETyLam b e -> pprExpr env (ELam b e)
     ELam b e -> 
-        let (fe, bs) = leadingLambdas e
+        let (fe, bs) = if env.desugarLeadingLambdas then leadingLambdas e else (e, [])
         in combine
             [ string "\\"
             , join space (List.map (pprBinder env) (b::bs))

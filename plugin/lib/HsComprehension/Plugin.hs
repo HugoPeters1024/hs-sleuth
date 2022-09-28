@@ -28,9 +28,7 @@ import HsComprehension.ElmDeriving
 import Control.Monad.IO.Class
 import Control.Monad
 import qualified Data.ByteString.Lazy as BSL
-import Codec.Serialise (Serialise)
 
-import qualified Codec.Serialise as Ser
 import qualified Codec.Compression.Zstd.Lazy as Zstd
 
 import System.FilePath.Posix as FP
@@ -62,6 +60,7 @@ import qualified GhcDump.Convert
 import Data.Time
 import Data.Time.Clock
 import Data.Time.Clock.POSIX
+--import GHC.Tc.Types (IfM)
 
 
 type StdThief = (FilePath, Handle)
@@ -166,6 +165,7 @@ plugin = defaultPlugin
   , dynflagsPlugin = modifyDynFlags
 #endif
   , parsedResultAction = parsedPlugin
+--  , interfaceLoadAction = interfacePlugin
   }
 
 #if MIN_VERSION_ghc(9,2,0)
@@ -250,10 +250,6 @@ writeToFile :: (ToJSON a) => FilePath -> a -> IO ()
 writeToFile fname = do
     BSL.writeFile fname . encode
 
-readFromFile :: Serialise a => FilePath -> IO a
-readFromFile fname = do
-    Ser.deserialise . Zstd.decompress <$> BSL.readFile fname
-
 dumpPass :: IORef [Ast.Phase] -> Int -> String -> CoreToDo
 dumpPass ms_ref n in_phase = CoreDoPluginPass "Core Snapshot" $ \in_guts -> do
     let guts = in_guts { mg_binds = Uniqify.freshenUniques (mg_binds in_guts) }
@@ -320,3 +316,7 @@ parsedPlugin options modsum parsed = liftIO $ do
     Nothing -> pure ()
   pure parsed
 
+--interfacePlugin :: [CommandLineOption] -> ModIface -> IfM lcl ModIface
+--interfacePlugin _ mod = do
+--  liftIO $  print (map (showSDocUnsafe . ppr) (mi_rules mod))
+--  pure mod

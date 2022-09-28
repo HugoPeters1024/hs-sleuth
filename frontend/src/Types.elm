@@ -5,9 +5,9 @@ import Loading exposing (Loading(..))
 
 import Generated.Types exposing (..)
 
-import UI.Tabs as Tabs
 import UI.Slider as Slider
 import UI.FileDropper as FileDropper
+import Bootstrap.Tab as Tab
 import Time
 import Dict exposing (Dict)
 import Set exposing (Set)
@@ -82,6 +82,7 @@ type alias CodeViewOptions =
   , hideDisambiguation : Bool
   , hideRecursiveGroups : Bool 
   , hideUndemanded : Bool
+  , desugarLeadingLambdas : Bool
   , varRenames : Dict Int String
   }
 
@@ -90,6 +91,7 @@ codeViewOptionsToggleHideModules o = { o | hideModules = not o.hideModules }
 codeViewOptionsToggleHideDisambiguation o = { o | hideDisambiguation = not o.hideDisambiguation }
 codeViewOptionsToggleHideRecursiveGroups o = { o | hideRecursiveGroups = not o.hideRecursiveGroups }
 codeViewOptionsToggleHideUndemanded o = { o | hideUndemanded = not o.hideUndemanded }
+codeViewOptionsToggleDesugarLeadingLambdas o = { o | desugarLeadingLambdas = not o.desugarLeadingLambdas }
 codeViewOptionsMapVarRenames f o = { o | varRenames = f o.varRenames }
 
 type alias CaptureView =
@@ -122,6 +124,7 @@ type CodeTabMsg
     | CodeMsgToggleHideDisambiguation
     | CodeMsgToggleHideRecursiveGroups
     | CodeMsgToggleHideUndemanded
+    | CodeMsgToggleDesugarLeadingLambdas
     | CodeMsgModuleDropdown Dropdown.State
     | CodeMsgSlider SlotId Slider.Msg
     | CodeMsgRenameModalOpen Var
@@ -140,7 +143,7 @@ type CtxMenu =
     CtxCodeVar TabId SlotId Var
 
 type alias Model = 
-    { pageTab : Tabs.Model
+    { pageTab : Tab.State
     , timezone : Time.Zone
     , codeTabs : Dict TabId CodeTab
     , overviewTab : OverviewTab
@@ -175,7 +178,7 @@ type OverviewMsg
 
 type Msg 
     = MsgCodeMsg TabId CodeTabMsg
-    | MsgPageTab Tabs.Msg
+    | MsgPageTab Tab.State
     | MsgOverViewTab OverviewMsg
     | MsgOpenCodeTab
     | MsgAdjustTimeZone Time.Zone

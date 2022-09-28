@@ -143,7 +143,8 @@ view m =
             , Table.td [] [text cv.capture.captureName]
             ]
     in div []
-           [ h1 [] [text "Overview"]
+           [ p [] []
+           , h1 [] [text "Overview"]
            , p []
               [ text "This application can be used to explore haskell core snapshots made using the HsComprehension "
               , a [href "https://github.com/HugoPeters1024/hs-comprehension", target "_blank"] [text "plugin."]
@@ -176,10 +177,7 @@ view m =
                    ]
                , tbody = Table.tbody [] (List.map mkCaptureRow m.overviewTab.captures)
                }
-           , hr [] []
-
-
-           , h2 [] 
+           , h2 [style "padding-top" "3rem"] 
               [ text "Staged "
               , helpPopover m.overviewTab.stagedPopover (lift << OverviewMsgStagedPopover) "Staging area" "Captures referenced in this list will be opened side by side"
               ]
@@ -191,7 +189,7 @@ view m =
                   ]
               , tbody = Table.tbody [] (List.map mkStagedRow (EH.enumerate m.overviewTab.stagedProjects))
               }
-           , hr [] []
+           , p [] []
            , Button.button 
                [ Button.primary
                , Button.disabled (List.isEmpty m.overviewTab.stagedProjects)
