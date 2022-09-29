@@ -3,19 +3,20 @@
 module InspectionTests where
 
 import Test.Inspection
-import qualified Text
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
+import Data.ByteString
 
 import Tree
+--addNothing :: Tree Int -> Tree Int
+--addNothing = mapTree (+0) . mapTree id
 
-addNothing :: Tree Int -> Tree Int
-addNothing = mapTree (+0) . mapTree identity
+--addNothing2 :: Tree Int -> Tree Int
+--addNothing2 = fmap (+0) . fmap id
 
-identity = id
+countChars :: ByteString -> Int
+countChars = T.length . T.toUpper . TE.decodeUtf8
 
-countChars = Text.countChars
+inspect $ 'countChars `hasNoType` ''T.Text
 
-slice = Text.slice
-
-inspect $ mkObligation 'countChars NoAllocation
-inspect $ mkObligation 'slice      NoAllocation
 

@@ -35,6 +35,12 @@ zip lhs rhs = case (lhs, rhs) of
     (x::xs, y::ys) -> (x,y) :: zip xs ys
     _              -> []
 
+dropWhile : (a -> Bool) -> List a -> List a
+dropWhile pred list = case list of
+  x::xs -> if pred x then dropWhile pred xs else list
+  []    -> []
+
+
 range : Int -> List Int
 range = 
     let go : Int -> List Int

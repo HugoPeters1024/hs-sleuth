@@ -7,7 +7,7 @@ import Dict exposing (Dict)
 import Set exposing (Set)
 import ElmHelpers as EH
 
-import Ppr exposing (..)
+import PprGHC exposing (..)
 import Html exposing (..)
 import Html.Lazy
 import Html.Attributes exposing (..)

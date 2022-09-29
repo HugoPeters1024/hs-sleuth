@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
 module HsComprehension.Plugin where
 
 import Prelude as P
@@ -60,8 +61,6 @@ import qualified GhcDump.Convert
 import Data.Time
 import Data.Time.Clock
 import Data.Time.Clock.POSIX
---import GHC.Tc.Types (IfM)
-
 
 type StdThief = (FilePath, Handle)
 
@@ -165,7 +164,6 @@ plugin = defaultPlugin
   , dynflagsPlugin = modifyDynFlags
 #endif
   , parsedResultAction = parsedPlugin
---  , interfaceLoadAction = interfacePlugin
   }
 
 #if MIN_VERSION_ghc(9,2,0)
@@ -316,7 +314,3 @@ parsedPlugin options modsum parsed = liftIO $ do
     Nothing -> pure ()
   pure parsed
 
---interfacePlugin :: [CommandLineOption] -> ModIface -> IfM lcl ModIface
---interfacePlugin _ mod = do
---  liftIO $  print (map (showSDocUnsafe . ppr) (mi_rules mod))
---  pure mod

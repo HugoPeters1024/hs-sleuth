@@ -8,4 +8,4 @@ triangular 0 = 0
 triangular n = n + triangular (n-1)
 
 main :: IO ()
-main = print $ triangular 1000000
+main = print $ triangular 10000000

@@ -37,11 +37,10 @@ executable hs-plugin-test
     -- other-extensions:
     build-depends:    base
                     , hs-comprehension-plugin
-                    , text
+                    , text == 1.2.3.2
                     , bytestring
                     , stream-fusion
-                    , alfred-margaret
                     , inspection-testing
     hs-source-dirs:   app
     default-language: Haskell2010
-    ghc-options: -O1 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:ExampleGhc9.2.2
+    ghc-options: -O1 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:Baseline -ddump-rule-firings

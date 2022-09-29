@@ -21,7 +21,7 @@ import HsCore.Trafo.VarOccs exposing (exprVarOccs)
 import HsCore.Trafo.Diff as Diff
 import HsCore.Trafo.Reconstruct as Recon
 
-import Ppr
+import PprGHC as Ppr
 import PprRender as Ppr
 
 import Loading exposing (Loading(..))
@@ -337,9 +337,9 @@ renderPhase : CodeViewOptions -> ModuleName -> Set Int -> Int -> Int -> Phase ->
 renderPhase cv modname toplevelHides tabid panelid phase = 
   phase
   |> hideToplevels toplevelHides
-  |> (if cv.hideTypes then eraseTypesPhase else identity)
-  |> (if cv.hideRecursiveGroups then \p -> {p | phaseTopBindings = removeRecursiveGroups p.phaseTopBindings} else identity)
-  |> Ppr.pprPhase cv modname
+--  |> (if cv.hideTypes then eraseTypesPhase else identity)
+--  |> (if cv.hideRecursiveGroups then \p -> {p | phaseTopBindings = removeRecursiveGroups p.phaseTopBindings} else identity)
+  |> Ppr.pprPhase Ppr.default_env modname
   |> Ppr.renderHtml tabid panelid
 
 viewCode : CodeTab -> CodeTabCapture -> Html Msg

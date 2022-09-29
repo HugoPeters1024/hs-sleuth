@@ -34,7 +34,7 @@ library
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base
+    build-depends:    base <= 4.16.3
                     , ghc
                     , ghc-prim
                     , ghc-dump-core
@@ -62,7 +62,7 @@ library
     default-language: Haskell2010
 
 executable hs-comprehension-zip
-  build-depends:      base
+  build-depends:      base <= 4.16.3
                     , hs-comprehension-plugin
                     , zip-archive
                     , bytestring
