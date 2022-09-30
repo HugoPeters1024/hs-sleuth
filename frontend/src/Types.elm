@@ -112,6 +112,7 @@ type alias CodeTab =
     , selectedTopLevels : List TopBindingInfo
     , renameModal : CodeTabRenameModal
     , varHighlights : Set Int
+    , varHover : Maybe Var
     }
 
 type CodeTabMsg
@@ -138,6 +139,8 @@ type CodeTabMsg
     | CodeMsgUnhideAll
     | CodeMsgHighlightVar Var
     | CodeMsgRemoveAllHightlights
+    | CodeMsgHoverVar Var
+    | CodeMsgDehoverVar
 
 type CtxMenu =
     CtxCodeVar TabId SlotId Var

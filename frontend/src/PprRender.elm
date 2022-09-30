@@ -7,7 +7,7 @@ import Dict exposing (Dict)
 import Set exposing (Set)
 import ElmHelpers as EH
 
-import PprGHC exposing (..)
+import Ppr exposing (..)
 import Html exposing (..)
 import Html.Lazy
 import Html.Attributes exposing (..)
@@ -41,7 +41,11 @@ renderVar env content var =
               Just ([], n) -> ("", n)
               Just (qual, n) -> ((String.join "." qual) ++ ".", n)
               _ -> ("", "")
-    in a [class "no-style", onClick (MsgCodeMsg env.codeTabId (CodeMsgSelectVar var))]
+    in a [ class "no-style"
+         , onClick (MsgCodeMsg env.codeTabId (CodeMsgSelectVar var))
+         , onMouseEnter (MsgCodeMsg env.codeTabId (CodeMsgHoverVar var))
+         , onMouseLeave (MsgCodeMsg env.codeTabId CodeMsgDehoverVar)
+         ]
          [span 
             [ctxMenu, class className, class (varHighlightClass var), title (typeToString (varType var))] 
             [span [class "nc"] [text prefix], text base_name]]
@@ -70,14 +74,15 @@ htmlRenderer env =
     , outer = span []
     }
 
-dyn_css : Set Int -> Maybe Var -> Html msg
-dyn_css var_highlights selectedVar = 
+dyn_css : Set Int -> Maybe Var -> Maybe Var -> Html msg
+dyn_css var_highlights selectedVar hoverVar = 
   let highlight_selected var = Css.Global.class (varHighlightClass var) [Css.backgroundColor (Css.rgb 53 100 30)]
+      highlight_hover var = Css.Global.class (varHighlightClass var) [Css.backgroundColor (Css.rgb 94 129 172)]
       highlights = 
         var_highlights
         |> Set.toList
         |> List.map (\i -> Css.Global.class ("var" ++ String.fromInt i) [Css.backgroundColor (Css.rgb 181 167 18)])
-  in Html.Styled.toUnstyled <| Css.Global.global (highlights ++ (EH.mapMaybe identity [Maybe.map highlight_selected selectedVar]))
+  in Html.Styled.toUnstyled <| Css.Global.global (highlights ++ (EH.mapMaybe identity [Maybe.map highlight_selected selectedVar, Maybe.map highlight_hover hoverVar]))
 
 renderHtml : TabId -> SlotId -> Pretty.Doc Tag -> Html Msg
 renderHtml tabid slotid content = 

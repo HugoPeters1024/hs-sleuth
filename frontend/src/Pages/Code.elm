@@ -21,7 +21,7 @@ import HsCore.Trafo.VarOccs exposing (exprVarOccs)
 import HsCore.Trafo.Diff as Diff
 import HsCore.Trafo.Reconstruct as Recon
 
-import PprGHC as Ppr
+import Ppr as Ppr
 import PprRender as Ppr
 
 import Loading exposing (Loading(..))
@@ -128,6 +128,7 @@ makeCodeTab model cvs =
               , stagingText = ""
               , varId = -1
               }
+          , varHover = Nothing
           }
     in
     ( { model | idGen = model.idGen + 1 }
@@ -254,6 +255,9 @@ update msg tab = case msg of
       in ({tab | captureSlots = Dict.map (\_ -> updateHideSet) tab.captureSlots}, Cmd.none)
     CodeMsgHighlightVar var -> ({tab | varHighlights = EH.toggleSet (HsCore.Helpers.varToInt var) tab.varHighlights}, Cmd.none)
     CodeMsgRemoveAllHightlights -> ({tab | varHighlights = Set.empty}, Cmd.none)
+    CodeMsgHoverVar var -> ({ tab | varHover = Just var}, Cmd.none)
+    CodeMsgDehoverVar -> ({tab | varHover = Nothing}, Cmd.none)
+
 
 
 
@@ -337,9 +341,9 @@ renderPhase : CodeViewOptions -> ModuleName -> Set Int -> Int -> Int -> Phase ->
 renderPhase cv modname toplevelHides tabid panelid phase = 
   phase
   |> hideToplevels toplevelHides
---  |> (if cv.hideTypes then eraseTypesPhase else identity)
---  |> (if cv.hideRecursiveGroups then \p -> {p | phaseTopBindings = removeRecursiveGroups p.phaseTopBindings} else identity)
-  |> Ppr.pprPhase Ppr.default_env modname
+  |> (if cv.hideTypes then eraseTypesPhase else identity)
+  |> (if cv.hideRecursiveGroups then \p -> {p | phaseTopBindings = removeRecursiveGroups p.phaseTopBindings} else identity)
+  |> Ppr.pprPhase cv modname
   |> Ppr.renderHtml tabid panelid
 
 viewCode : CodeTab -> CodeTabCapture -> Html Msg
@@ -362,7 +366,7 @@ viewCode tab modtab = div []
                    [ case modtab.srcToggle of
                        Core -> code [] 
                                     [ a [class "src-toggle", onClick (mkCodeMsg tab.id (CodeMsgToggleSrc modtab.slot))] [text "view source\n\n"]
-                                    , Ppr.dyn_css tab.varHighlights tab.selectedVar
+                                    , Ppr.dyn_css tab.varHighlights tab.selectedVar tab.varHover
                                     , Html.Lazy.lazy6 renderPhase tab.codeViewOptions tab.currentModule modtab.toplevelHides tab.id modtab.slot phase
                                     ]
                               
