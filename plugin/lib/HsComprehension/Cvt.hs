@@ -14,7 +14,7 @@ import HsComprehension.Hash (hashExprModAlpha)
 
 data CvtEnv = CvtEnv
     { cvtEnvPhaseId :: Int
-    , cvtEnvBinders :: [Unique]
+    , cvtEnvBinders :: [Int]
     }
 
 binderUnique :: Binder -> Unique
@@ -42,10 +42,17 @@ getBinderName :: Binder -> Text
 getBinderName Binder {..} = binderName
 getBinderName TyBinder {..} = binderName
 
+cvtUnique :: GHCD.Unique -> Unique
+cvtUnique (GHCD.Unique _ i) = i
+
+cvtTyCon :: GHCD.TyCon -> TyCon
+cvtTyCon (GHCD.TyCon con u) = TyCon con (cvtUnique u)
+
 cvtExternalName :: CvtEnv -> GHCD.SExternalName -> ExternalName
 cvtExternalName env GHCD.ExternalName {..} = ExternalName
     { externalModuleName = GHCD.getModuleName externalModuleName
     , externalType = cvtType env externalType
+    , externalUnique = cvtUnique externalUnique
     , ..
     }
 cvtExternalName env GHCD.ForeignCall = ForeignCall
@@ -69,14 +76,19 @@ cvtBinder env sbndr = case GHCD.unSBndr sbndr of
 
 cvtBinderId :: CvtEnv -> GHCD.BinderId -> BinderId
 cvtBinderId env (GHCD.BinderId unique) = BinderId
-    { binderIdUnique = unique
+    { binderIdUnique = cvtUnique unique
     , binderIdRenderedUnique = T.pack $ show unique
-    , binderIdDeBruijn = envFindDeBruijn env unique
+    , binderIdDeBruijn = envFindDeBruijn env (cvtUnique unique)
     }
 
 cvtIdInfo :: CvtEnv -> GHCD.IdInfo GHCD.SBinder GHCD.BinderId -> IdInfo
-cvtIdInfo env GHCD.IdInfo {..} = IdInfo
-    { idiUnfolding = NoUnfolding --TODO: figure out a way to include the unfolding cvtUnfolding env idiUnfolding
+cvtIdInfo env GHCD.IdInfo {..} = 
+-- to reduce the dump size, the details of the unfoldings care currently removed
+  let removeUnfolding :: Unfolding -> Unfolding
+      removeUnfolding u@CoreUnfolding {..} = u { unfTemplate = ELit (MachStr (T.pack "unfolding removed by plugin")) }
+      removeUnfolding x = x
+  in IdInfo
+    { idiUnfolding = removeUnfolding $ cvtUnfolding env idiUnfolding
     , ..
     }
 
@@ -101,7 +113,7 @@ cvtExpr env (GHCD.ELam bndr expr) =
         env' = envInsertBinder (binderUnique cvtedBinder) env
      in ELam cvtedBinder (cvtExpr env' expr)
 cvtExpr env (GHCD.ELet bs body) =
-    let uniques = map ((\(GHCD.BinderId u) -> u) . GHCD.binderId . GHCD.unSBndr . fst) bs
+    let uniques = map ((\(GHCD.BinderId u) -> cvtUnique u) . GHCD.binderId . GHCD.unSBndr . fst) bs
         env' = envInsertBinderN uniques env
         cvtPair (bndr, expr) = (cvtBinder env' bndr, cvtExpr env' expr)
     in ELet (map cvtPair bs) (cvtExpr env' body)
@@ -146,7 +158,7 @@ cvtAltCon GHCD.AltDefault = AltDefault
 cvtType :: CvtEnv -> GHCD.SType -> Type
 cvtType env (GHCD.VarTy id) = VarTy (cvtBinderId env id)
 cvtType env (GHCD.FunTy f a) = FunTy (cvtType env f) (cvtType env a)
-cvtType env (GHCD.TyConApp con ts) = TyConApp con (map (cvtType env) ts)
+cvtType env (GHCD.TyConApp con ts) = TyConApp (cvtTyCon con) (map (cvtType env) ts)
 cvtType env (GHCD.AppTy f a) = AppTy (cvtType env f) (cvtType env a)
 cvtType env (GHCD.ForAllTy bndr t) = ForAllTy (cvtBinder env bndr) (cvtType env t)
 cvtType env (GHCD.LitTy tylit) = LitTy tylit

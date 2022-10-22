@@ -6,6 +6,8 @@ import Set exposing (Set)
 import Html exposing (text, Html)
 import Set.Any exposing (AnySet)
 
+boolToString : Bool -> String
+boolToString b = if b then "yes" else "no"
 
 maybeTraverse : List (Maybe a) -> Maybe (List a)
 maybeTraverse list = case list of

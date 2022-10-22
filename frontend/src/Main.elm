@@ -88,10 +88,14 @@ getCtxMenuItems : CtxMenu -> List (List (ContextMenu.Item, Msg))
 getCtxMenuItems context = case context of
     CtxCodeVar tabid slot var -> 
         let always = 
-              [ (ContextMenu.item "Rename", Code.mkCodeMsg tabid (CodeMsgRenameModalOpen var))
+              [ (ContextMenu.item "Inspect"         , Code.mkCodeMsg tabid (CodeMsgInspectVar var))
+              , (ContextMenu.item "Rename"          , Code.mkCodeMsg tabid (CodeMsgRenameModalOpen var))
               , (ContextMenu.item "Toggle Highlight", Code.mkCodeMsg tabid (CodeMsgHighlightVar var))
-              , (ContextMenu.item "Query on Hoogle", MsgOpenBrowserTab (varToHoogleQuery var))
+              , (ContextMenu.item "Query on Hoogle" , MsgOpenBrowserTab (varToHoogleQuery var))
+              , (ContextMenu.item "Unhide"          , Code.mkCodeMsg tabid (CodeMsgUnhideVar slot var))
               ]
+
+
             onBinder = 
                 let wBinder bndr = case bndr of
                         Binder b -> [(ContextMenu.item ("GOTO First Occ. (Pass " ++ String.fromInt b.binderCreatedPhaseId ++ ")"), Code.mkCodeMsg tabid (CodeMsgSetPhase slot b.binderCreatedPhaseId))]

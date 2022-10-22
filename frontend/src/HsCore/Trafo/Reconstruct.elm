@@ -14,7 +14,7 @@ withBindingN : List Binder -> Env -> Env
 withBindingN bs env = List.foldl withBinding env bs
 
 lookupBinder : Env -> Unique -> BinderThunk
-lookupBinder env u = case Dict.get (H.uniqueToInt u) env of
+lookupBinder env u = case Dict.get u env of
     Just x -> Found x
     Nothing -> NotFound
 

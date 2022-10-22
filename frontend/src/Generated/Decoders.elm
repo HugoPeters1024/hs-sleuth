@@ -1,7 +1,6 @@
 module Generated.Decoders exposing
     ( captureDecoder
     , moduleMetaDecoder
-    , uniqueDecoder
     , externalNameDecoder
     , binderIdDecoder
     , binderDecoder
@@ -47,19 +46,6 @@ moduleMetaDecoder =
     Json.Decode.Pipeline.required "toplevels" (Json.Decode.dict Json.Decode.string)
 
 
-uniqueDecoder : Json.Decode.Decoder Unique
-uniqueDecoder =
-    Json.Decode.succeed Unique |>
-    Json.Decode.Pipeline.custom (Json.Decode.index 0 (Json.Decode.string |>
-    Json.Decode.andThen (\a -> case String.uncons a of
-        Just (b , "") ->
-            Json.Decode.succeed b
-
-        _ ->
-            Json.Decode.fail "Not a char"))) |>
-    Json.Decode.Pipeline.custom (Json.Decode.index 1 Json.Decode.int)
-
-
 externalNameDecoder : Json.Decode.Decoder ExternalName
 externalNameDecoder =
     Json.Decode.field "tag" Json.Decode.string |>
@@ -72,7 +58,7 @@ externalNameDecoder =
             , externalType = e }) |>
             Json.Decode.Pipeline.required "externalModuleName" Json.Decode.string |>
             Json.Decode.Pipeline.required "externalName" Json.Decode.string |>
-            Json.Decode.Pipeline.required "externalUnique" uniqueDecoder |>
+            Json.Decode.Pipeline.required "externalUnique" Json.Decode.int |>
             Json.Decode.Pipeline.required "externalType" typeDecoder)
 
         "ForeignCall" ->
@@ -85,7 +71,7 @@ externalNameDecoder =
 binderIdDecoder : Json.Decode.Decoder BinderId
 binderIdDecoder =
     Json.Decode.succeed (BinderId Untouched) |>
-    Json.Decode.Pipeline.required "binderIdUnique" uniqueDecoder |>
+    Json.Decode.Pipeline.required "binderIdUnique" Json.Decode.int |>
     Json.Decode.Pipeline.required "binderIdRenderedUnique" Json.Decode.string |>
     Json.Decode.Pipeline.required "binderIdDeBruijn" Json.Decode.int
 
@@ -300,7 +286,7 @@ tyConDecoder : Json.Decode.Decoder TyCon
 tyConDecoder =
     Json.Decode.succeed TyCon |>
     Json.Decode.Pipeline.custom (Json.Decode.index 0 Json.Decode.string) |>
-    Json.Decode.Pipeline.custom (Json.Decode.index 1 uniqueDecoder)
+    Json.Decode.Pipeline.custom (Json.Decode.index 1 Json.Decode.int)
 
 
 typeDecoder : Json.Decode.Decoder Type

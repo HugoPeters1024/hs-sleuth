@@ -111,6 +111,7 @@ type alias CodeTab =
     , selectedVar : Maybe Var
     , selectedTopLevels : List TopBindingInfo
     , renameModal : CodeTabRenameModal
+    , inspectVar : Maybe Var
     , varHighlights : Set Int
     , varHover : Maybe Var
     }
@@ -132,6 +133,7 @@ type CodeTabMsg
     | CodeMsgRenameModalClose
     | CodeMsgRenameModalStagingText String
     | CodeMsgRenameModalCommit
+    | CodeMsgUnhideVar SlotId Var
     | CodeMsgHideToplevel SlotId TopBindingInfo
     | CodeMsgHideToplevelAllBut SlotId TopBindingInfo
     | CodeMsgUnhideTransitively SlotId TopBindingInfo
@@ -141,6 +143,8 @@ type CodeTabMsg
     | CodeMsgRemoveAllHightlights
     | CodeMsgHoverVar Var
     | CodeMsgDehoverVar
+    | CodeMsgInspectVar Var
+    | CodeMsgInspectVarClose
 
 type CtxMenu =
     CtxCodeVar TabId SlotId Var

@@ -126,13 +126,6 @@ deriving via TopBindingElm instance Aeson.ToJSON TopBinding
 deriving via TopBindingElm instance HasElmType TopBinding
 deriving via TopBindingElm instance HasElmDecoder Aeson.Value TopBinding
 
-deriving instance SOP.Generic Unique
-deriving instance SOP.HasDatatypeInfo Unique
-type UniqueElm = ElmType "Generated.TODO.Unique" Unique
-deriving via UniqueElm instance Aeson.ToJSON Unique
-deriving via UniqueElm instance HasElmType Unique
-deriving via UniqueElm instance HasElmDecoder Aeson.Value Unique
-
 deriving instance SOP.Generic IdDetails
 deriving instance SOP.HasDatatypeInfo IdDetails
 type IdDetailsElm = ElmType "Generated.TODO.IdDetails" IdDetails

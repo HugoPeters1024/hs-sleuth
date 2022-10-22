@@ -17,6 +17,8 @@ import Tree
 countChars :: ByteString -> Int
 countChars = T.length . T.toUpper . TE.decodeUtf8
 
-inspect $ 'countChars `hasNoType` ''T.Text
+
+-- inspect $ 'countChars `hasNoType` ''T.Text
+
 
 

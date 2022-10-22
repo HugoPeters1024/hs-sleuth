@@ -43,6 +43,7 @@ renderVar env content var =
               _ -> ("", "")
     in a [ class "no-style"
          , onClick (MsgCodeMsg env.codeTabId (CodeMsgSelectVar var))
+         , onDoubleClick (MsgCodeMsg env.codeTabId (CodeMsgInspectVar var))
          , onMouseEnter (MsgCodeMsg env.codeTabId (CodeMsgHoverVar var))
          , onMouseLeave (MsgCodeMsg env.codeTabId CodeMsgDehoverVar)
          ]
@@ -53,13 +54,13 @@ renderVar env content var =
 htmlTagged : PprRenderEnv -> Tag -> String -> List (Html Msg) -> List (Html Msg)
 htmlTagged env tag content next = 
     let htmlContent = case tag of
-            TagVar var -> renderVar env content var
-            TagLitString -> span [class "s"] [text content]
-            TagLitNumber -> span [class "m"] [text content]
-            TagKeyword -> span [class "k"] [text content]
-            TagComment -> span [class "c1"] [text content]
-            TagOperator -> span [class "o"] [text content]
-            TagModule -> span [class "nc"] [text content]
+          TagVar var   -> renderVar env content var
+          TagLitString -> span [class "s" ] [text content]
+          TagLitNumber -> span [class "m" ] [text content]
+          TagKeyword   -> span [class "k" ] [text content]
+          TagComment   -> span [class "c1"] [text content]
+          TagOperator  -> span [class "o" ] [text content]
+          TagModule    -> span [class "nc"] [text content]
     in next ++ [htmlContent]
 
 htmlUntagged :  String -> List (Html Msg) -> List (Html Msg)

@@ -18,18 +18,17 @@ module HsComprehension.Ast
     , AltCon (..)
     , TopBindingInfo (..)
     , TopBinding (..)
+    , TyCon (..)
+    , Unique
     -- re-export
-    , Unique (..)
     , IdDetails (..)
     , BinderId (..)
-    , TyCon (..)
     , SrcSpan (..)
     , LineCol (..)
     , OccInfo (..)
     , Tick (..)
     , CoreStats (..)
     , TyLit (..)
-    , get_binderIdUniqueNum
     , get_binderUniqueNum
     , get_binderName
     , getPhaseTopLevels
@@ -45,7 +44,9 @@ import Data.Hashable
 
 import Data.Map (Map)
 
-import GhcDump.Ast (Unique(..), IdDetails(..), TyCon(..), SrcSpan(..), LineCol(..), OccInfo(..), Tick(..), CoreStats(..), TyLit(..))
+import GhcDump.Ast (IdDetails(..), SrcSpan(..), LineCol(..), OccInfo(..), Tick(..), CoreStats(..), TyLit(..))
+
+type Unique = Int
 
 data Capture = Capture
     { captureName :: Text
@@ -53,11 +54,11 @@ data Capture = Capture
     , captureGhcVersion :: Text
     , captureModules :: [(Text, Int)]
     }
-    deriving (Generic, Show)
+    deriving (Generic)
 
 data ModuleMeta = ModuleMeta
   { toplevels :: Map Text Text
-  } deriving (Generic, Show)
+  } deriving (Generic)
 
 data ExternalName = ExternalName
     { externalModuleName :: Text
@@ -66,19 +67,14 @@ data ExternalName = ExternalName
     , externalType :: Type
     }
     | ForeignCall
-    deriving (Generic, Show)
+    deriving (Generic)
 
 data BinderId = BinderId
     { binderIdUnique :: Unique
     , binderIdRenderedUnique :: Text
     , binderIdDeBruijn :: Int
-    } deriving (Generic, Show)
+    } deriving (Generic)
 
-get_uniqueNum :: Unique -> Int
-get_uniqueNum (Unique _ i) = i
-
-get_binderIdUniqueNum :: BinderId -> Int
-get_binderIdUniqueNum = get_uniqueNum . binderIdUnique
 
 instance Eq BinderId where
     lhs == rhs = binderIdUnique lhs == binderIdUnique rhs
@@ -103,15 +99,15 @@ data Binder = Binder
              , binderPhaseId :: Int
              }
 
-    deriving (Generic, Show)
+    deriving (Generic)
 
 get_binderName :: Binder -> Text
 get_binderName (Binder {..}) = binderName
 get_binderName (TyBinder {..}) = binderName
 
 get_binderUniqueNum :: Binder -> Int
-get_binderUniqueNum (Binder {..}) = get_binderIdUniqueNum binderId
-get_binderUniqueNum (TyBinder {..}) = get_binderIdUniqueNum binderId
+get_binderUniqueNum (Binder {..}) = binderIdUnique binderId
+get_binderUniqueNum (TyBinder {..}) = binderIdUnique binderId
 
 data IdInfo = IdInfo
     { idiArity         :: !Int
@@ -123,7 +119,7 @@ data IdInfo = IdInfo
     , idiDemandSig     :: !T.Text
     , idiCallArity     :: !Int
     }
-    deriving (Generic, Show)
+    deriving (Generic)
 
 data Unfolding
     = NoUnfolding
@@ -136,7 +132,7 @@ data Unfolding
                     , unfIsWorkFree :: Bool
                     , unfGuidance   :: T.Text
                     }
-    deriving (Generic, Show)
+    deriving (Generic)
 
 data Lit
     = MachChar Char
@@ -152,7 +148,10 @@ data Lit
    | LitInteger Text
    | LitNatural Text
    | LitRubbish
-   deriving (Generic, Show, Eq, Hashable)
+   deriving (Generic, Eq, Hashable)
+
+data TyCon = TyCon !Text !Int
+  deriving (Generic)
 
 data Type
     = VarTy BinderId
@@ -162,7 +161,7 @@ data Type
     | ForAllTy Binder Type
     | LitTy TyLit
     | CoercionTy
-    deriving (Generic, Show)
+    deriving (Generic)
 
 instance Hashable TyLit
 
@@ -170,7 +169,7 @@ data FiredRule = FiredRule
     { firedRuleName :: Text
     , firedRuleModule :: Text
     , firedRulePhase :: Int
-    } deriving (Generic, Show)
+    } deriving (Generic)
 
 data Phase = Phase
     { phaseName :: Text
@@ -178,7 +177,7 @@ data Phase = Phase
     , phaseTopBindings :: [TopBinding]
     , phaseFiredRules :: [FiredRule]
     }
-    deriving (Generic, Show)
+    deriving (Generic)
 
 data Expr
     = EVar BinderId
@@ -194,20 +193,20 @@ data Expr
     | ECoercion
     -- Marker tokens
     | EMarkDiff Expr
-    deriving (Generic, Show)
+    deriving (Generic)
 
 data Alt = Alt
     { altCon :: AltCon
     , altBinders :: [Binder]
     , altRHS :: Expr
     }
-    deriving (Generic, Show)
+    deriving (Generic)
 
 data AltCon
     = AltDataCon !T.Text
     | AltLit Lit
     | AltDefault
-    deriving (Generic, Show)
+    deriving (Generic)
 
 data TopBindingInfo = TopBindingInfo
     { topBindingBinder :: Binder
@@ -216,12 +215,12 @@ data TopBindingInfo = TopBindingInfo
     , topBindingFromSource :: Bool
     , topBindingHash :: Int
     }
-    deriving (Generic, Show)
+    deriving (Generic)
 
 data TopBinding
     = NonRecTopBinding TopBindingInfo
     | RecTopBinding [TopBindingInfo]
-    deriving (Generic, Show)
+    deriving (Generic)
 
 getPhaseTopLevels :: Phase -> [TopBindingInfo]
 getPhaseTopLevels phase = concatMap go (phaseTopBindings phase)

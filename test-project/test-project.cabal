@@ -32,15 +32,17 @@ executable hs-plugin-test
                     , Tree
                     , InspectionTests
                     , Text
+                    , Typeclass
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:    base
                     , hs-comprehension-plugin
-                    , text == 1.2.3.2
+--                    , text == 1.2.3.2
+                    , text
                     , bytestring
                     , stream-fusion
                     , inspection-testing
     hs-source-dirs:   app
     default-language: Haskell2010
-    ghc-options: -O1 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:Baseline -ddump-rule-firings
+    ghc-options: -O1 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:Test -ddump-rule-firings -ddump-ds-preopt

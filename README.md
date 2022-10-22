@@ -94,7 +94,7 @@ The frontend fetches the data from the zip on a per module and per phase basis.
 
 ## For the Final Thesis
 
-- What the contributions (making a tool to support haskell developers), and how can we verify that (ACM Emperical Evaluation Checklist?)
+- What the contributions (making a tool to support haskell developers), and how can we verify that (ACM Empirical Evaluation Checklist?)
     - Also conversations with the industry, Well Typed, Channable, Chordify?
 
 

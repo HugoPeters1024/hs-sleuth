@@ -25,11 +25,11 @@ elmDefsFor = (,) <$> elmDefinition @a <*> elmDecoderDefinition @Aeson.Value @a
 (elmDefs, elmDecoders) = unzip $ catMaybes 
     [ elmDefsFor @Capture
     , elmDefsFor @ModuleMeta
-    , elmDefsFor @Unique
     , elmDefsFor @ExternalName
     , elmDefsFor @BinderId
     , elmDefsFor @Binder
     , elmDefsFor @IdInfo
+    , elmDefsFor @Unique
     , elmDefsFor @Unfolding
     , elmDefsFor @OccInfo
     , elmDefsFor @IdDetails
@@ -41,8 +41,7 @@ elmDefsFor = (,) <$> elmDefinition @a <*> elmDecoderDefinition @Aeson.Value @a
     , elmDefsFor @Phase
     , elmDefsFor @Expr 
     , elmDefsFor @Alt 
-    , elmDefsFor @AltCon 
-    , elmDefsFor @LineCol 
+    , elmDefsFor @AltCon , elmDefsFor @LineCol 
     , elmDefsFor @SrcSpan 
     , elmDefsFor @Tick 
     , elmDefsFor @TopBindingInfo
@@ -61,13 +60,20 @@ binderThunkDef = unlines [ ""
                          , "type BinderThunk = Found Binder | NotFound | Untouched"
                          ]
 
+uniqueDef :: String
+uniqueDef = unlines [ ""
+                    , "type alias Unique = Int"
+                    ]
+
 finalizeTypes :: String -> String
 finalizeTypes = replace
-                    "{ binderIdUnique : Unique"
-                    "{ binderIdThunk : BinderThunk,\n    binderIdUnique : Unique"
+                    "{ binderIdUnique : Int"
+                    "{ binderIdThunk : BinderThunk,\n    binderIdUnique : Int"
                . replace' "externalType : Type }" "externalType : Type\n    , localBinder : BinderThunk }"
-               . replace' "TopBinding(..)" "TopBinding(..)\n    , BinderThunk(..)"
-              . (++ binderThunkDef)
+               . replace' "TopBinding(..)" "TopBinding(..)\n    , BinderThunk(..), Unique"
+               . (++ binderThunkDef)
+               . (++ uniqueDef)
+             
 
 finalizeDecoders :: String -> String
 finalizeDecoders = replace' "import Json.Decode" "import Generated.Types exposing (..)\nimport Json.Decode"

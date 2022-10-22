@@ -2,8 +2,6 @@ module Pages.Code exposing (..)
 
 import ElmHelpers as EH
 
-import Http
-import Json.Encode
 import Html exposing (..)
 import Html.Lazy
 import Html.Parser
@@ -18,7 +16,6 @@ import Types exposing (..)
 import HsCore.Helpers exposing (..)
 import HsCore.Trafo.EraseTypes exposing (eraseTypesPhase)
 import HsCore.Trafo.VarOccs exposing (exprVarOccs)
-import HsCore.Trafo.Diff as Diff
 import HsCore.Trafo.Reconstruct as Recon
 
 import Ppr as Ppr
@@ -28,18 +25,20 @@ import Loading exposing (Loading(..))
 
 import Set exposing (Set)
 import Set.Any exposing (AnySet)
-import Ports
 
 import UI.Slider as Slider
 
 import Bootstrap.Card as Card
-import Bootstrap.Spinner as Spinner
 import Bootstrap.Alert as Alert
 import Bootstrap.Card.Block as Block
 import Bootstrap.Dropdown  as Dropdown
 import Bootstrap.Button  as Button
 import Bootstrap.Modal as Modal
 import Bootstrap.Form.Input as Input
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Grid.Row as Row
+
 import Zip.Entry
 import Json.Decode
 
@@ -128,6 +127,7 @@ makeCodeTab model cvs =
               , stagingText = ""
               , varId = -1
               }
+          , inspectVar = Nothing
           , varHover = Nothing
           }
     in
@@ -208,6 +208,10 @@ update msg tab = case msg of
         let varRenames = Dict.insert tab.renameModal.varId tab.renameModal.stagingText tab.codeViewOptions.varRenames
             modal = renameModalClose tab.renameModal
         in ({tab | codeViewOptions = codeViewOptionsMapVarRenames (\_ -> varRenames) tab.codeViewOptions, renameModal = modal}, Cmd.none)
+    CodeMsgUnhideVar slot var -> 
+        let updateHideSet : CodeTabCapture -> CodeTabCapture
+            updateHideSet tabmod = {tabmod | toplevelHides = Set.remove (varToInt var) tabmod.toplevelHides}
+        in ({tab | captureSlots = Dict.update slot (Maybe.map updateHideSet) tab.captureSlots}, Cmd.none)
     CodeMsgHideToplevel slot ti -> 
         let updateHideSet : CodeTabCapture -> CodeTabCapture
             updateHideSet tabmod = {tabmod | toplevelHides = EH.toggleSet (topBindingInfoToInt ti) tabmod.toplevelHides}
@@ -257,10 +261,8 @@ update msg tab = case msg of
     CodeMsgRemoveAllHightlights -> ({tab | varHighlights = Set.empty}, Cmd.none)
     CodeMsgHoverVar var -> ({ tab | varHover = Just var}, Cmd.none)
     CodeMsgDehoverVar -> ({tab | varHover = Nothing}, Cmd.none)
-
-
-
-
+    CodeMsgInspectVar var -> ({tab | inspectVar = Just var}, Cmd.none)
+    CodeMsgInspectVarClose -> ({tab | inspectVar = Nothing}, Cmd.none)
 
 
 view : Model -> CodeTab -> Html Msg
@@ -275,6 +277,7 @@ view model = Html.Lazy.lazy <| \tab ->
                     )
                 )
            , Html.map (mkCodeMsg tab.id) <| viewRenameModal tab
+           , Html.map (mkCodeMsg tab.id) <| viewInspectVarModal tab
            ]
 
 
@@ -323,6 +326,81 @@ viewRenameModal tab =
                 ] [text "Close"]
             ]
         |> Modal.view tab.renameModal.visiblity
+
+viewInspectVarModal : CodeTab -> Html CodeTabMsg
+viewInspectVarModal tab = case tab.inspectVar of
+  Nothing -> text ""
+  Just var ->
+    let onClose = CodeMsgInspectVarClose
+
+        description : String
+        description = case var of
+          VarBinder _ -> "A locally bound term"
+          VarTop _ -> "A term defined in the current module at the top level"
+          VarExternal ForeignCall -> "A call to foreign code"
+          VarExternal (ExternalName e) -> "A term imported from the module " ++ e.externalModuleName
+
+        source : String
+        source = case HsCore.Helpers.varCreatedPhaseId var of
+            Nothing -> "Build artifact of another module"
+            Just id -> if id == 0 then "Desugared from the source code" else "Generated at phase " ++ (String.fromInt id)
+
+        details = case HsCore.Helpers.varIdDetails var of
+            Nothing   -> "Unknown"
+            Just VanillaId -> "Vanilla"
+            Just RecSelId -> "Record selector"
+            Just DataConWorkId -> "Data constructor"
+            Just DataConWrapId -> "Data constructor"
+            Just ClassOpId -> "Class operation"
+            Just PrimOpId -> "Primitive operation"
+            Just TickBoxOpId -> "HPC tickbox"
+            Just DFunId -> "Typeclass dictionary function"
+            Just CoVarId -> "Coercion variable"
+            Just (JoinId j) -> "Join point with arity " ++ String.fromInt j.joinIdArity
+
+        renderRow : String -> String -> Html CodeTabMsg
+        renderRow k v = 
+          Grid.row [] 
+            [ Grid.col [Col.xs3] [text k]
+            , Grid.col [Col.xs] [text v]
+            ]
+
+
+    in Modal.config onClose
+      |> Modal.large
+      |> Modal.hideOnBackdropClick True
+      |> Modal.h3 [] [text (HsCore.Helpers.varName var ++ " :: " ++ HsCore.Helpers.typeToString (HsCore.Helpers.varType var))]
+      |> Modal.body [] 
+          [ Grid.container []
+              [ renderRow "Description" description
+              , renderRow "Source"      source
+              , renderRow "IdDetails"     details
+              , hr [] []
+              , case HsCore.Helpers.varIdInfo var of
+                  Just id_info -> div []
+                    [ h4 [] [text ("IdInfo (at phase " ++ (String.fromInt (HsCore.Helpers.varPhaseId var)) ++ ")")]
+                    , renderRow "Arity" (String.fromInt id_info.idiArity)
+                    , renderRow "Lambda with 1 usage" (EH.boolToString id_info.idiIsOneShot)
+                    , renderRow "Has Core unfolding" (case id_info.idiUnfolding of
+                        CoreUnfolding _ -> "yes"
+                        _               -> "no"
+                      )
+                    , renderRow "Inline Pragma" id_info.idiInlinePragma
+                    , renderRow "Occurances" (HsCore.Helpers.occInfoToString id_info.idiOccInfo)
+                    , renderRow "Strictness Sig." id_info.idiStrictnessSig
+                    , renderRow "Demand Sig." id_info.idiDemandSig
+                    , renderRow "Call Arity" (String.fromInt id_info.idiCallArity)
+                    ]
+                  _ -> h4 [] [text "No IdInfo for this variable"]
+              ]
+          ]
+      |> Modal.footer []
+          [ Button.button
+              [ Button.outlinePrimary
+              , Button.attrs [onClick onClose]
+              ] [text "Close"]
+          ]
+      |> Modal.view Modal.shown
 
 
 hideToplevels : Set Int -> Phase -> Phase
@@ -396,9 +474,6 @@ viewInfo model tab =
               , checkbox tab.codeViewOptions.hideUndemanded CodeMsgToggleHideUndemanded "Render Undemanded Variables as _"
               , checkbox tab.codeViewOptions.desugarLeadingLambdas CodeMsgToggleDesugarLeadingLambdas "Desugar Leading Lambdas"
               , hr [] []
-              , h4 [] [text "Selected Variable"]
-              , Maybe.withDefault (h5 [] [text "No term selected"]) (Maybe.map (viewVarInfo tab) tab.selectedVar)
-              , hr [] []
               , viewHideOptions model tab
               , hr [] []
               , viewExtraOptions model tab
@@ -441,41 +516,3 @@ viewExtraOptions model tab = HtmlHelpers.list
       ]
       [text "Remove All Highlights"]
   ]
-
-
-
-viewVarInfo : CodeTab -> Var -> Html CodeTabMsg
-viewVarInfo tab term = case term of
-    VarBinder b -> viewBinderInfo b
-    VarTop tb -> viewTopInfo tab tb
-    VarExternal e -> viewExternalInfo e
-
-
-viewBinderInfo : Binder -> Html CodeTabMsg
-viewBinderInfo bndr = case bndr of
-    Binder b -> HtmlHelpers.list
-            [ text ("name: " ++ b.binderName)
-            , text ("type: " ++ typeToString b.binderType)
-            , text ("first seen in phase: " ++ String.fromInt b.binderCreatedPhaseId)
---            , text ("span: " ++ Debug.toString (b.binderIdInfo))
-            ]
-    TyBinder b -> text "TODO: TyBinder"
-
-viewTopInfo : CodeTab -> TopBindingInfo -> Html CodeTabMsg
-viewTopInfo tab ti = HtmlHelpers.list
-    [ text ("hash: " ++ String.fromInt ti.topBindingHash)
-    , viewBinderInfo ti.topBindingBinder
-    ]
-
-viewExternalInfo : ExternalName -> Html CodeTabMsg
-viewExternalInfo ext = case ext of
-    ForeignCall -> text ("[ForeignCall]")
-    ExternalName e -> HtmlHelpers.list
-        [ text ("name: " ++ e.externalName)
-        , text ("module:"  ++ e.externalModuleName)
-        , text ("type: " ++ typeToString e.externalType)
-        ]
-
-
-
-

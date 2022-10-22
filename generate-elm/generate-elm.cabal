@@ -29,7 +29,7 @@ executable generate-elm
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base ^>=4.16.1.0
+    build-depends:    base
                     , hs-comprehension-plugin
                     , haskell-to-elm
                     , elm-syntax

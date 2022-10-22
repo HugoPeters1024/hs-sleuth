@@ -198,19 +198,19 @@ pprLit lit =
     let litNumber : String -> PP
         litNumber i = taggedString i TagLitNumber
     in case lit of
-        MachChar c -> taggedString (String.fromList ['\'', c, '\'']) TagLitString
-        MachStr s  -> taggedString s TagLitString
+        MachChar c   -> taggedString (String.fromList ['\'', c, '\'']) TagLitString
+        MachStr s    -> taggedString s TagLitString
         MachNullAddr -> string "NullAddr#"
-        MachInt i  -> litNumber i
-        MachInt64 i -> litNumber i
-        MachWord i -> litNumber i
+        MachInt i    -> litNumber i
+        MachInt64 i  -> litNumber i
+        MachWord i   -> litNumber i
         MachWord64 i -> litNumber i
-        MachFloat f -> litNumber f
+        MachFloat f  -> litNumber f
         MachDouble d -> litNumber d
-        MachLabel l -> litNumber l
-        LitInteger i  -> litNumber i
+        MachLabel l  -> litNumber l
+        LitInteger i -> litNumber i
         LitNatural n -> litNumber n
-        LitRubbish -> string "[LitRubbish]"
+        LitRubbish   -> string "[LitRubbish]"
 
 
 pprBinderThunk : CodeViewOptions -> BinderThunk -> PP

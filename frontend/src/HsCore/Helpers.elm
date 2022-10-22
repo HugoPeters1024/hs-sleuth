@@ -46,6 +46,13 @@ varPhaseId var = case var of
     VarTop b -> binderPhaseId b.topBindingBinder
     VarExternal _ -> -1
 
+varCreatedPhaseId : Var -> Maybe Int
+varCreatedPhaseId var = case var of
+    VarBinder (Binder b) -> Just b.binderCreatedPhaseId
+    VarBinder _ -> Nothing
+    VarTop b -> varCreatedPhaseId (VarBinder b.topBindingBinder)
+    VarExternal _ -> Nothing
+
 
 topBindingInfoToInt : TopBindingInfo -> Int
 topBindingInfoToInt = binderToInt << .topBindingBinder
@@ -75,7 +82,19 @@ varType var = case var of
     VarTop b -> binderType b.topBindingBinder
     VarExternal ext -> case ext of
         ExternalName e -> e.externalType
-        ForeignCall -> TyConApp (TyCon "ForeignCall" (Unique 't' -1)) []
+        ForeignCall -> TyConApp (TyCon "ForeignCall" (-1)) []
+
+varIdInfo : Var -> Maybe IdInfo
+varIdInfo var = case var of
+  VarBinder (Binder b) -> Just b.binderIdInfo
+  VarTop b -> varIdInfo (VarBinder b.topBindingBinder)
+  _                    -> Nothing
+
+varIdDetails : Var -> Maybe IdDetails
+varIdDetails var = case var of
+  VarBinder (Binder b) -> Just b.binderIdDetails
+  VarTop b -> varIdDetails (VarBinder b.topBindingBinder)
+  _                    -> Nothing
 
 binderName : Binder -> String
 binderName binder = case binder of
@@ -129,17 +148,14 @@ binderToInt : Binder -> Int
 binderToInt = binderIdToInt << binderId
 
 binderIdToInt : BinderId -> Int
-binderIdToInt binderid = uniqueToInt binderid.binderIdUnique
-
-uniqueToInt : Unique -> Int
-uniqueToInt (Unique _ i) = i
+binderIdToInt binderid = binderid.binderIdUnique
 
 uniqueToStr : Unique -> String
-uniqueToStr (Unique _ i) = String.fromInt i
+uniqueToStr = String.fromInt
 
 externalNameToInt : ExternalName -> Int
 externalNameToInt en = case en of
-    ExternalName n -> uniqueToInt n.externalUnique
+    ExternalName n -> n.externalUnique
     ForeignCall -> -1
 
 isConstructorName : String -> Bool
@@ -287,3 +303,9 @@ exprIsAtom expr = case expr of
     EMarkDiff e -> exprIsAtom e
     _ -> False
 
+occInfoToString : OccInfo -> String
+occInfoToString occ = case occ of
+  OccManyOccs -> "more than 1"
+  OccDead     -> "none (dead)"
+  OccOneOcc   -> "exactly 1"
+  OccLoopBreaker b -> if b.occStrongLoopBreaker then "loop breaker (strong)" else "loop breaker (weak)"

@@ -1,7 +1,6 @@
 module Generated.Types exposing
     ( Capture
     , ModuleMeta
-    , Unique(..)
     , ExternalName(..)
     , BinderId
     , Binder(..)
@@ -23,7 +22,7 @@ module Generated.Types exposing
     , Tick
     , TopBindingInfo
     , TopBinding(..)
-    , BinderThunk(..)
+    , BinderThunk(..), Unique
     , CoreStats
     )
 
@@ -41,14 +40,10 @@ type alias ModuleMeta  =
     { toplevels : Dict.Dict String String }
 
 
-type Unique 
-    = Unique Char Int
-
-
 type ExternalName 
     = ExternalName { externalModuleName : String
     , externalName : String
-    , externalUnique : Unique
+    , externalUnique : Int
     , externalType : Type
     , localBinder : BinderThunk }
     | ForeignCall 
@@ -56,7 +51,7 @@ type ExternalName
 
 type alias BinderId  =
     { binderIdThunk : BinderThunk,
-    binderIdUnique : Unique
+    binderIdUnique : Int
     , binderIdRenderedUnique : String
     , binderIdDeBruijn : Int }
 
@@ -136,7 +131,7 @@ type Lit
 
 
 type TyCon 
-    = TyCon String Unique
+    = TyCon String Int
 
 
 type Type 
@@ -224,4 +219,6 @@ type alias CoreStats  =
     , csCoercions : Int
     , csValBinds : Int
     , csJoinBinds : Int }
+type alias Unique = Int
+
 type BinderThunk = Found Binder | NotFound | Untouched
