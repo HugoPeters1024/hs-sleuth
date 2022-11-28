@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 module HsComprehension.Plugin where
 
 import Prelude as P
@@ -14,6 +15,8 @@ import GHC.Plugins as Plugins
 # else
 import GhcPlugins as Plugins
 # endif
+
+import Language.Haskell.TH.Syntax (addCorePlugin)
 
 #if MIN_VERSION_ghc(9,0,0)
 import qualified GHC.Data.EnumSet (insert)
@@ -186,7 +189,7 @@ getGhcVersionString = do
 parseCmdLineOptions :: [CommandLineOption] -> String
 parseCmdLineOptions options = case options of
     [slug] -> slug
-    _      -> error "provide a slug for the dump as exactly 1 argument"
+    _      -> "Default" --error "provide a slug for the dump as exactly 1 argument"
 
 install :: [CommandLineOption] -> [CoreToDo] -> CoreM [CoreToDo]
 install options todo = do
@@ -314,3 +317,5 @@ parsedPlugin options modsum parsed = liftIO $ do
     Nothing -> pure ()
   pure parsed
 
+
+dumpThisModule = addCorePlugin "HsComprehension.Plugin" >> pure []

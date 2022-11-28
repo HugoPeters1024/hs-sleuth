@@ -115,7 +115,7 @@ type IdDetails
 
 
 type Lit 
-    = MachChar Char
+    = MachChar String
     | MachStr String
     | MachNullAddr 
     | MachInt String

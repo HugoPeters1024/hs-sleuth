@@ -135,7 +135,7 @@ data Unfolding
     deriving (Generic)
 
 data Lit
-    = MachChar Char
+    = MachChar Text
    | MachStr Text
    | MachNullAddr
    | MachInt Text

@@ -358,11 +358,23 @@ viewInspectVarModal tab = case tab.inspectVar of
             Just CoVarId -> "Coercion variable"
             Just (JoinId j) -> "Join point with arity " ++ String.fromInt j.joinIdArity
 
-        renderRow : String -> String -> Html CodeTabMsg
+        stats = case var of
+            VarTop top -> 
+              let s = top.topBindingCoreState
+              in div [] [ text ("#terms " ++ String.fromInt s.csTerms), br [] []
+                        , text ("#types " ++ String.fromInt s.csTypes), br [] []
+                        , text ("#coercions " ++ String.fromInt s.csCoercions), br [] []
+                        , text ("#val_binds " ++ String.fromInt s.csValBinds), br [] []
+                        , text ("#join_binds " ++ String.fromInt s.csJoinBinds)
+                        ]
+            _          -> text "Stats are only available for local top level bindings"
+              
+
+        renderRow : String -> Html CodeTabMsg -> Html CodeTabMsg
         renderRow k v = 
           Grid.row [] 
             [ Grid.col [Col.xs3] [text k]
-            , Grid.col [Col.xs] [text v]
+            , Grid.col [Col.xs] [v]
             ]
 
 
@@ -372,24 +384,25 @@ viewInspectVarModal tab = case tab.inspectVar of
       |> Modal.h3 [] [text (HsCore.Helpers.varName var ++ " :: " ++ HsCore.Helpers.typeToString (HsCore.Helpers.varType var))]
       |> Modal.body [] 
           [ Grid.container []
-              [ renderRow "Description" description
-              , renderRow "Source"      source
-              , renderRow "IdDetails"     details
+              [ renderRow "Description" (text description)
+              , renderRow "Source"      (text source)
+              , renderRow "IdDetails"     (text details)
+              , renderRow "Stats" stats
               , hr [] []
               , case HsCore.Helpers.varIdInfo var of
                   Just id_info -> div []
                     [ h4 [] [text ("IdInfo (at phase " ++ (String.fromInt (HsCore.Helpers.varPhaseId var)) ++ ")")]
-                    , renderRow "Arity" (String.fromInt id_info.idiArity)
-                    , renderRow "Lambda with 1 usage" (EH.boolToString id_info.idiIsOneShot)
+                    , renderRow "Arity" (text (String.fromInt id_info.idiArity))
+                    , renderRow "Lambda with 1 usage" (text (EH.boolToString id_info.idiIsOneShot))
                     , renderRow "Has Core unfolding" (case id_info.idiUnfolding of
-                        CoreUnfolding _ -> "yes"
-                        _               -> "no"
+                        CoreUnfolding _ -> text "yes"
+                        _               -> text "no"
                       )
-                    , renderRow "Inline Pragma" id_info.idiInlinePragma
-                    , renderRow "Occurances" (HsCore.Helpers.occInfoToString id_info.idiOccInfo)
-                    , renderRow "Strictness Sig." id_info.idiStrictnessSig
-                    , renderRow "Demand Sig." id_info.idiDemandSig
-                    , renderRow "Call Arity" (String.fromInt id_info.idiCallArity)
+                    , renderRow "Inline Pragma" (text id_info.idiInlinePragma)
+                    , renderRow "Occurances" (text (HsCore.Helpers.occInfoToString id_info.idiOccInfo))
+                    , renderRow "Strictness Sig." (text id_info.idiStrictnessSig)
+                    , renderRow "Demand Sig." (text id_info.idiDemandSig)
+                    , renderRow "Call Arity" (text (String.fromInt id_info.idiCallArity))
                     ]
                   _ -> h4 [] [text "No IdInfo for this variable"]
               ]

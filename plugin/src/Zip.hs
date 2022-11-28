@@ -11,14 +11,9 @@ import qualified Data.ByteString.Lazy as BSL
 
 import HsComprehension.Plugin
 
-parseArgs :: [String] -> String
-parseArgs [] = error "provide the slug of the dump to zip"
-parseArgs (x:[]) = x
-parseARgs _ = error "provide the slug of the dump to zip with as the only argument"
-
 main :: IO ()
 main = do
-  slug <- parseArgs <$> getArgs
+  slug <- parseCmdLineOptions <$> getArgs
   let cv = defaultCaptureView
 
   let dump_dir = coreDumpDir cv slug

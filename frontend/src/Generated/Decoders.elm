@@ -224,13 +224,7 @@ litDecoder =
     Json.Decode.andThen (\a -> case a of
         "MachChar" ->
             Json.Decode.succeed MachChar |>
-            Json.Decode.Pipeline.required "contents" (Json.Decode.string |>
-            Json.Decode.andThen (\b -> case String.uncons b of
-                Just (c , "") ->
-                    Json.Decode.succeed c
-
-                _ ->
-                    Json.Decode.fail "Not a char"))
+            Json.Decode.Pipeline.required "contents" Json.Decode.string
 
         "MachStr" ->
             Json.Decode.succeed MachStr |>

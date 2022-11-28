@@ -2,7 +2,7 @@
 
 Haskell Comprehension is a tool to inspect/verify/debug the interaction your haskell source code has with the GHC Core2Core optimization pipeline.
 It uses a plugin to make a snapshot of each intermediate AST which can interactively be explored in a browser using the frontend app.
-The frontend app is also hosted at http://core.hugopeters.me
+The frontend app is also hosted at http://core.hugopeters.me and contains some example captures to pick from.
 
 ## Requirements
 
@@ -22,10 +22,9 @@ The project is currently not on hackage so you need to add this repo as a local 
     ```cabal
     packages: .
             , ../hs-comprehension/plugin
-            , ../hs-comprehension/cborg/cborg
             , ../hs-comprehension/ghc-dump
     ```
-- :electric_plug: Register the dependency and enable the plugin in your cabal file, use the `-fplugin-opt` flag to give a name to your capture.
+- :electric_plug: Register the dependency and enable the plugin in your cabal file, optionally use the `-fplugin-opt` flag to give a name to your capture.
     ```cabal
     build-depends:    base ^>=4.16.0.0
                     , hs-comprehension-plugin
@@ -33,12 +32,12 @@ The project is currently not on hackage so you need to add this repo as a local 
 
     ...
 
-    ghc-options: -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:MyCapture001
+    ghc-options: -fplugin HsComprehension.Plugin
     ```
 
 - :floppy_disk: Now whenever you build dump files are created in `dist-newstyle/coredump-MyCapture001/`
 
-- To create a zip archive you can run `cabal run hs-comprehension-zip -- MyCapture001`.
+- To create a zip archive you can run `cabal run hs-comprehension-zip`.
 
 # Inspecting dumps
 
@@ -67,14 +66,15 @@ The frontend fetches the data from the zip on a per module and per phase basis.
 ## Current Capabilities
 
 - GHC >= 8.4 support
-- Core pretty printer
-- Phase scrolling
+- Haskell like Core pretty printer
+- Easy phase scrolling
 - Side by side view of 2 or more captures
 - Variable highlighting for easy scope exploration
 - Variable renaming (generated names are often not informative)
 - Click to jump to phase of first occurrence
 - Click to query hoogle
 - Inspect which rewrite rules have fired in which order at each phase.
+- Extract the changes from two captures
 
 
 ## Possible Future Capabilities/Goals
@@ -90,15 +90,3 @@ The frontend fetches the data from the zip on a per module and per phase basis.
 ## Identified Limitations
 
 - Getting more detailed information about rewrite rule firings (such as which ones are considered etc.) will require changes to GHC.
-
-
-## For the Final Thesis
-
-- What the contributions (making a tool to support haskell developers), and how can we verify that (ACM Empirical Evaluation Checklist?)
-    - Also conversations with the industry, Well Typed, Channable, Chordify?
-
-
-
-
-
-

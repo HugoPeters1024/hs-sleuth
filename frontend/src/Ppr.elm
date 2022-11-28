@@ -198,7 +198,7 @@ pprLit lit =
     let litNumber : String -> PP
         litNumber i = taggedString i TagLitNumber
     in case lit of
-        MachChar c   -> taggedString (String.fromList ['\'', c, '\'']) TagLitString
+        MachChar c   -> taggedString ("\'" ++ c ++ "\'") TagLitString
         MachStr s    -> taggedString s TagLitString
         MachNullAddr -> string "NullAddr#"
         MachInt i    -> litNumber i

@@ -60,8 +60,12 @@ update msg tab = case msg of
       Just entries -> 
         let dict = Dict.fromList (EH.annotate Zip.Entry.basename entries)
 
+            capture_parsed = 
+              parseFile dict "capture.json" Generated.Decoders.captureDecoder
+              -- overwrite the capture slug to the filename
+              |> Result.map (\c -> { c | captureName = filename })
 
-        in case parseFile dict "capture.json" Generated.Decoders.captureDecoder of
+        in case capture_parsed of
           Err problem -> (overviewSetProblem problem tab, Cmd.none)
           Ok capture -> 
             let metas_res = capture.captureModules
@@ -126,7 +130,6 @@ view m =
                     ] []
                 ]
             , Table.td [] [text cv.filename]
-            , Table.td [] [text cv.capture.captureName]
             , Table.td [] [text cv.capture.captureGhcVersion]
             , Table.td [] [text (renderDateTime m.timezone (Time.millisToPosix cv.capture.captureDate))]
             ] 
@@ -171,7 +174,6 @@ view m =
                , thead = Table.simpleThead
                    [ Table.th [] [text "Actions"]
                    , Table.th [] [text "Capture Archive"]
-                   , Table.th [] [text "Capture Slug"]
                    , Table.th [] [text "GHC Version"]
                    , Table.th [] [text "Captured at"]
                    ]
@@ -185,7 +187,7 @@ view m =
               { options = [Table.striped, Table.hover]
               , thead = Table.simpleThead
                   [ Table.th [] [text "Actions"]
-                  , Table.th [] [text "Slug"]
+                  , Table.th [] [text "Archive"]
                   ]
               , tbody = Table.tbody [] (List.map mkStagedRow (EH.enumerate m.overviewTab.stagedProjects))
               }
@@ -197,6 +199,7 @@ view m =
                ] 
                [text ("Open Tab With " ++ String.fromInt (List.length m.overviewTab.stagedProjects) ++ " Panel(s)")]
            ]
+
 
 
 

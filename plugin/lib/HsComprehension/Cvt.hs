@@ -6,6 +6,8 @@ import HsComprehension.Ast
 
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Char
+import Numeric (showOct, showHex)
 
 import Data.Hashable as Hash
 
@@ -125,8 +127,24 @@ cvtExpr env (GHCD.ETick t expr) = ETick t (cvtExpr env expr)
 cvtExpr env (GHCD.EType t) = EType (cvtType env t)
 cvtExpr env GHCD.ECoercion = ECoercion
 
+showOct' :: Int -> String
+showOct' i = replicate (3 - length s) '0' ++ s
+  where s = showOct i ""
+
+escapeChar :: Char -> String
+escapeChar '\\' = "\\\\"
+escapeChar '\a' = "\\a"
+escapeChar '\b' = "\\b"
+escapeChar '\f' = "\\f"
+escapeChar '\n' = "\\n"
+escapeChar '\r' = "\\r"
+escapeChar '\t' = "\\t"
+escapeChar '\v' = "\\v"
+escapeChar c  | (ord c) < 512   = '\\' : showOct' (ord c)
+              | otherwise       = '\\' : 'x'  : showHex (ord c) ""
+
 cvtLit :: GHCD.Lit -> Lit
-cvtLit (GHCD.MachChar c) = MachChar c
+cvtLit (GHCD.MachChar c) = MachChar (T.pack (escapeChar c))
 cvtLit (GHCD.MachStr t) = MachStr (showText t)
 cvtLit GHCD.MachNullAddr = MachNullAddr
 cvtLit (GHCD.MachInt i) = MachInt (showText i)
