@@ -1,0 +1,748 @@
+Resolving dependencies...
+Build profile: -w ghc-9.5.20221105 -O1
+In order, the following will be built (use -v for more details):
+ - unlines-test-0.1.0.0 (exe:unlines-test) (configuration changed)
+Configuring executable 'unlines-test' for unlines-test-0.1.0.0..
+Preprocessing executable 'unlines-test' for unlines-test-0.1.0.0..
+Building executable 'unlines-test' for unlines-test-0.1.0.0..
+[1 of 2] Compiling Unlines          ( app/Unlines.hs, /home/hugo/repos/hs-comprehension/unlines-test/dist-newstyle/build/x86_64-linux/ghc-9.5.20221105/unlines-test-0.1.0.0/x/unlines-test/build/unlines-test/unlines-test-tmp/Unlines.o ) [Source file changed]
+
+==================== Desugar (before optimization) ====================
+Result size of Desugar (before optimization)
+  = {terms: 25, types: 23, coercions: 0, joins: 0/0}
+
+Rec {
+$dFoldable_aFD = $fFoldableList
+
+$trModule = Module (TrNameS "main"#) (TrNameS "Unlines"#)
+
+unlines
+  = \ ls_agu ->
+      concat
+        $dFoldable_aFD
+        (map
+           (\ l_arx ->
+              ++ l_arx (build (\ @a_dG3 c_dG4 n_dG5 -> c_dG4 (C# '\n'#) n_dG5)))
+           ls_agu)
+end Rec }
+
+
+
+
+==================== Desugar (after optimization) ====================
+Result size of Desugar (after optimization)
+  = {terms: 23, types: 21, coercions: 0, joins: 0/0}
+
+$trModule = Module (TrNameS "main"#) (TrNameS "Unlines"#)
+
+unlines
+  = \ ls_agu ->
+      concat
+        $fFoldableList
+        (map
+           (\ l_arx ->
+              ++ l_arx (build (\ @a_dG3 c_dG4 n_dG5 -> c_dG4 (C# '\n'#) n_dG5)))
+           ls_agu)
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = InitialPhase [Gentle],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             no case-of-case}
+Result size of Simplifier
+  = {terms: 32, types: 24, coercions: 0, joins: 0/0}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+unlines
+  = \ ls_agu ->
+      build
+        (\ @b_aGg c_aGh n_aGi ->
+           foldr
+             (\ x_a10L r_a10M -> foldr c_aGh (c_aGh (C# '\n'#) r_a10M) x_a10L)
+             n_aGi
+             ls_agu)
+
+
+
+
+==================== Specialise ====================
+Result size of Specialise
+  = {terms: 32, types: 24, coercions: 0, joins: 0/0}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+unlines
+  = \ ls_agu ->
+      build
+        (\ @b_aGg c_aGh n_aGi ->
+           foldr
+             (\ x_a10L r_a10M -> foldr c_aGh (c_aGh (C# '\n'#) r_a10M) x_a10L)
+             n_aGi
+             ls_agu)
+
+
+
+
+==================== Levels added: ====================
+<$trModule_sG8,<0,0>> = "main"#
+<$trModule_sG9,<0,0>> = TrNameS $trModule_sG8
+<$trModule_sGa,<0,0>> = "Unlines"#
+<$trModule_sGb,<0,0>> = TrNameS $trModule_sGa
+<$trModule,<0,0>> = Module $trModule_sG9 $trModule_sGb
+<unlines,<0,0>>
+  = \ <ls_agu,<1,0>> ->
+      build
+        (\ <b_aGg,<1,2>> <c_aGh,<1,2>> <n_aGi,<1,2>> ->
+           foldr
+             (\ <x_a10L,<2,0>> <r_a10M,<2,0>> ->
+                foldr
+                  c_aGh
+                  (c_aGh (let { <lvl_s10N,F<0,0>> = C# '\n'# } in lvl_s10N) r_a10M)
+                  x_a10L)
+             n_aGi
+             ls_agu)
+
+
+
+==================== Float out(FOS {Lam = Just 0, Consts = True, OverSatApps = False}) ====================
+Result size of Float out(FOS {Lam = Just 0, Consts = True, OverSatApps = False})
+  = {terms: 34, types: 25, coercions: 0, joins: 0/0}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      build
+        (\ @b_aGg c_aGh n_aGi ->
+           foldr
+             (\ x_a10L r_a10M -> foldr c_aGh (c_aGh lvl_s10N r_a10M) x_a10L)
+             n_aGi
+             ls_agu)
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = 2 [main],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 34, types: 25, coercions: 0, joins: 0/0}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      build
+        (\ @b_aGg c_aGh n_aGi ->
+           foldr
+             (\ x_a10L r_a10M -> foldr c_aGh (c_aGh lvl_s10N r_a10M) x_a10L)
+             n_aGi
+             ls_agu)
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = 1 [main],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 29, types: 22, coercions: 0, joins: 0/0}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      foldr (\ x_a10L r_a10M -> ++ x_a10L (: lvl_s10N r_a10M)) [] ls_agu
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = 0 [main],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 34, types: 30, coercions: 0, joins: 0/1}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      letrec {
+        go1_a10Y
+          = \ ds_a10Z ->
+              case ds_a10Z of {
+                [] -> [];
+                : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_a10Y ys_a113))
+              }; } in
+      go1_a10Y ls_agu
+
+
+
+
+==================== Float inwards ====================
+Result size of Float inwards
+  = {terms: 34, types: 30, coercions: 0, joins: 0/1}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      letrec {
+        go1_a10Y
+          = \ ds_a10Z ->
+              case ds_a10Z of {
+                [] -> [];
+                : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_a10Y ys_a113))
+              }; } in
+      go1_a10Y ls_agu
+
+
+
+
+==================== Called arity analysis ====================
+Result size of Called arity analysis
+  = {terms: 34, types: 30, coercions: 0, joins: 0/1}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      letrec {
+        go1_a10Y
+          = \ ds_a10Z ->
+              case ds_a10Z of {
+                [] -> [];
+                : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_a10Y ys_a113))
+              }; } in
+      go1_a10Y ls_agu
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = FinalPhase [post-call-arity],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 34, types: 30, coercions: 0, joins: 0/1}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      letrec {
+        go1_a10Y
+          = \ ds_a10Z ->
+              case ds_a10Z of {
+                [] -> [];
+                : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_a10Y ys_a113))
+              }; } in
+      go1_a10Y ls_agu
+
+
+
+
+==================== Demand analysis (including Boxity) ====================
+Result size of Demand analysis (including Boxity)
+  = {terms: 34, types: 30, coercions: 0, joins: 0/1}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      letrec {
+        go1_a10Y
+          = \ ds_a10Z ->
+              case ds_a10Z of {
+                [] -> [];
+                : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_a10Y ys_a113))
+              }; } in
+      go1_a10Y ls_agu
+
+
+
+
+==================== Constructed Product Result analysis ====================
+Result size of Constructed Product Result analysis
+  = {terms: 34, types: 30, coercions: 0, joins: 0/1}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      letrec {
+        go1_a10Y
+          = \ ds_a10Z ->
+              case ds_a10Z of {
+                [] -> [];
+                : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_a10Y ys_a113))
+              }; } in
+      go1_a10Y ls_agu
+
+
+
+
+==================== Worker Wrapper binds ====================
+Result size of Worker Wrapper binds
+  = {terms: 34, types: 30, coercions: 0, joins: 0/1}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      letrec {
+        go1_a10Y
+          = \ ds_a10Z ->
+              case ds_a10Z of {
+                [] -> [];
+                : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_a10Y ys_a113))
+              }; } in
+      go1_a10Y ls_agu
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = FinalPhase [post-worker-wrapper],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 34, types: 30, coercions: 0, joins: 0/1}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      letrec {
+        go1_a10Y
+          = \ ds_a10Z ->
+              case ds_a10Z of {
+                [] -> [];
+                : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_a10Y ys_a113))
+              }; } in
+      go1_a10Y ls_agu
+
+
+
+
+==================== Exitification transformation ====================
+Result size of Exitification transformation
+  = {terms: 34, types: 30, coercions: 0, joins: 0/1}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+unlines
+  = \ ls_agu ->
+      letrec {
+        go1_a10Y
+          = \ ds_a10Z ->
+              case ds_a10Z of {
+                [] -> [];
+                : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_a10Y ys_a113))
+              }; } in
+      go1_a10Y ls_agu
+
+
+
+
+==================== Levels added: ====================
+<$trModule_sG8,<0,0>> = "main"#
+<$trModule_sG9,<0,0>> = TrNameS $trModule_sG8
+<$trModule_sGa,<0,0>> = "Unlines"#
+<$trModule_sGb,<0,0>> = TrNameS $trModule_sGa
+<$trModule,<0,0>> = Module $trModule_sG9 $trModule_sGb
+<lvl_s10N,<0,0>> = C# '\n'#
+<unlines,<0,0>>
+  = \ <ls_agu,<1,0>> ->
+      letrec {
+        <go1_s11c,F<0,0>>
+          = \ <ds_a10Z,<1,0>> ->
+              case ds_a10Z of <wild_a110,<1,2>> {
+                [] -> [];
+                : <y_a112,<1,2>> <ys_a113,<1,2>> ->
+                  ++ y_a112 (: lvl_s10N (go1_s11c ys_a113))
+              }; } in
+      go1_s11c ls_agu
+
+
+
+==================== Float out(FOS {Lam = Just 0, Consts = True, OverSatApps = True}) ====================
+Result size of Float out(FOS {Lam = Just 0, Consts = True, OverSatApps = True})
+  = {terms: 34, types: 30, coercions: 0, joins: 0/0}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+Rec {
+go1_s11c
+  = \ ds_a10Z ->
+      case ds_a10Z of {
+        [] -> [];
+        : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_s11c ys_a113))
+      }
+end Rec }
+
+unlines = \ ls_agu -> go1_s11c ls_agu
+
+
+
+
+==================== Common sub-expression ====================
+Result size of Common sub-expression
+  = {terms: 34, types: 30, coercions: 0, joins: 0/0}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+Rec {
+go1_s11c
+  = \ ds_a10Z ->
+      case ds_a10Z of wild_a110 {
+        [] -> [];
+        : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_s11c ys_a113))
+      }
+end Rec }
+
+unlines = \ ls_agu -> go1_s11c ls_agu
+
+
+
+
+==================== Float inwards ====================
+Result size of Float inwards
+  = {terms: 34, types: 30, coercions: 0, joins: 0/0}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+Rec {
+go1_s11c
+  = \ ds_a10Z ->
+      case ds_a10Z of wild_a110 {
+        [] -> [];
+        : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (go1_s11c ys_a113))
+      }
+end Rec }
+
+unlines = \ ls_agu -> go1_s11c ls_agu
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = FinalPhase [final tidy up],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 30, types: 23, coercions: 0, joins: 0/0}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+Rec {
+unlines
+  = \ ds_a10Z ->
+      case ds_a10Z of {
+        [] -> [];
+        : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (unlines ys_a113))
+      }
+end Rec }
+
+
+
+
+==================== Demand analysis ====================
+Result size of Demand analysis
+  = {terms: 30, types: 23, coercions: 0, joins: 0/0}
+
+$trModule_sG8 = "main"#
+
+$trModule_sG9 = TrNameS $trModule_sG8
+
+$trModule_sGa = "Unlines"#
+
+$trModule_sGb = TrNameS $trModule_sGa
+
+$trModule = Module $trModule_sG9 $trModule_sGb
+
+lvl_s10N = C# '\n'#
+
+Rec {
+unlines
+  = \ ds_a10Z ->
+      case ds_a10Z of {
+        [] -> [];
+        : y_a112 ys_a113 -> ++ y_a112 (: lvl_s10N (unlines ys_a113))
+      }
+end Rec }
+
+
+
+
+==================== Tidy Core ====================
+Result size of Tidy Core
+  = {terms: 30, types: 23, coercions: 0, joins: 0/0}
+
+$trModule4 = "main"#
+
+$trModule3 = TrNameS $trModule4
+
+$trModule2 = "Unlines"#
+
+$trModule1 = TrNameS $trModule2
+
+$trModule = Module $trModule3 $trModule1
+
+lvl_r11d = C# '\n'#
+
+Rec {
+unlines
+  = \ ds_a10Z ->
+      case ds_a10Z of {
+        [] -> [];
+        : y_a112 ys_a113 -> ++ y_a112 (: lvl_r11d (unlines ys_a113))
+      }
+end Rec }
+
+
+
+
+==================== CorePrep ====================
+Result size of CorePrep
+  = {terms: 34, types: 26, coercions: 0, joins: 0/2}
+
+$trModule4 = "main"#
+
+$trModule3 = TrNameS $trModule4
+
+$trModule2 = "Unlines"#
+
+$trModule1 = TrNameS $trModule2
+
+$trModule = Module $trModule3 $trModule1
+
+lvl_r11d = C# '\n'#
+
+Rec {
+unlines
+  = \ ds_s147 ->
+      case ds_s147 of {
+        [] -> [];
+        : y_s149 ys_s14a ->
+          let { sat_s14b = unlines ys_s14a } in
+          let { sat_s14c = : lvl_r11d sat_s14b } in ++ y_s149 sat_s14c
+      }
+end Rec }
+
+
+
+[2 of 2] Skipping Main             ( app/Main.hs, /home/hugo/repos/hs-comprehension/unlines-test/dist-newstyle/build/x86_64-linux/ghc-9.5.20221105/unlines-test-0.1.0.0/x/unlines-test/build/unlines-test/unlines-test-tmp/Main.o )
+[1 of 3] Skipping Unlines          ( app/Unlines.hs, /home/hugo/repos/hs-comprehension/unlines-test/dist-newstyle/build/x86_64-linux/ghc-9.5.20221105/unlines-test-0.1.0.0/x/unlines-test/build/unlines-test/unlines-test-tmp/Unlines.o )
+[2 of 3] Skipping Main             ( app/Main.hs, /home/hugo/repos/hs-comprehension/unlines-test/dist-newstyle/build/x86_64-linux/ghc-9.5.20221105/unlines-test-0.1.0.0/x/unlines-test/build/unlines-test/unlines-test-tmp/Main.o )
+[3 of 3] Linking /home/hugo/repos/hs-comprehension/unlines-test/dist-newstyle/build/x86_64-linux/ghc-9.5.20221105/unlines-test-0.1.0.0/x/unlines-test/build/unlines-test/unlines-test [Objects changed]

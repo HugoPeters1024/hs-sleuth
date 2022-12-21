@@ -1,11 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
-
 module InspectionTests where
 
 import Test.Inspection
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.ByteString
+import HsComprehension.Plugin (dumpThisModule)
 
 import Tree
 --addNothing :: Tree Int -> Tree Int
@@ -18,7 +18,9 @@ countChars :: ByteString -> Int
 countChars = T.length . T.toUpper . TE.decodeUtf8
 
 
--- inspect $ 'countChars `hasNoType` ''T.Text
+--inspect $ 'countChars `hasNoType` ''T.Text
+
+--dumpThisModule
 
 
 

@@ -1,0 +1,1874 @@
+Build profile: -w ghc-9.2.2 -O1
+In order, the following will be built (use -v for more details):
+ - unlines-test-0.1.0.0 (exe:unlines-test) (file app/Unlines.hs changed)
+Preprocessing executable 'unlines-test' for unlines-test-0.1.0.0..
+Building executable 'unlines-test' for unlines-test-0.1.0.0..
+[1 of 2] Compiling Unlines          ( app/Unlines.hs, /home/hugo/repos/hs-comprehension/unlines-test/dist-newstyle/build/x86_64-linux/ghc-9.2.2/unlines-test-0.1.0.0/x/unlines-test/build/unlines-test/unlines-test-tmp/Unlines.o )
+
+==================== Desugar (before optimization) ====================
+Result size of Desugar (before optimization)
+  = {terms: 25, types: 23, coercions: 0, joins: 0/0}
+
+Rec {
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$dFoldable_aFf :: Foldable []
+[LclId]
+$dFoldable_aFf = Data.Foldable.$fFoldable[]
+
+-- RHS size: {terms: 5, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module
+      (ghc-prim:GHC.Types.TrNameS "main"#)
+      (ghc-prim:GHC.Types.TrNameS "Unlines"#)
+
+-- RHS size: {terms: 16, types: 17, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) ->
+      concat
+        @[]
+        @Char
+        $dFoldable_aFf
+        (map
+           @[Char]
+           @[Char]
+           (\ (l_arc :: [Char]) ->
+              ++
+                @Char
+                l_arc
+                (GHC.Base.build
+                   @Char
+                   (\ (@a_dFS) (c_dFT :: Char -> a_dFS -> a_dFS) (n_dFU :: a_dFS) ->
+                      c_dFT (ghc-prim:GHC.Types.C# '\n'#) n_dFU)))
+           ls_ag6)
+end Rec }
+
+
+
+
+==================== Desugar (after optimization) ====================
+Result size of Desugar (after optimization)
+  = {terms: 23, types: 21, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 5, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 80 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module
+      (ghc-prim:GHC.Types.TrNameS "main"#)
+      (ghc-prim:GHC.Types.TrNameS "Unlines"#)
+
+-- RHS size: {terms: 16, types: 17, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 160 0}]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) ->
+      concat
+        @[]
+        @Char
+        Data.Foldable.$fFoldable[]
+        (map
+           @[Char]
+           @[Char]
+           (\ (l_arc :: [Char]) ->
+              ++
+                @Char
+                l_arc
+                (GHC.Base.build
+                   @Char
+                   (\ (@a_dFS)
+                      (c_dFT [OS=OneShot] :: Char -> a_dFS -> a_dFS)
+                      (n_dFU [OS=OneShot] :: a_dFS) ->
+                      c_dFT (ghc-prim:GHC.Types.C# '\n'#) n_dFU)))
+           ls_ag6)
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = InitialPhase [Gentle],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             no case-of-case}
+Result size of Simplifier
+  = {terms: 42, types: 39, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 27, types: 31, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 260 40}]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) ->
+      GHC.Base.build
+        @Char
+        (\ (@b_aFL)
+           (c_aFM [OS=OneShot] :: Char -> b_aFL -> b_aFL)
+           (n_aFN [OS=OneShot] :: b_aFL) ->
+           GHC.Base.foldr
+             @[Char]
+             @b_aFL
+             (GHC.Base.mapFB
+                @[Char]
+                @b_aFL
+                @[Char]
+                (\ (x_aFO :: [Char]) (y_aFP :: b_aFL) ->
+                   GHC.Base.foldr @Char @b_aFL c_aFM y_aFP x_aFO)
+                (\ (l_arc :: [Char]) ->
+                   GHC.Base.build
+                     @Char
+                     (\ (@b_aXq)
+                        (c_aXr [OS=OneShot] :: Char -> b_aXq -> b_aXq)
+                        (n_aXs [OS=OneShot] :: b_aXq) ->
+                        GHC.Base.foldr
+                          @Char
+                          @b_aXq
+                          c_aXr
+                          (c_aXr (ghc-prim:GHC.Types.C# '\n'#) n_aXs)
+                          l_arc)))
+             n_aFN
+             ls_ag6)
+
+
+
+
+==================== Specialise ====================
+Result size of Specialise
+  = {terms: 42, types: 39, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 27, types: 31, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 260 40}]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) ->
+      GHC.Base.build
+        @Char
+        (\ (@b_aFL)
+           (c_aFM [OS=OneShot] :: Char -> b_aFL -> b_aFL)
+           (n_aFN [OS=OneShot] :: b_aFL) ->
+           GHC.Base.foldr
+             @[Char]
+             @b_aFL
+             (GHC.Base.mapFB
+                @[Char]
+                @b_aFL
+                @[Char]
+                (\ (x_aFO :: [Char]) (y_aFP :: b_aFL) ->
+                   GHC.Base.foldr @Char @b_aFL c_aFM y_aFP x_aFO)
+                (\ (l_arc :: [Char]) ->
+                   GHC.Base.build
+                     @Char
+                     (\ (@b_aXq)
+                        (c_aXr [OS=OneShot] :: Char -> b_aXq -> b_aXq)
+                        (n_aXs [OS=OneShot] :: b_aXq) ->
+                        GHC.Base.foldr
+                          @Char
+                          @b_aXq
+                          c_aXr
+                          (c_aXr (ghc-prim:GHC.Types.C# '\n'#) n_aXs)
+                          l_arc)))
+             n_aFN
+             ls_ag6)
+
+
+
+
+==================== Levels added: ====================
+<$trModule_sG0,<0,0>>
+<$trModule_sG0,<0,0>> = "main"#
+<$trModule_sG1,<0,0>>
+<$trModule_sG1,<0,0>> = GHC.Types.TrNameS $trModule_sG0
+<$trModule_sG2,<0,0>>
+<$trModule_sG2,<0,0>> = "Unlines"#
+<$trModule_sG3,<0,0>>
+<$trModule_sG3,<0,0>> = GHC.Types.TrNameS $trModule_sG2
+<Unlines.$trModule,<0,0>>
+<Unlines.$trModule,<0,0>>
+  = GHC.Types.Module $trModule_sG1 $trModule_sG3
+<Unlines.unlines,<0,0>>
+<Unlines.unlines,<0,0>>
+  = \ <ls_ag6,<1,0>> ->
+      GHC.Base.build
+        @GHC.Types.Char
+        (\ <b_aFL,<1,2>> <c_aFM,<1,2>> <n_aFN,<1,2>> ->
+           GHC.Base.foldr
+             @[GHC.Types.Char]
+             @b_aFL
+             (GHC.Base.mapFB
+                @[GHC.Types.Char]
+                @b_aFL
+                @[GHC.Types.Char]
+                (\ <x_aFO,<2,0>> <y_aFP,<2,0>> ->
+                   GHC.Base.foldr @GHC.Types.Char @b_aFL c_aFM y_aFP x_aFO)
+                (let {
+                   <lvl_sYT,F<0,0>>
+                   <lvl_sYT,F<0,0>>
+                     = \ <l_arc,<1,0>> ->
+                         GHC.Base.build
+                           @GHC.Types.Char
+                           (\ <b_aXq,<1,2>> <c_aXr,<1,2>> <n_aXs,<1,2>> ->
+                              GHC.Base.foldr
+                                @GHC.Types.Char
+                                @b_aXq
+                                c_aXr
+                                (c_aXr
+                                   (let {
+                                      <lvl_sYS,F<0,0>>
+                                      <lvl_sYS,F<0,0>> = GHC.Types.C# '\n'# } in
+                                    lvl_sYS)
+                                   n_aXs)
+                                l_arc) } in
+                 lvl_sYT))
+             n_aFN
+             ls_ag6)
+
+
+
+==================== Float out(FOS {Lam = Just 0, Consts = True, OverSatApps = False}) ====================
+Result size of Float out(FOS {Lam = Just 0,
+                              Consts = True,
+                              OverSatApps = False})
+  = {terms: 46, types: 44, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 11, types: 10, coercions: 0, joins: 0/0}
+lvl_sYT :: [Char] -> [Char]
+[LclId]
+lvl_sYT
+  = \ (l_arc :: [Char]) ->
+      GHC.Base.build
+        @Char
+        (\ (@b_aXq)
+           (c_aXr [OS=OneShot] :: Char -> b_aXq -> b_aXq)
+           (n_aXs [OS=OneShot] :: b_aXq) ->
+           GHC.Base.foldr @Char @b_aXq c_aXr (c_aXr lvl_sYS n_aXs) l_arc)
+
+-- RHS size: {terms: 16, types: 21, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX, Arity=1]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) ->
+      GHC.Base.build
+        @Char
+        (\ (@b_aFL)
+           (c_aFM [OS=OneShot] :: Char -> b_aFL -> b_aFL)
+           (n_aFN [OS=OneShot] :: b_aFL) ->
+           GHC.Base.foldr
+             @[Char]
+             @b_aFL
+             (GHC.Base.mapFB
+                @[Char]
+                @b_aFL
+                @[Char]
+                (\ (x_aFO :: [Char]) (y_aFP :: b_aFL) ->
+                   GHC.Base.foldr @Char @b_aFL c_aFM y_aFP x_aFO)
+                lvl_sYT)
+             n_aFN
+             ls_ag6)
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = 2 [main],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 46, types: 44, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 11, types: 10, coercions: 0, joins: 0/0}
+lvl_sYT :: [Char] -> [Char]
+[LclId,
+ Arity=1,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 90 40}]
+lvl_sYT
+  = \ (l_arc :: [Char]) ->
+      GHC.Base.build
+        @Char
+        (\ (@b_aXq)
+           (c_aXr [OS=OneShot] :: Char -> b_aXq -> b_aXq)
+           (n_aXs [OS=OneShot] :: b_aXq) ->
+           GHC.Base.foldr @Char @b_aXq c_aXr (c_aXr lvl_sYS n_aXs) l_arc)
+
+-- RHS size: {terms: 16, types: 21, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 150 40}]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) ->
+      GHC.Base.build
+        @Char
+        (\ (@b_aFL)
+           (c_aFM [OS=OneShot] :: Char -> b_aFL -> b_aFL)
+           (n_aFN [OS=OneShot] :: b_aFL) ->
+           GHC.Base.foldr
+             @[Char]
+             @b_aFL
+             (GHC.Base.mapFB
+                @[Char]
+                @b_aFL
+                @[Char]
+                (\ (x_aFO :: [Char]) (y_aFP :: b_aFL) ->
+                   GHC.Base.foldr @Char @b_aFL c_aFM y_aFP x_aFO)
+                lvl_sYT)
+             n_aFN
+             ls_ag6)
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = 1 [main],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 32, types: 32, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 6, types: 5, coercions: 0, joins: 0/0}
+lvl_sYT :: [Char] -> [Char]
+[LclId,
+ Arity=1,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 40 0}]
+lvl_sYT
+  = \ (l_arc :: [Char]) ->
+      ++
+        @Char
+        l_arc
+        (ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char))
+
+-- RHS size: {terms: 7, types: 14, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 70 0}]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) ->
+      GHC.Base.foldr
+        @[Char]
+        @[Char]
+        (GHC.Base.mapFB @[Char] @[Char] @[Char] (++ @Char) lvl_sYT)
+        (ghc-prim:GHC.Types.[] @Char)
+        ls_ag6
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = 0 [main],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 36, types: 32, coercions: 0, joins: 0/1}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 18, types: 23, coercions: 0, joins: 0/1}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 150 0}]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) ->
+      letrec {
+        go1_aVW [Occ=LoopBreaker] :: [[Char]] -> [Char]
+        [LclId,
+         Arity=1,
+         Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True,
+                 WorkFree=True, Expandable=True, Guidance=IF_ARGS [30] 110 10}]
+        go1_aVW
+          = \ (ds_aVX :: [[Char]]) ->
+              case ds_aVX of {
+                [] -> ghc-prim:GHC.Types.[] @Char;
+                : y_aW0 ys_aW1 ->
+                  ++
+                    @Char
+                    (++
+                       @Char
+                       y_aW0
+                       (ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)))
+                    (go1_aVW ys_aW1)
+              }; } in
+      go1_aVW ls_ag6
+
+
+
+
+==================== Float inwards ====================
+Result size of Float inwards
+  = {terms: 36, types: 32, coercions: 0, joins: 0/1}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 18, types: 23, coercions: 0, joins: 0/1}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 150 0}]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) ->
+      letrec {
+        go1_aVW [Occ=LoopBreaker] :: [[Char]] -> [Char]
+        [LclId,
+         Arity=1,
+         Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True,
+                 WorkFree=True, Expandable=True, Guidance=IF_ARGS [30] 110 10}]
+        go1_aVW
+          = \ (ds_aVX :: [[Char]]) ->
+              case ds_aVX of {
+                [] -> ghc-prim:GHC.Types.[] @Char;
+                : y_aW0 ys_aW1 ->
+                  ++
+                    @Char
+                    (++
+                       @Char
+                       y_aW0
+                       (ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)))
+                    (go1_aVW ys_aW1)
+              }; } in
+      go1_aVW ls_ag6
+
+
+
+
+==================== Called arity analysis ====================
+Result size of Called arity analysis
+  = {terms: 36, types: 32, coercions: 0, joins: 0/1}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 18, types: 23, coercions: 0, joins: 0/1}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 150 0}]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) ->
+      letrec {
+        go1_aVW [Occ=LoopBreaker] :: [[Char]] -> [Char]
+        [LclId,
+         Arity=1,
+         CallArity=1,
+         Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True,
+                 WorkFree=True, Expandable=True, Guidance=IF_ARGS [30] 110 10}]
+        go1_aVW
+          = \ (ds_aVX :: [[Char]]) ->
+              case ds_aVX of {
+                [] -> ghc-prim:GHC.Types.[] @Char;
+                : y_aW0 ys_aW1 ->
+                  ++
+                    @Char
+                    (++
+                       @Char
+                       y_aW0
+                       (ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)))
+                    (go1_aVW ys_aW1)
+              }; } in
+      go1_aVW ls_ag6
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = FinalPhase [post-call-arity],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 36, types: 32, coercions: 0, joins: 0/1}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 18, types: 23, coercions: 0, joins: 0/1}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 150 0}]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) ->
+      letrec {
+        go1_aVW [Occ=LoopBreaker] :: [[Char]] -> [Char]
+        [LclId,
+         Arity=1,
+         Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True,
+                 WorkFree=True, Expandable=True, Guidance=IF_ARGS [30] 110 10}]
+        go1_aVW
+          = \ (ds_aVX :: [[Char]]) ->
+              case ds_aVX of {
+                [] -> ghc-prim:GHC.Types.[] @Char;
+                : y_aW0 ys_aW1 ->
+                  ++
+                    @Char
+                    (++
+                       @Char
+                       y_aW0
+                       (ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)))
+                    (go1_aVW ys_aW1)
+              }; } in
+      go1_aVW ls_ag6
+
+
+
+
+==================== Demand analysis ====================
+Result size of Demand analysis
+  = {terms: 36, types: 32, coercions: 0, joins: 0/1}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 18, types: 23, coercions: 0, joins: 0/1}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Str=<1L>,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 150 0}]
+Unlines.unlines
+  = \ (ls_ag6 [Dmd=1L] :: [String]) ->
+      letrec {
+        go1_aVW [Occ=LoopBreaker, Dmd=SCS(L)] :: [[Char]] -> [Char]
+        [LclId,
+         Arity=1,
+         Str=<1L>,
+         Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True,
+                 WorkFree=True, Expandable=True, Guidance=IF_ARGS [30] 110 10}]
+        go1_aVW
+          = \ (ds_aVX [Dmd=1L] :: [[Char]]) ->
+              case ds_aVX of {
+                [] -> ghc-prim:GHC.Types.[] @Char;
+                : y_aW0 [Dmd=1L] ys_aW1 [Dmd=ML] ->
+                  ++
+                    @Char
+                    (++
+                       @Char
+                       y_aW0
+                       (ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)))
+                    (go1_aVW ys_aW1)
+              }; } in
+      go1_aVW ls_ag6
+
+
+
+
+==================== Constructed Product Result analysis ====================
+Result size of Constructed Product Result analysis
+  = {terms: 36, types: 32, coercions: 0, joins: 0/1}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 18, types: 23, coercions: 0, joins: 0/1}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Str=<1L>,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 150 0}]
+Unlines.unlines
+  = \ (ls_ag6 [Dmd=1L] :: [String]) ->
+      letrec {
+        go1_aVW [Occ=LoopBreaker, Dmd=SCS(L)] :: [[Char]] -> [Char]
+        [LclId,
+         Arity=1,
+         Str=<1L>,
+         Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True,
+                 WorkFree=True, Expandable=True, Guidance=IF_ARGS [30] 110 10}]
+        go1_aVW
+          = \ (ds_aVX [Dmd=1L] :: [[Char]]) ->
+              case ds_aVX of {
+                [] -> ghc-prim:GHC.Types.[] @Char;
+                : y_aW0 [Dmd=1L] ys_aW1 [Dmd=ML] ->
+                  ++
+                    @Char
+                    (++
+                       @Char
+                       y_aW0
+                       (ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)))
+                    (go1_aVW ys_aW1)
+              }; } in
+      go1_aVW ls_ag6
+
+
+
+
+==================== Worker Wrapper binds ====================
+Result size of Worker Wrapper binds
+  = {terms: 36, types: 32, coercions: 0, joins: 0/1}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 18, types: 23, coercions: 0, joins: 0/1}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Str=<SL>,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 150 0}]
+Unlines.unlines
+  = \ (ls_ag6 [Dmd=SL] :: [String]) ->
+      letrec {
+        go1_aVW [Occ=LoopBreaker, Dmd=SCS(L)] :: [[Char]] -> [Char]
+        [LclId,
+         Arity=1,
+         Str=<SL>,
+         Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True,
+                 WorkFree=True, Expandable=True, Guidance=IF_ARGS [30] 110 10}]
+        go1_aVW
+          = \ (ds_aVX [Dmd=SL] :: [[Char]]) ->
+              case ds_aVX of {
+                [] -> ghc-prim:GHC.Types.[] @Char;
+                : y_aW0 [Dmd=SL] ys_aW1 ->
+                  ++
+                    @Char
+                    (++
+                       @Char
+                       y_aW0
+                       (ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)))
+                    (go1_aVW ys_aW1)
+              }; } in
+      go1_aVW ls_ag6
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = FinalPhase [post-worker-wrapper],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 36, types: 32, coercions: 0, joins: 0/1}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 18, types: 23, coercions: 0, joins: 0/1}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Str=<SL>,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 150 0}]
+Unlines.unlines
+  = \ (ls_ag6 [Dmd=SL] :: [String]) ->
+      letrec {
+        go1_aVW [Occ=LoopBreaker] :: [[Char]] -> [Char]
+        [LclId,
+         Arity=1,
+         Str=<SL>,
+         Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True,
+                 WorkFree=True, Expandable=True, Guidance=IF_ARGS [30] 110 10}]
+        go1_aVW
+          = \ (ds_aVX [Dmd=SL] :: [[Char]]) ->
+              case ds_aVX of {
+                [] -> ghc-prim:GHC.Types.[] @Char;
+                : y_aW0 [Dmd=SL] ys_aW1 ->
+                  ++
+                    @Char
+                    (++
+                       @Char
+                       y_aW0
+                       (ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)))
+                    (go1_aVW ys_aW1)
+              }; } in
+      go1_aVW ls_ag6
+
+
+
+
+==================== Exitification transformation ====================
+Result size of Exitification transformation
+  = {terms: 36, types: 32, coercions: 0, joins: 0/1}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 18, types: 23, coercions: 0, joins: 0/1}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Str=<SL>,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [0] 150 0}]
+Unlines.unlines
+  = \ (ls_ag6 [Dmd=SL] :: [String]) ->
+      letrec {
+        go1_aVW [Occ=LoopBreaker] :: [[Char]] -> [Char]
+        [LclId,
+         Arity=1,
+         Str=<SL>,
+         Unf=Unf{Src=<vanilla>, TopLvl=False, Value=True, ConLike=True,
+                 WorkFree=True, Expandable=True, Guidance=IF_ARGS [30] 110 10}]
+        go1_aVW
+          = \ (ds_aVX [Dmd=SL] :: [[Char]]) ->
+              case ds_aVX of {
+                [] -> ghc-prim:GHC.Types.[] @Char;
+                : y_aW0 [Dmd=SL] ys_aW1 ->
+                  ++
+                    @Char
+                    (++
+                       @Char
+                       y_aW0
+                       (ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)))
+                    (go1_aVW ys_aW1)
+              }; } in
+      go1_aVW ls_ag6
+
+
+
+
+==================== Levels added: ====================
+<$trModule_sG0,<0,0>>
+<$trModule_sG0,<0,0>> = "main"#
+<$trModule_sG1,<0,0>>
+<$trModule_sG1,<0,0>> = GHC.Types.TrNameS $trModule_sG0
+<$trModule_sG2,<0,0>>
+<$trModule_sG2,<0,0>> = "Unlines"#
+<$trModule_sG3,<0,0>>
+<$trModule_sG3,<0,0>> = GHC.Types.TrNameS $trModule_sG2
+<Unlines.$trModule,<0,0>>
+<Unlines.$trModule,<0,0>>
+  = GHC.Types.Module $trModule_sG1 $trModule_sG3
+<lvl_sYS,<0,0>>
+<lvl_sYS,<0,0>> = GHC.Types.C# '\n'#
+<Unlines.unlines,<0,0>>
+<Unlines.unlines,<0,0>>
+  = \ <ls_ag6,<1,0>> ->
+      letrec {
+        <go1_sYX,F<0,0>>
+        <go1_sYX,F<0,0>>
+          = \ <ds_aVX,<1,0>> ->
+              case ds_aVX of <wild_aVY,<1,2>> {
+                [] -> GHC.Types.[] @GHC.Types.Char;
+                : <y_aW0,<1,2>> <ys_aW1,<1,2>> ->
+                  GHC.Base.++
+                    @GHC.Types.Char
+                    (GHC.Base.++
+                       @GHC.Types.Char
+                       y_aW0
+                       (let {
+                          <lvl_sYY,F<0,0>>
+                          <lvl_sYY,F<0,0>>
+                            = GHC.Types.:
+                                @GHC.Types.Char lvl_sYS (GHC.Types.[] @GHC.Types.Char) } in
+                        lvl_sYY))
+                    (go1_sYX ys_aW1)
+              }; } in
+      go1_sYX ls_ag6
+
+
+
+==================== Float out(FOS {Lam = Just 0, Consts = True, OverSatApps = True}) ====================
+Result size of Float out(FOS {Lam = Just 0,
+                              Consts = True,
+                              OverSatApps = True})
+  = {terms: 38, types: 34, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+Rec {
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+lvl_sYY :: [Char]
+[LclId]
+lvl_sYY
+  = ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)
+
+-- RHS size: {terms: 12, types: 14, coercions: 0, joins: 0/0}
+go1_sYX [Occ=LoopBreaker] :: [[Char]] -> [Char]
+[LclId, Arity=1, Str=<SL>]
+go1_sYX
+  = \ (ds_aVX [Dmd=SL] :: [[Char]]) ->
+      case ds_aVX of {
+        [] -> ghc-prim:GHC.Types.[] @Char;
+        : y_aW0 [Dmd=SL] ys_aW1 ->
+          ++ @Char (++ @Char y_aW0 lvl_sYY) (go1_sYX ys_aW1)
+      }
+end Rec }
+
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX, Arity=1, Str=<SL>]
+Unlines.unlines = \ (ls_ag6 [Dmd=SL] :: [String]) -> go1_sYX ls_ag6
+
+
+
+
+==================== Common sub-expression ====================
+Result size of Common sub-expression
+  = {terms: 38, types: 34, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+Rec {
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+lvl_sYY :: [Char]
+[LclId]
+lvl_sYY
+  = ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)
+
+-- RHS size: {terms: 12, types: 14, coercions: 0, joins: 0/0}
+go1_sYX [Occ=LoopBreaker] :: [[Char]] -> [Char]
+[LclId, Arity=1, Str=<SL>]
+go1_sYX
+  = \ (ds_aVX [Dmd=SL] :: [[Char]]) ->
+      case ds_aVX of wild_aVY [Dmd=A] {
+        [] -> ghc-prim:GHC.Types.[] @Char;
+        : y_aW0 [Dmd=SL] ys_aW1 ->
+          ++ @Char (++ @Char y_aW0 lvl_sYY) (go1_sYX ys_aW1)
+      }
+end Rec }
+
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX, Arity=1, Str=<SL>]
+Unlines.unlines = \ (ls_ag6 [Dmd=SL] :: [String]) -> go1_sYX ls_ag6
+
+
+
+
+==================== Float inwards ====================
+Result size of Float inwards
+  = {terms: 38, types: 34, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+Rec {
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+lvl_sYY :: [Char]
+[LclId]
+lvl_sYY
+  = ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)
+
+-- RHS size: {terms: 12, types: 14, coercions: 0, joins: 0/0}
+go1_sYX [Occ=LoopBreaker] :: [[Char]] -> [Char]
+[LclId, Arity=1, Str=<SL>]
+go1_sYX
+  = \ (ds_aVX [Dmd=SL] :: [[Char]]) ->
+      case ds_aVX of wild_aVY [Dmd=A] {
+        [] -> ghc-prim:GHC.Types.[] @Char;
+        : y_aW0 [Dmd=SL] ys_aW1 ->
+          ++ @Char (++ @Char y_aW0 lvl_sYY) (go1_sYX ys_aW1)
+      }
+end Rec }
+
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX, Arity=1, Str=<SL>]
+Unlines.unlines = \ (ls_ag6 [Dmd=SL] :: [String]) -> go1_sYX ls_ag6
+
+
+
+
+==================== Simplifier ====================
+  Max iterations = 4
+  SimplMode {Phase = FinalPhase [final],
+             inline,
+             rules,
+             eta-expand,
+             cast-swizzle,
+             case-of-case}
+Result size of Simplifier
+  = {terms: 38, types: 34, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+lvl_sYY :: [Char]
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYY
+  = ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)
+
+Rec {
+-- RHS size: {terms: 12, types: 14, coercions: 0, joins: 0/0}
+go1_sYX [Occ=LoopBreaker] :: [[Char]] -> [Char]
+[LclId,
+ Arity=1,
+ Str=<SL>,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [30] 100 10}]
+go1_sYX
+  = \ (ds_aVX [Dmd=SL] :: [[Char]]) ->
+      case ds_aVX of {
+        [] -> ghc-prim:GHC.Types.[] @Char;
+        : y_aW0 [Dmd=SL] ys_aW1 ->
+          ++ @Char (++ @Char y_aW0 lvl_sYY) (go1_sYX ys_aW1)
+      }
+end Rec }
+
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Str=<SL>,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True,
+         Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=True)}]
+Unlines.unlines = \ (ls_ag6 [Dmd=SL] :: [String]) -> go1_sYX ls_ag6
+
+
+
+
+==================== Demand analysis ====================
+Result size of Demand analysis
+  = {terms: 38, types: 34, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG0 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+$trModule_sG0 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG1 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG1 = ghc-prim:GHC.Types.TrNameS $trModule_sG0
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG2 :: ghc-prim:GHC.Prim.Addr#
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+$trModule_sG2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+$trModule_sG3 :: ghc-prim:GHC.Types.TrName
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+$trModule_sG3 = ghc-prim:GHC.Types.TrNameS $trModule_sG2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[LclIdX,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module $trModule_sG1 $trModule_sG3
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_sYS :: Char
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYS = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+lvl_sYY :: [Char]
+[LclId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+lvl_sYY
+  = ghc-prim:GHC.Types.: @Char lvl_sYS (ghc-prim:GHC.Types.[] @Char)
+
+Rec {
+-- RHS size: {terms: 12, types: 14, coercions: 0, joins: 0/0}
+go1_sYX [Occ=LoopBreaker] :: [[Char]] -> [Char]
+[LclId,
+ Arity=1,
+ Str=<1L>,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [30] 100 10}]
+go1_sYX
+  = \ (ds_aVX [Dmd=1L] :: [[Char]]) ->
+      case ds_aVX of {
+        [] -> ghc-prim:GHC.Types.[] @Char;
+        : y_aW0 [Dmd=1L] ys_aW1 [Dmd=ML] ->
+          ++ @Char (++ @Char y_aW0 lvl_sYY) (go1_sYX ys_aW1)
+      }
+end Rec }
+
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[LclIdX,
+ Arity=1,
+ Str=<1L>,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True,
+         Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=True)}]
+Unlines.unlines = \ (ls_ag6 [Dmd=1L] :: [String]) -> go1_sYX ls_ag6
+
+
+
+
+==================== Tidy Core ====================
+Result size of Tidy Core
+  = {terms: 38, types: 34, coercions: 0, joins: 0/0}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule4 :: ghc-prim:GHC.Prim.Addr#
+[GblId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 20 0}]
+Unlines.$trModule4 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule3 :: ghc-prim:GHC.Types.TrName
+[GblId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule3 = ghc-prim:GHC.Types.TrNameS Unlines.$trModule4
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule2 :: ghc-prim:GHC.Prim.Addr#
+[GblId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 30 0}]
+Unlines.$trModule2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule1 :: ghc-prim:GHC.Types.TrName
+[GblId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule1 = ghc-prim:GHC.Types.TrNameS Unlines.$trModule2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: ghc-prim:GHC.Types.Module
+[GblId,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True, Guidance=IF_ARGS [] 10 10}]
+Unlines.$trModule
+  = ghc-prim:GHC.Types.Module Unlines.$trModule3 Unlines.$trModule1
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_rVO :: Char
+[GblId, Unf=OtherCon []]
+lvl_rVO = ghc-prim:GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+lvl1_rYZ :: [Char]
+[GblId, Unf=OtherCon []]
+lvl1_rYZ
+  = ghc-prim:GHC.Types.: @Char lvl_rVO (ghc-prim:GHC.Types.[] @Char)
+
+Rec {
+-- RHS size: {terms: 12, types: 14, coercions: 0, joins: 0/0}
+Unlines.unlines_go1 [Occ=LoopBreaker] :: [[Char]] -> [Char]
+[GblId, Arity=1, Str=<1L>, Unf=OtherCon []]
+Unlines.unlines_go1
+  = \ (ds_aVX :: [[Char]]) ->
+      case ds_aVX of {
+        [] -> ghc-prim:GHC.Types.[] @Char;
+        : y_aW0 ys_aW1 ->
+          ++ @Char (++ @Char y_aW0 lvl1_rYZ) (Unlines.unlines_go1 ys_aW1)
+      }
+end Rec }
+
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+Unlines.unlines :: [String] -> String
+[GblId,
+ Arity=1,
+ Str=<1L>,
+ Unf=Unf{Src=<vanilla>, TopLvl=True, Value=True, ConLike=True,
+         WorkFree=True, Expandable=True,
+         Guidance=ALWAYS_IF(arity=1,unsat_ok=True,boring_ok=True)}]
+Unlines.unlines
+  = \ (ls_ag6 :: [String]) -> Unlines.unlines_go1 ls_ag6
+
+
+
+
+==================== CorePrep ====================
+Result size of CorePrep
+  = {terms: 43, types: 38, coercions: 0, joins: 0/1}
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule4 :: GHC.Prim.Addr#
+[GblId, Unf=OtherCon []]
+Unlines.$trModule4 = "main"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule3 :: GHC.Types.TrName
+[GblId, Unf=OtherCon []]
+Unlines.$trModule3 = GHC.Types.TrNameS Unlines.$trModule4
+
+-- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule2 :: GHC.Prim.Addr#
+[GblId, Unf=OtherCon []]
+Unlines.$trModule2 = "Unlines"#
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule1 :: GHC.Types.TrName
+[GblId, Unf=OtherCon []]
+Unlines.$trModule1 = GHC.Types.TrNameS Unlines.$trModule2
+
+-- RHS size: {terms: 3, types: 0, coercions: 0, joins: 0/0}
+Unlines.$trModule :: GHC.Types.Module
+[GblId, Unf=OtherCon []]
+Unlines.$trModule
+  = GHC.Types.Module Unlines.$trModule3 Unlines.$trModule1
+
+-- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
+lvl_rVO :: GHC.Types.Char
+[GblId, Unf=OtherCon []]
+lvl_rVO = GHC.Types.C# '\n'#
+
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+lvl1_rYZ :: [GHC.Types.Char]
+[GblId, Unf=OtherCon []]
+lvl1_rYZ
+  = GHC.Types.:
+      @GHC.Types.Char lvl_rVO (GHC.Types.[] @GHC.Types.Char)
+
+Rec {
+-- RHS size: {terms: 17, types: 18, coercions: 0, joins: 0/1}
+Unlines.unlines_go1 [Occ=LoopBreaker]
+  :: [[GHC.Types.Char]] -> [GHC.Types.Char]
+[GblId, Arity=1, Str=<1L>, Unf=OtherCon []]
+Unlines.unlines_go1
+  = \ (ds_s11T [Occ=Once1!] :: [[GHC.Types.Char]]) ->
+      case ds_s11T of {
+        [] -> GHC.Types.[] @GHC.Types.Char;
+        : y_s11V [Occ=Once1] ys_s11W [Occ=Once1] ->
+          let {
+            sat_s11Y [Occ=Once1, Dmd=ML] :: [GHC.Types.Char]
+            [LclId]
+            sat_s11Y = Unlines.unlines_go1 ys_s11W } in
+          case GHC.Base.++ @GHC.Types.Char y_s11V lvl1_rYZ
+          of sat_s11X [Occ=Once1]
+          { __DEFAULT ->
+          GHC.Base.++ @GHC.Types.Char sat_s11X sat_s11Y
+          }
+      }
+end Rec }
+
+-- RHS size: {terms: 3, types: 2, coercions: 0, joins: 0/0}
+Unlines.unlines :: [GHC.Base.String] -> GHC.Base.String
+[GblId, Arity=1, Str=<1L>, Unf=OtherCon []]
+Unlines.unlines
+  = \ (ls_s11Z [Occ=Once1] :: [GHC.Base.String]) ->
+      Unlines.unlines_go1 ls_s11Z
+
+
+
+[2 of 2] Skipping  Main             ( app/Main.hs, /home/hugo/repos/hs-comprehension/unlines-test/dist-newstyle/build/x86_64-linux/ghc-9.2.2/unlines-test-0.1.0.0/x/unlines-test/build/unlines-test/unlines-test-tmp/Main.o )
+[1 of 2] Skipping  Unlines          ( app/Unlines.hs, /home/hugo/repos/hs-comprehension/unlines-test/dist-newstyle/build/x86_64-linux/ghc-9.2.2/unlines-test-0.1.0.0/x/unlines-test/build/unlines-test/unlines-test-tmp/Unlines.o )
+[2 of 2] Skipping  Main             ( app/Main.hs, /home/hugo/repos/hs-comprehension/unlines-test/dist-newstyle/build/x86_64-linux/ghc-9.2.2/unlines-test-0.1.0.0/x/unlines-test/build/unlines-test/unlines-test-tmp/Main.o )
+Linking /home/hugo/repos/hs-comprehension/unlines-test/dist-newstyle/build/x86_64-linux/ghc-9.2.2/unlines-test-0.1.0.0/x/unlines-test/build/unlines-test/unlines-test ...

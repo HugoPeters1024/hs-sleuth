@@ -33,6 +33,8 @@ executable hs-plugin-test
                     , InspectionTests
                     , Text
                     , Typeclass
+                    , Unlines
+                    , Streaming
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -43,6 +45,9 @@ executable hs-plugin-test
                     , bytestring
                     , stream-fusion
                     , inspection-testing
+                    , criterion
+                    , template-haskell
+
     hs-source-dirs:   app
     default-language: Haskell2010
-    ghc-options: -O1 -fplugin HsComprehension.Plugin -fplugin-opt HsComprehension.Plugin:Test -ddump-rule-firings -ddump-ds-preopt
+    ghc-options: -O1 -dverbose-core2core

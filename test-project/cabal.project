@@ -2,5 +2,5 @@ packages: .
         , ../plugin
         , ../ghc-dump/ghc-dump-core
         , ./stream-fusion
---        , ./text-1.2.3.2/
+--        , ./text-1.2.4.0
 allow-newer: all

@@ -415,7 +415,7 @@ unstream (Stream next s0) = unfold_unstream s0
 {-# RULES
 "STREAM stream/unstream fusion" forall s.
     stream (unstream s) = s
-  #-}
+#-}
 
 -- ---------------------------------------------------------------------
 -- Basic stream functions
